@@ -1,5 +1,5 @@
 {
-  "name": "my-turborepo",
+  "name": "webAnly2",
   "private": true,
   "scripts": {
     "build": "turbo run build",
