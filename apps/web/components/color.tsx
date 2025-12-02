@@ -1,4 +1,11 @@
+"use client";
+
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { decrement, increment } from "../store/slices/counterSlice";
+
 export default function Color() {
+  const count = useAppSelector((state) => state.counter.value);
+  const dispatch = useAppDispatch();
   return (
    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-500 via-pink-500 to-red-500">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm text-center transform transition-transform duration-300 hover:scale-105">
@@ -6,10 +13,22 @@ export default function Color() {
         <p className="text-gray-700 mb-6">
           This is a simple colorful card component built with Tailwind CSS.
         </p>
-        <button className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white px-6 py-2 rounded-full font-semibold shadow-lg hover:opacity-90 transition-opacity duration-200">
-          Click Me
+        <div className="text-2xl font-semibold text-pink-600 mb-4">Count: {count}</div>
+        <button
+          onClick={() => dispatch(increment())}
+          className="bg-purple-600 text-white px-6 py-2 rounded-full hover:bg-purple-700 transition-colors duration-300"
+        >
+          Increment
         </button>
+        <button
+          onClick={() => dispatch(decrement())}
+          className="bg-purple-600 text-white px-6 py-2 rounded-full hover:bg-purple-700 transition-colors duration-300"
+        >
+          decrement
+        </button>
+        
       </div>
+     
     </div>
 
    

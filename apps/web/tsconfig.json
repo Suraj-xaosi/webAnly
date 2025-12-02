@@ -14,7 +14,7 @@
     "next.config.js",
     "lib/types/**/*.d.ts",
     ".next/types/**/*.ts"
-, "tailwind.config.cjs"  ],
+, "tailwind.config.cjs", "store/slices"  ],
   "exclude": [
     "node_modules"
   ]
