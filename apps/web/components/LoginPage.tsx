@@ -32,18 +32,22 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#181c23]">
-      <div className="w-full max-w-md p-8 bg-[#24292f] rounded-2xl shadow-lg">
-        <h1 className="text-2xl font-semibold text-white mb-6 text-center">Log in</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#6F42C1] via-[#8B5CF6] to-[#A78BFA] p-6">
+      <div className="w-full max-w-md p-10 bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl shadow-purple-900/30">
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <h1 className="text-3xl font-extrabold text-white mb-6 text-center drop-shadow">
+          Welcome Back 👋
+        </h1>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="w-full border border-gray-700 bg-[#1f2328] rounded-lg px-3 py-2 
-            text-white"
+            className="w-full rounded-xl px-4 py-3 bg-white/20 text-white placeholder-white/70 
+            border border-white/30 focus:outline-none focus:border-white/60 focus:ring-2 focus:ring-white/40 transition"
           />
 
           <input
@@ -51,33 +55,42 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            className="w-full border border-gray-700 bg-[#1f2328] rounded-lg px-3 py-2 
-            text-white"
+            className="w-full rounded-xl px-4 py-3 bg-white/20 text-white placeholder-white/70 
+            border border-white/30 focus:outline-none focus:border-white/60 focus:ring-2 focus:ring-white/40 transition"
           />
 
-          {error && <p className="text-red-400">{error}</p>}
+          {error && (
+            <p className="text-red-300 text-sm bg-red-500/10 p-2 rounded-lg text-center">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2"
+            className="w-full py-3 rounded-xl   bg-gradient-to-r from-[#8B5CF6] to-[#6F42C1]
+            text-white font-semibold animate-bounce shadow-lg shadow-purple-800/30"
           >
             {loading ? "Logging in…" : "Login"}
           </button>
         </form>
 
-        <div className="mt-4">
+        {/* Auth Buttons */}
+        <div className="mt-6 space-y-3">
+
           <button
             onClick={() => signIn("google")}
-            className="w-full bg-red-600 text-white py-2 rounded-lg mt-2"
+            className="w-full py-3 rounded-xl bg-[#8B5CF6] text-white font-medium 
+            hover:bg-[#6F42C1] border border-white/30 transition shadow-md shadow-purple-900/10"
           >
-            Login with Google
+            Continue with Google
           </button>
 
           <button
             onClick={() => signIn("github")}
-            className="w-full bg-gray-700 text-white py-2 rounded-lg mt-2"
+            className="w-full py-3 rounded-xl bg-[#8B5CF6] text-white font-medium 
+            hover:bg-[#6F42C1] transition shadow-md shadow-purple-900/10"
           >
-            Login with GitHub
+            Continue with GitHub
           </button>
         </div>
       </div>

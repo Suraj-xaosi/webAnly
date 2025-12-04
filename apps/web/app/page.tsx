@@ -1,11 +1,23 @@
-import Color from "../components/color";
+"use client";
 
+import { useSession } from "next-auth/react";
+import HomePage from "../components/home/homePage";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
+export default function Home() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
 
-export default async function Home() {
-  return (
-    <Color />
-   
-  );
+  if (status === "loading") return <p>Loading...</p>;
+
+  if (!session) return null; 
+
+  return <HomePage />;
 }
