@@ -53,7 +53,7 @@ app.post("/collect", async (req: Request, res: Response) => {
     const url = String(body.url || "");
     
     if (!site || !url) {
-        return res.status(400).send("Missing required fields: site and url");
+        return res.status(400).send("Missing these required fields: site and url");
     }
 
     const referrer = String(body.referrer || body.referer || "");
@@ -88,7 +88,7 @@ app.post("/collect", async (req: Request, res: Response) => {
         return res.status(200).send("Event sent to Kafka");
     } catch (err) {
         console.error("Failed to send event to Kafka:", err);
-        return res.status(500).send("Failed to send event to Kafka");
+        return res.status(500).send("Failed to send event to Kafka.");
     }
 });
 
