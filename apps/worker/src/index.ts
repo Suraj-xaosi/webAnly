@@ -7,9 +7,10 @@ dotenv.config();
 
 
 const kafka = new Kafka({
-  clientId: process.env.KAFKA_CLIENT_ID_WORKER,
-  brokers: [process.env.KAFKA_BROKERS || "localhost:9092"],
+  clientId: process.env.KAFKA_CLIENT_ID_WORKER ?? "collector-worker",
+  brokers: (process.env.KAFKA_BROKERS?.split(",") ?? ["localhost:9092"]),
 });
+
 
 const consumer = kafka.consumer({ groupId: process.env.KAFKA_GROUP_ID || "event-processors" });
 

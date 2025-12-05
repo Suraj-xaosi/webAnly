@@ -17,7 +17,7 @@ export default function countryFromIp(ip: string): string {
         return code;
     }
 }
-export  function normalizeIp(raw: string): string {
+export function normalizeIp(raw: string): string {
     if (!raw) return "0.0.0.0";
     // remove port if present (IPv6 with port)
     const withoutPort = raw.split(":").length > 2 ? raw : raw.split(":").pop() || raw;

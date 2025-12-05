@@ -2,9 +2,9 @@ import express, { Request, Response } from "express";
 import { Kafka } from "kafkajs";
 
 import cors from "cors";
-import countryFromIp from "./functions/countryFromIp";
-import parseBrowser from "./functions/parseBrowser";
-import normalizeIp from "./functions/countryFromIp";
+import countryFromIp,{normalizeIp} from "./functions/countryFromIp.js";
+import parseBrowser from "./functions/parseBrowser.js";
+
 import dotenv from "dotenv";
 
 dotenv.config();
