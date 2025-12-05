@@ -1,0 +1,86 @@
+"use client";
+
+import ReactEChartsCore from "echarts-for-react/lib/core";
+import echarts from "./echart"; //
+import { useAppSelector } from "../../../store/hooks";
+
+type chd = {
+  interval: string;
+  views: number;
+};
+
+export default function ViewsChart() {
+  const chartdata = useAppSelector((state) => state.analytics.viewsData);
+  if (!chartdata?.length ) {
+    return <div className="text-gray-400">No data available</div>;
+  }
+
+  const option = {
+    backgroundColor: "#232733",
+    tooltip: { trigger: "axis" },
+    legend: {    
+      data: ["Total Views", "Unique Visitors"],
+      textStyle: { color: "#a1a1a1" },
+    },
+    grid: { left: "3%", right: "3%", bottom: "3%", containLabel: true },
+    xAxis: {
+      type: "category",
+      boundaryGap: false,
+      data: chartdata.map((d) => d.interval),
+      axisLine: { lineStyle: { color: "#555" } },
+      axisLabel: { color: "#aaa" },
+    },
+    yAxis: {
+      type: "value",
+      axisLine: { lineStyle: { color: "#555" } },
+      splitLine: { lineStyle: { color: "#333" } },
+      axisLabel: { color: "#aaa" },
+    },
+    series: [
+      {
+        name: "Total Views",
+        type: "line",
+        smooth: true,
+        showSymbol: false,
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: "rgba(0, 136, 212, 0.8)" },
+            { offset: 1, color: "rgba(0, 136, 212, 0.1)" },
+          ]),
+        },
+        lineStyle: { color: "#0088d4" },
+        data: chartdata.map((d) => d.views),
+      }
+      /*{
+        name: "Unique Visitors",
+        type: "line",
+        smooth: true,
+        showSymbol: false,
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: "rgba(0, 255, 136, 0.8)" },
+            { offset: 1, color: "rgba(0, 255, 136, 0.1)" },
+          ]),
+        },
+        lineStyle: { color: "#00ff88" },
+        data: uniquevisitorsdata.map((d) => d.views),
+      },*/
+    ],
+  };
+
+  return (
+    <div className="bg-[#181c23] text-white p-8">
+      <div className="w-full h-100 p-4 bg-[#232733] rounded-2xl shadow">
+        <h2 className="text-xs text-blue-400 font-semibold mb-2">
+          Total Landings
+        </h2>
+        <ReactEChartsCore
+          echarts={echarts}
+          option={option}
+          style={{ height: "20rem", width: "100%" }}
+        />
+      </div>
+    </div>
+  );
+}
+
