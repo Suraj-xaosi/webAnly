@@ -1,10 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Sidebar from "./sidebar/sidebar";
+import {fetchSiteInfo} from "../../store/slices/sitesSlice";
+import { useAppDispatch } from "../../store/hooks";
 
 export default function HomePage() {
+  const dispatch = useAppDispatch();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  useEffect(() => {
+    dispatch(fetchSiteInfo());
+  },[]);
 
   return (
     <div className="relative flex h-screen w-full bg-gradient-to-br from-[#6F42C1] via-[#8B5CF6] to-[#A78BFA] text-white overflow-hidden ">

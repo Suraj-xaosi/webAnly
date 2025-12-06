@@ -1,9 +1,9 @@
 "use client";
-"use client";
+
 
 import { useEffect } from "react";
-import { useAppDispatch } from "../../store/hooks";
-import { fetchAnalytics } from "../../store/slices/analyticsSlice";
+import { useAppDispatch } from "../../../store/hooks";
+import { fetchAnalytics } from "../../../store/slices/analyticsSlice";
 import BrowsersChart from "./charts/BrowserChart";
 import ViewChart from "./charts/ViewChart";
 import CountriesChart from "./charts/CountryChart";

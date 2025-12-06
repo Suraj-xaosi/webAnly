@@ -2,7 +2,7 @@
 
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import echarts from "./echart"; //
-import { useAppSelector } from "../../../store/hooks";
+import { useAppSelector } from "../../../../store/hooks";
 
 type chd = {
   interval: string;
