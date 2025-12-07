@@ -1,12 +1,16 @@
 import { configureStore } from "@reduxjs/toolkit";
-import counterReducer from "./slices/counterSlice";
-import analyticsReducer from "./slices/analyticsSlice";
 
+import analyticsReducer from "./slices/analyticsSlice";
+import selectedDateSiteIdReducer from "./slices/selectedDateSiteSlice";
+import siteReducer from "./slices/sitesSlice"
 export const createStore = () => {
   return configureStore({
     reducer: {
-      counter: counterReducer,
+      site: siteReducer,
       analytics: analyticsReducer,
+      selectedDateSiteId: selectedDateSiteIdReducer,
+      
+
     },
   });
 };

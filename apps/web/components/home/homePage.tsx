@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "./sidebar/sidebar";
 import {fetchSiteInfo} from "../../store/slices/sitesSlice";
 import { useAppDispatch } from "../../store/hooks";
+import Board from "./board/board";
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
@@ -22,7 +23,7 @@ export default function HomePage() {
         }`}
       >
         {sidebarOpen && (
-          <div className="relative shadow-2xl h-full">
+          <div className="relative shadow-2xl h-full transition-all duration-300">
             <Sidebar />
 
             {/* Hide Button */}
@@ -50,25 +51,8 @@ export default function HomePage() {
       <main className="flex-1 p-12 overflow-auto">
         <h1 className="text-4xl font-extrabold mb-6 drop-shadow-xl tracking-wide">
           Dashboard
+          <Board/>
         </h1>
-
-        <p className="text-lg opacity-90">
-          Your analytics and website insights will appear here.
-        </p>
-
-        {/* Example content block */}
-        <div className="mt-10 p-10 bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20">
-          <h2 className="text-3xl font-bold mb-3">Welcome Back 👋</h2>
-          <p className="text-md opacity-90 leading-relaxed">
-            Use the sidebar to add sites, remove them, or explore analytics.
-          </p>
-
-          <div className="mt-5 p-5 rounded-xl bg-white/5 border border-white/10">
-            <p className="opacity-80">
-              You can place charts, cards, and insights inside this container.
-            </p>
-          </div>
-        </div>
       </main>
     </div>
   );

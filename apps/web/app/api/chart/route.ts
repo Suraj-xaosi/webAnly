@@ -37,9 +37,9 @@ function hourlyViews(rows: StatArray) {
   const result = [];
 
   for (let hour = 0; hour < 24; hour++) {
-    const count = rows.filter((row) => {
-      return new Date(row.date).getHours() === hour;
-    }).length;
+    const count = rows.filter(
+      (row) => new Date(row.date).getUTCHours() === hour
+    ).length;
 
     if (count > 0) {
       result.push({
@@ -53,17 +53,18 @@ function hourlyViews(rows: StatArray) {
 }
 
 // ------------------------------
-// GET /api/chart?domain=x&date=YYYY-MM-DD
+// GET /api/chart?siteId=xxx&date=YYYY-MM-DD
 // ------------------------------
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const domain = searchParams.get("domain");
+
+    const siteId = searchParams.get("siteId");
     const dateString = searchParams.get("date");
 
-    if (!domain) {
+    if (!siteId) {
       return NextResponse.json(
-        { error: "domain is required" },
+        { error: "siteId is required" },
         { status: 400 }
       );
     }
@@ -83,25 +84,13 @@ export async function GET(req: Request) {
       );
     }
 
-    const startOfDay = new Date(dateString + "T00:00:00.000Z");
-    const endOfDay = new Date(dateString + "T23:59:59.999Z");
-
-    // Find site
-    const site = await prisma.site.findUnique({
-      where: { domain },
-    });
-
-    if (!site) {
-      return NextResponse.json(
-        { error: "Site not found" },
-        { status: 404 }
-      );
-    }
+    const startOfDay = new Date(`${dateString}T00:00:00.000Z`);
+    const endOfDay = new Date(`${dateString}T23:59:59.999Z`);
 
     // Fetch analytics for that day
     const rows: StatArray = await prisma.dailyStat.findMany({
       where: {
-        siteId: site.id,
+        siteId: siteId,
         date: {
           gte: startOfDay,
           lte: endOfDay,

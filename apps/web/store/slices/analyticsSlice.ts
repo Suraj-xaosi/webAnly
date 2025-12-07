@@ -37,12 +37,12 @@ const initialState: AnalyticsState = {
 export const fetchAnalytics = createAsyncThunk(
   "analytics/fetchAnalytics",
   async (
-    params: { domain: string; date: string },
+    params: { siteId: string; date: string },
     { rejectWithValue }
   ) => {
     try {
       const res = await fetch(
-        `/api/chart?domain=${params.domain}&date=${params.date}`
+        `/api/chart?domain=${params.siteId}&date=${params.date}`
       );
 
       if (!res.ok) {
