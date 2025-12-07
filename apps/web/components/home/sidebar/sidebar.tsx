@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import React from "react";
 import { useSession } from "next-auth/react";
+import Logout from "./logout/logout";
 
 export default function Sidebar() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function Sidebar() {
         onClick={() => router.push("/addSite")}
         className="p-3 shadow-md rounded-lg mb-3 cursor-pointer transition-all bg-white/5 hover:bg-white/20 border border-white/10"
       >
-        <span className="font-medium">➕ Add another site</span>
+        <span className="font-medium">➕ Add site</span>
       </div>
 
       <div 
@@ -36,11 +37,12 @@ export default function Sidebar() {
       </div>
 
       <div 
-        role="button"
         tabIndex={0}
         className="shadow-lg p-3 rounded-lg mb-3 cursor-pointer transition-all bg-white/5 hover:bg-white/20 border border-white/10"
       >
-        <span className="font-medium">🚪 Logout</span>
+        
+        <span className="font-medium justify-center"><Logout/></span>
+        
       </div>
     </aside>
   );
