@@ -132,7 +132,7 @@ export const authOptions: NextAuthOptions = {
           },
           create: {
             userId: dbUser.id,
-           type: account.type,
+            type: account.type,
             provider: account.provider,
             providerAccountId: account.providerAccountId,
             access_token: account.access_token,

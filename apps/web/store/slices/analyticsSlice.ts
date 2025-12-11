@@ -42,7 +42,7 @@ export const fetchAnalytics = createAsyncThunk(
   ) => {
     try {
       const res = await fetch(
-        `/api/chart?domain=${params.siteId}&date=${params.date}`
+        `/api/chart?siteId=${params.siteId}&date=${params.date}`
       );
 
       if (!res.ok) {
