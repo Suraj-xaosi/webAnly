@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { fetchAnalytics } from "../../../store/slices/analyticsSlice";
+import { fetchAnalytics } from "../../../store/slices/analyticSlice";
 
 import BrowsersChart from "./charts/BrowserChart";
 import ViewChart from "./charts/ViewChart";
@@ -12,8 +12,6 @@ import PagesChart from "./charts/PageChart";
 
 export default function Dashboard() {
   const dispatch = useAppDispatch();
-
-  const sites = useAppSelector((s) => s.site.sites);
   const { siteId, date } = useAppSelector((s) => s.selectedDateSiteId);
 
   useEffect(() => {
@@ -25,15 +23,17 @@ export default function Dashboard() {
   if (!siteId) return null;
 
   return (
-    <div className="bg-[#181c23] min-height-screen text-white p-8">
-      <ViewChart />
+    <div className="w-full min-h-screen p-2 sm:p-4 md:p-8 flex flex-col gap-6">
+      <div className="w-full">
+        <ViewChart />
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 mt-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <PagesChart />
         <CountriesChart />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 mt-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <BrowsersChart />
         <DevicesChart />
       </div>

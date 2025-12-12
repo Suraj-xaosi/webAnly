@@ -67,18 +67,41 @@ model Site {
   dailyStats DailyStat[]
 }
 
-model DailyStat {
+/*model DailyStat {
   id           String   @id @default(uuid())
   siteId       String
+  eventType    String?
   date         DateTime
   previousPage String? //referrer: document.referrer 
   page         String //pathname: window.location.pathname
+  pageTitle    String?
+  
   country      String?
   browser      String?
   device       String?
+  os           String?
   TimeSpent    Int? //timeSpent: custom implementation
-  event        String? //event: custom implementation
+  
   IpAddress    String? //ipAddress: custom implementation
 
   site Site @relation(fields: [siteId], references: [id])
+}*/
+
+model DailyStat {
+  id           String   @id @default(uuid())
+  siteId       String
+  visitorId    String   // ✅ new
+  eventType    String?
+  date         DateTime
+  previousPage String?
+  page         String
+  pageTitle    String?
+  country      String?
+  browser      String?
+  device       String?
+  os           String?
+  TimeSpent    Int?
+  IpAddress    String?
+  site Site @relation(fields: [siteId], references: [id])
 }
+

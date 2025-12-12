@@ -1,83 +1,94 @@
 import { Kafka } from "kafkajs";
-
 import dotenv from "dotenv";
 import { prisma } from "@repo/db";
+
 dotenv.config();
 
-
-
 const kafka = new Kafka({
-  clientId: process.env.KAFKA_CLIENT_ID_WORKER ?? "collector-worker",
-  brokers: (process.env.KAFKA_BROKERS?.split(",") ?? ["localhost:9092"]),
+  clientId: process.env.KAFKA_CLIENT_ID_WORKER || "worker",
+  brokers: process.env.KAFKA_BROKERS?.split(",") || ["localhost:9092"],
 });
 
-
-const consumer = kafka.consumer({ groupId: process.env.KAFKA_GROUP_ID || "event-processors" });
+const consumer = kafka.consumer({
+  groupId: process.env.KAFKA_GROUP_ID || "event-processors",
+});
 
 async function run() {
-  console.log("Connecting to Kafka broker...");
+  console.log("Connecting to Kafka...");
   await consumer.connect();
-  console.log(`Connected. Subscribing to topic '${process.env.TOPIC_NAME || "site-events"}'...`);
-  await consumer.subscribe({ topic: process.env.TOPIC_NAME || "site-events", fromBeginning: false }); // For debugging, consume all messages
+
+  const topic = process.env.TOPIC_NAME || "";
+  console.log(`Connected. Subscribing to topic '${topic}'...`);
+
+  await consumer.subscribe({ topic, fromBeginning: false });
 
   await consumer.run({
     eachMessage: async ({ topic, partition, message }) => {
       try {
-        console.log(`Received message on topic ${topic}, partition ${partition}`);
         if (!message.value) {
-          console.warn("Message value is empty");
+          console.warn("Message received but value is null");
           return;
         }
+
         const rawValue = message.value.toString();
-        console.log("Raw message value:", rawValue);
+        console.log(`Raw message from Kafka: ${rawValue}`);
+
         let eventData;
+
+        // Parse JSON safely
         try {
           const parsed = JSON.parse(rawValue);
-          eventData = parsed.eventData || parsed; // Support both {eventData} and direct eventData
-        } catch (parseErr) {
-          console.error("Failed to parse message value as JSON:", parseErr);
-          return;
-        }
-        if (!eventData || !eventData.siteName) {
-          console.warn("eventData or siteName missing in message:", eventData);
-          return;
-        }
-        console.log("Processing event data:", eventData);
-        const siteName = eventData.siteName;
-        const url = eventData.url || "";
-        const cameFrom = eventData.cameFrom || null;
 
-        // Fetch site
-        const site = await prisma.site.findUnique({
-          where: { domain: siteName },
-        });
-        console.log("Fetched sitedetails:", site);
-
-        if (!site) {
-          console.warn(`Site not found: ${siteName}`);
+          // Support both {eventData} wrapper or plain object
+          eventData = parsed.eventData || parsed;
+        } catch (err) {
+          console.error("❌ Failed to parse Kafka message JSON:", err);
           return;
         }
 
-        // Create daily stat record
+        if (!eventData) {
+          console.warn("⚠ eventData missing in message");
+          return;
+        }
+
+        if (!eventData.siteId) {
+          console.warn("⚠ siteId missing:", eventData);
+          return;
+        }
+
+        console.log("Processing event:", eventData);
+
+        // Insert into dailyStat table
         await prisma.dailyStat.create({
           data: {
-            siteId: site.id,
-            date: new Date(),
-            page: url,
-            country: eventData.country || null,
+            siteId: eventData.siteId,
+            visitorId:eventData.visitorId,
+            eventType: eventData.eventType || "unknown",
+            page: eventData.page,
+            pageTitle: eventData.pageTitle || null,
+            previousPage: eventData.previousPage || null,
+            os: eventData.os || null,
             browser: eventData.browser || null,
-            device: eventData.device || null
+            device: eventData.device || null,
+            country: eventData.country || null,
+            TimeSpent: eventData.timeSpent || null,
+            IpAddress: eventData.ipAddress || null,
+
+            // Ensure date is always valid
+            date: eventData.date
+              ? new Date(eventData.date)
+              : new Date(),
           },
         });
 
-        console.log("Processed event:", eventData);
+        console.log("✅ Event processed successfully!");
       } catch (error) {
-        console.error("Error processing message:", error);
+        console.error("❌ Error processing Kafka message:", error);
       }
     },
   });
 }
 
 run().catch((err) => {
-  console.error("Worker failed to start:", err);
+  console.error("❌ Worker failed to start:", err);
 });

@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 
-import analyticsReducer from "./slices/analyticsSlice";
+import analyticsReducer from "./slices/analyticSlice";
 import selectedDateSiteIdReducer from "./slices/selectedDateSiteSlice";
 import siteReducer from "./slices/sitesSlice"
 export const createStore = () => {

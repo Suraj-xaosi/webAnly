@@ -6,9 +6,9 @@ import { useAppSelector } from "../../../../store/hooks";
 
 export default function BrowsersChart() {
 
-  const bChartdata = useAppSelector((state) => state.analytics.browsers);
-  const loading = useAppSelector((state) => state.analytics.loading);
-  const error = useAppSelector((state) => state.analytics.error);
+  const bChartdata = useAppSelector((s) => s.analytics.browsers);
+  const loading = useAppSelector((s) => s.analytics.loading);
+  const error = useAppSelector((s) => s.analytics.error);
   // Loading state first
   if (loading) {
     return <div className="text-gray-400">Loading...</div>;
@@ -21,7 +21,11 @@ export default function BrowsersChart() {
 
   // Empty or missing data
   if (!bChartdata || bChartdata.length === 0) {
-    return <div className="text-gray-400">No data available</div>;
+    return (
+      <div className="flex items-center justify-center h-64 bg-white/10 rounded-xl shadow-inner text-gray-300 text-lg font-medium">
+        No data available
+      </div>
+    );
   }
   const categories = bChartdata.map((b:{name:string,views:number}) => b.name);
   const values = bChartdata.map((b:{name:string,views:number}) => b.views);
@@ -72,17 +76,17 @@ export default function BrowsersChart() {
 
 
   return (
-    <div className="bg-[#181c23]  text-white p-8">
-      <div className="w-full h-80 p-4 bg-[#232733] rounded-2xl shadow">
-        <h2 className="text-xs text-blue-400 font-semibold mb-1">visits per browser </h2>
+    <div className="w-full h-72 sm:h-80 md:h-96 p-4 sm:p-6 bg-gradient-to-br from-[#8B5CF6] to-[#6F42C1] rounded-2xl shadow-xl shadow-purple-800/40 flex flex-col">
+      <h2 className="text-sm sm:text-base text-white font-semibold mb-2 tracking-wide drop-shadow">Visits per Browser</h2>
+      <div className="flex-1 min-h-0">
         <ReactEChartsCore
-                  echarts={echarts}
-                  option={option}
-                  style={{ height: "100%", width: "100%" }}
-                  notMerge={true}
-                  lazyUpdate={true}
+          echarts={echarts}
+          option={option}
+          style={{ height: "100%", width: "100%" }}
+          notMerge={true}
+          lazyUpdate={true}
         />
+      </div>
     </div>
-  </div>
   );
 }

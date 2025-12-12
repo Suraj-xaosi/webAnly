@@ -11,8 +11,12 @@ type chd = {
 
 export default function ViewsChart() {
   const chartdata = useAppSelector((state) => state.analytics.viewsData);
-  if (!chartdata?.length ) {
-    return <div className="text-gray-400">No data available</div>;
+  if (!chartdata || chartdata.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64 bg-white/10 rounded-xl shadow-inner text-gray-300 text-lg font-medium">
+        No data available
+      </div>
+    );
   }
 
   const option = {
@@ -69,15 +73,13 @@ export default function ViewsChart() {
   };
 
   return (
-    <div className="bg-[#181c23] text-white p-8">
-      <div className="w-full h-100 p-4 bg-[#232733] rounded-2xl shadow">
-        <h2 className="text-xs text-blue-400 font-semibold mb-2">
-          Total Landings
-        </h2>
+    <div className="w-full h-80 sm:h-96 md:h-[28rem] p-4 sm:p-6 bg-gradient-to-br from-[#8B5CF6] to-[#6F42C1] rounded-2xl shadow-xl shadow-purple-800/40 flex flex-col mb-4">
+      <h2 className="text-lg sm:text-xl text-white font-semibold mb-2 tracking-wide drop-shadow">Total Landings</h2>
+      <div className="flex-1 min-h-0">
         <ReactEChartsCore
           echarts={echarts}
           option={option}
-          style={{ height: "20rem", width: "100%" }}
+          style={{ height: "100%", width: "100%" }}
         />
       </div>
     </div>

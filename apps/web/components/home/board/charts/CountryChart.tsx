@@ -9,8 +9,12 @@ type cc= {
 export default function CountryChart() {
 
   const countryChartdata = useAppSelector((state) => state.analytics.countries);
-  if(countryChartdata.length===0  ){
-    return <div className="text-gray-400">No data available</div>;
+  if (!countryChartdata || countryChartdata.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64 bg-white/10 rounded-xl shadow-inner text-gray-300 text-lg font-medium">
+        No data available
+      </div>
+    );
   }
 
   const option: echarts.EChartsCoreOption = {
@@ -53,15 +57,15 @@ export default function CountryChart() {
 
 
   return (
-    <div className="bg-[#181c23]  text-white p-8">
-      <div className="w-full h-80 p-4 bg-[#232733] rounded-2xl shadow">
-        <h2 className="text-xs text-blue-400 font-semibold mb-1">visits per country </h2>
+    <div className="w-full h-72 sm:h-80 md:h-96 p-4 sm:p-6 bg-gradient-to-br from-[#8B5CF6] to-[#6F42C1] rounded-2xl shadow-xl shadow-purple-800/40 flex flex-col">
+      <h2 className="text-sm sm:text-base text-white font-semibold mb-2 tracking-wide drop-shadow">Visits per Country</h2>
+      <div className="flex-1 min-h-0">
         <ReactEChartsCore
           echarts={echarts}
           option={option}
-          style={{ height: "16rem", width: "100%" }}
+          style={{ height: "100%", width: "100%" }}
         />
+      </div>
     </div>
-  </div>
   );
 }
