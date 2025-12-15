@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/db";
 
-/**
- * GET /api/analytics/timeseries
- */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -31,11 +28,6 @@ export async function GET(req: NextRequest) {
     const toDate = new Date(to);
     toDate.setHours(23, 59, 59, 999);
 
-
-
-    /**
-     * PostgreSQL date trunc
-     */
     const dateTrunc =
       interval === "day"
         ? "day"
@@ -43,9 +35,6 @@ export async function GET(req: NextRequest) {
         ? "week"
         : "month";
 
-    /**
-     * Raw SQL is MUCH better here than Prisma groupBy
-     */
     const rows = await prisma.$queryRaw<
       {
         date: Date;
@@ -66,9 +55,6 @@ export async function GET(req: NextRequest) {
       ORDER BY 1 ASC
     `;
 
-    /**
-     * Normalize response
-     */
     const data = rows.map((row) => ({
       date: row.date.toISOString().split("T")[0],
       views: row.views,

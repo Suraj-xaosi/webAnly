@@ -9,17 +9,15 @@ export default function BrowsersChart() {
   const bChartdata = useAppSelector((s) => s.breakdown.data.browser);
   const loading = useAppSelector((s) => s.breakdown.loading);
   const error = useAppSelector((s) => s.breakdown.error);
-  // Loading state first
+ 
   if (loading) {
     return <div className="text-gray-400">Loading...</div>;
   }
 
-  // Error state
   if (error) {
     return <div className="text-red-400">Error: {error}</div>;
   }
 
-  // Empty or missing data
   if (!bChartdata || bChartdata.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 bg-white/10 rounded-xl shadow-inner text-gray-300 text-lg font-medium">

@@ -1,13 +1,9 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 
-// ------------------------------
-// Types
-// ------------------------------
-
 export type Site = {
   id: string;
   domain: string;
-  createdAt: string; // ISO date string
+  createdAt: string; 
 };
 
 export type SiteState = {
@@ -16,19 +12,11 @@ export type SiteState = {
   error: string | null;
 };
 
-// ------------------------------
-// Initial State
-// ------------------------------
-
 const initialState: SiteState = {
   sites: [],
   loading: false,
   error: null,
 };
-
-// ------------------------------
-// Thunk: Load Sites from API Route
-// ------------------------------
 
 export const fetchSiteInfo = createAsyncThunk(
   "site/fetchSiteInfo",
@@ -52,29 +40,11 @@ export const fetchSiteInfo = createAsyncThunk(
   }
 );
 
-// ------------------------------
-// Slice
-// ------------------------------
-
 const siteSlice = createSlice({
   name: "site",
   initialState,
   reducers: {
-    // Optional: Optimistic Add
-    addSiteLocal: (state, action: PayloadAction<string>) => {
-      state.sites.unshift({
-        id: "temp-" + crypto.randomUUID(),
-        domain: action.payload,
-        createdAt: new Date().toISOString(),
-      });
-    },
 
-    // Optional: Optimistic Remove
-    removeSiteLocal: (state, action: PayloadAction<string>) => {
-      state.sites = state.sites.filter(
-        (site) => site.domain !== action.payload
-      );
-    },
   },
 
   extraReducers: (builder) => {
@@ -100,6 +70,6 @@ const siteSlice = createSlice({
   },
 });
 
-export const { addSiteLocal, removeSiteLocal } = siteSlice.actions;
+export const {  } = siteSlice.actions;
 
 export default siteSlice.reducer;

@@ -15,12 +15,10 @@ export default function HomePage() {
   const sites = useAppSelector((s) => s.site.sites);
   const selected = useAppSelector((s) => s.selectedDateSiteId);
 
-  // Fetch all sites once
   useEffect(() => {
     dispatch(fetchSiteInfo());
   }, []);
 
-  // Set default selected site once after fetch
   useEffect(() => {
     if (sites.length > 0 && !selected.siteId && sites[0]?.id) {
       

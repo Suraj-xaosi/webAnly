@@ -2,10 +2,7 @@
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import echarts from "./echart";  
 import { useAppSelector } from "../../../../store/hooks";
-type cc= {
-  name: string;
-  views: number;
-};
+
 export default function CountryChart() {
 
   const countryChartdata = useAppSelector((state) => state.breakdown.data.country);

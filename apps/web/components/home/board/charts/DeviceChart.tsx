@@ -22,7 +22,7 @@ export default function DevicesChart() {
   const categories = dChartdata.map((d) => d.name);
   const values = dChartdata.map((d) => d.views);
 
-  // ECharts option
+ 
   const option = {
     tooltip: {
       trigger: 'axis',

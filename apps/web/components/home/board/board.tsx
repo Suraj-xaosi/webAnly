@@ -22,28 +22,21 @@ export default function Dashboard() {
   useEffect(() => {
     if (!siteId || !fromdate || !todate) return;
 
-    // 🔹 initial fetch
     dispatch(fetchTimeseries({ siteId, from: fromdate, to: todate, interval: "day" }));
     dispatch(fetchBreakdown({ siteId, from: fromdate, to: todate, dimension: "page" }));
     dispatch(fetchBreakdown({ siteId, from: fromdate, to: todate, dimension: "country" }));
     dispatch(fetchBreakdown({ siteId, from: fromdate, to: todate, dimension: "browser" }));
     dispatch(fetchBreakdown({ siteId, from: fromdate, to: todate, dimension: "device" }));
-   // dispatch(fetchSummary({ siteId, from: fromdate, to: todate }));
-    console.log("Initial data fetch dispatched");
-    //dispatch(fetchAnalytics({ siteId, fromdate, todate }));
 
     // 🔁 polling every 40 sec
     const intervalId = setInterval(() => {
-      //dispatch(fetchAnalytics({ siteId, fromdate, todate }));
       dispatch(fetchTimeseries({ siteId, from: fromdate, to: todate, interval: "day" }));
       dispatch(fetchBreakdown({ siteId, from: fromdate, to: todate, dimension: "page" }));
       dispatch(fetchBreakdown({ siteId, from: fromdate, to: todate, dimension: "country" }));
       dispatch(fetchBreakdown({ siteId, from: fromdate, to: todate, dimension: "browser" }));
       dispatch(fetchBreakdown({ siteId, from: fromdate, to: todate, dimension: "device" }));
-      //dispatch(fetchSummary({ siteId, from: fromdate, to: todate }));
     }, POLL_INTERVAL);
 
-    // 🧹 cleanup on unmount / siteId/date change
     return () => {
       clearInterval(intervalId);
     };

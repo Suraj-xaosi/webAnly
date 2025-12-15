@@ -27,7 +27,6 @@ export const authOptions: NextAuthOptions = {
             where: { email: credentials.email },
           });
 
-          // if no user or no password (oauth-only user) => deny
           if (!user || !user.password) return null;
 
           const isValid = await bcrypt.compare(
@@ -44,7 +43,6 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
           } as any;
         } catch (err) {
-          // log server-side error, but do not return error message to client
           console.error("Authorize error:", err);
           return null;
         }
@@ -63,12 +61,9 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
 
-  // Use JWT strategy (stateless)
   session: {
     strategy: "jwt",
-    maxAge: 24 * 60 * 60, // 1 day
-    // updateAge controls how often an existing session JWT is updated.
-    // 3600 = update once per hour (recommended instead of 0)
+    maxAge: 24 * 60 * 60, 
     updateAge: 60 * 60,
   },
 
@@ -85,7 +80,6 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
 
-    // Make `session.user.id` available in the client session object
     async session({ session, token }) {
       if (session?.user && token?.id) {
         (session.user as any).id = token.id as string;
@@ -93,18 +87,15 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
 
-    // On OAuth sign in, ensure user exists in DB (upsert)
     async signIn({ user, account }) {
       console.log("OAuth user:", user);
       console.log("OAuth account:", account);
 
       try {
-        // Only handle OAuth providers (Google, Github etc)
         if (account?.provider && account.type === "oauth") {
         const email = user.email;
-        if (!email) return false; // Provider MUST return email
+        if (!email) return false;
 
-        // 1️⃣ Upsert the user (no password)
         const dbUser = await prisma.user.upsert({
           where: { email },
           update: { name: user.name ?? undefined },
@@ -114,7 +105,6 @@ export const authOptions: NextAuthOptions = {
           },
         });
 
-      // 2️⃣ Upsert the account record
         await prisma.account.upsert({
           where: {
             provider_providerAccountId: {
@@ -160,7 +150,5 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
   },
-
-  // NextAuth needs a secret for JWT signing in production
   secret: process.env.NEXTAUTH_SECRET,
 };

@@ -30,7 +30,7 @@ export default function Header() {
     }
   }, [selectedDate]);
 
-  // Handle date submission
+
   const handleDateSubmit = () => {
     if (!fromdateInput || !todateInput) return;
 

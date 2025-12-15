@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     toDate.setHours(23, 59, 59, 999);
 
     /**
-     * Raw SQL (safe because column is whitelisted)
+     * Raw SQL
      */
     const rows = await prisma.$queryRaw<
       {

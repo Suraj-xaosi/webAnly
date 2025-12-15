@@ -60,9 +60,6 @@ async function run() {
       const day = getDayBucket(eventDate);
 
       try {
-        /* ======================
-           1. RAW EVENT (ALWAYS)
-           ====================== */
         await prisma.dailyStat.create({
           data: {
             siteId: eventData.siteId,
@@ -82,9 +79,6 @@ async function run() {
         });
         console.log("✅ Raw event stored");
 
-        /* ======================
-           2. HOURLY VIEWS
-           ====================== */
         await prisma.hourlySiteStat.upsert({
           where: {
             siteId_hour: {
@@ -103,9 +97,7 @@ async function run() {
           },
         });
           console.log("✅ Hourly views updated");
-        /* ======================
-           3. UNIQUE VISITOR / HOUR
-           ====================== */
+
         try {
           await prisma.hourlyVisitor.create({
             data: {
@@ -128,13 +120,9 @@ async function run() {
           });
         } catch {
           console.log("ℹ️ something happend while updating hourly visitors");
-          // visitor already counted for this hour → ignore
         }
         console.log("✅ Hourly unique visitors updated");
 
-        /* ======================
-           4. DAILY BREAKDOWNS
-           ====================== */
         const breakdowns = [
           { type: "browser", key: eventData.browser },
           { type: "country", key: eventData.country },

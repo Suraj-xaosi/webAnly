@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../lib/auth"; // your next-auth config
+import { authOptions } from "../../../lib/auth"; 
 import { prisma } from "@repo/db";
 
 export async function GET() {

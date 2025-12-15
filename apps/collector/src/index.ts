@@ -6,12 +6,9 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-
 const TOPIC_NAME = process.env.TOPIC_NAME || "";
 
-
 const app = express();
-// If behind a proxy (e.g., nginx, Vercel), trust proxy headers for correct req.ip
 app.set("trust proxy", true);
 app.use(express.json());
 app.use(
@@ -21,11 +18,8 @@ app.use(
   })
 );
 
-
-// Kafka setup
 const kafka = new Kafka({
   clientId: process.env.KAFKA_CLIENT_ID_COLLECTOR || "",
-  // Accept comma-separated list for brokers, like worker does
   brokers: (process.env.KAFKA_BROKERS || "").split(",").map(b => b.trim()).filter(Boolean),
 });
 
@@ -33,7 +27,6 @@ const producer = kafka.producer({
   allowAutoTopicCreation: false, // prevents accidental topic creation
 });
 
-// -------- IP Extraction ----------
 function getClientIp(req: Request): string {
   const xff = req.get("x-forwarded-for") || "";
   //@ts-ignore
@@ -48,16 +41,12 @@ function getClientIp(req: Request): string {
   return normalizeIp(req.connection?.remoteAddress || "0.0.0.0");
 }
 
-// -------- COLLECT ENDPOINT ----------
-
 app.post("/collect", async (req: Request, res: Response) => {
   const body = req.body || {};
-  // Consider removing or redacting sensitive fields if logging in production
-  // console.log("Incoming raw payload:", body);
-  console.log("Incoming event for siteId:", body.siteId || "unknown");
+
   const siteId = String(body.siteId || "");
-  const siteName = String(body.siteName || ""); // Only store if needed later
-  const page = String(body.pathname || ""); // preferred: pathname
+  const siteName = String(body.siteName || ""); 
+  const page = String(body.pathname || ""); 
 
   if (!siteId || !siteName || !page) {
     return res
@@ -71,7 +60,6 @@ app.post("/collect", async (req: Request, res: Response) => {
   const ip = getClientIp(req);
   const country = countryFromIp(ip) ||body.country || "Unknown";
 
-  // Normalize date: accept ISO string, ms number, or fallback to now
   let date: Date;
   if (body.ts) {
     if (typeof body.ts === "string" || typeof body.ts === "number") {
@@ -84,7 +72,6 @@ app.post("/collect", async (req: Request, res: Response) => {
     date = new Date();
   }
 
-  // timeSpent: preserve 0 (not fallback to 0 if 0 is sent)
   let timeSpent = 0;
   if (typeof body.timeSpent === "number") {
     timeSpent = body.timeSpent;
@@ -96,8 +83,6 @@ app.post("/collect", async (req: Request, res: Response) => {
   const eventData = {
     eventType: body.eventType || "unknown",
     siteId,
-    // siteName: store only if you need it later
-    // siteName,
     visitorId: body.visitorId || null,
     currentUrl: body.currentUrl || null,
     pageTitle: body.pageTitle || null,
@@ -111,8 +96,6 @@ app.post("/collect", async (req: Request, res: Response) => {
     date,
     ipAddress: ip || body.ipAddress || "0.0.0.0",
   };
-
-  // console.log("Collected event data:", eventData); // Remove or redact in production
 
   try {
     await producer.send({
@@ -128,9 +111,8 @@ app.post("/collect", async (req: Request, res: Response) => {
 });
 
 
-// -------- SERVER START ----------
+
 async function start() {
-  // Validate required env vars at startup
   if (!TOPIC_NAME) {
     console.error("TOPIC_NAME environment variable is required.");
     process.exit(1);
