@@ -6,9 +6,9 @@ import { useAppSelector } from "../../../../store/hooks";
 
 export default function BrowsersChart() {
 
-  const bChartdata = useAppSelector((s) => s.analytics.browsers);
-  const loading = useAppSelector((s) => s.analytics.loading);
-  const error = useAppSelector((s) => s.analytics.error);
+  const bChartdata = useAppSelector((s) => s.breakdown.data.browser);
+  const loading = useAppSelector((s) => s.breakdown.loading);
+  const error = useAppSelector((s) => s.breakdown.error);
   // Loading state first
   if (loading) {
     return <div className="text-gray-400">Loading...</div>;

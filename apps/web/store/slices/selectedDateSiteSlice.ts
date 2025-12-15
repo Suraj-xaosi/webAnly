@@ -1,33 +1,34 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export interface SelectedDateSiteIdState {
-  date: string | null;
+export interface SelectedDateSiteState {
   siteId: string | null;
+  fromdate: string | null;
+  todate: string | null;
 }
 
-export const initialState: SelectedDateSiteIdState = {
-  date: null,
+export const initialState: SelectedDateSiteState = {
   siteId: null,
+  fromdate: null,
+  todate: null,
 };
 
-export const selectedDateSiteIdSlice = createSlice({
+export const selectedDateSiteSlice = createSlice({
   name: "selectedDateSiteId",
   initialState,
   reducers: {
-    setDate(state, action: PayloadAction<string | null>) {
-      state.date = action.payload;
-    },
-    setSiteId(state, action: PayloadAction<string | null>) {
+    setSiteId(state, action: PayloadAction<string>) {
       state.siteId = action.payload;
     },
-    resetSelection(state) {
-      state.date = null;
-      state.siteId = null;
+    setFromDate(state, action: PayloadAction<string>) {
+      state.fromdate = action.payload;
+    },
+    setToDate(state, action: PayloadAction<string>) {
+      state.todate = action.payload;
     },
   },
 });
 
-export const { setDate, setSiteId, resetSelection } =
-  selectedDateSiteIdSlice.actions;
+export const { setSiteId, setFromDate, setToDate } =
+  selectedDateSiteSlice.actions;
 
-export default selectedDateSiteIdSlice.reducer;
+export default selectedDateSiteSlice.reducer;

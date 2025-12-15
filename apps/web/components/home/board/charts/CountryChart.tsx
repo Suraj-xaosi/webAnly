@@ -8,7 +8,7 @@ type cc= {
 };
 export default function CountryChart() {
 
-  const countryChartdata = useAppSelector((state) => state.analytics.countries);
+  const countryChartdata = useAppSelector((state) => state.breakdown.data.country);
   if (!countryChartdata || countryChartdata.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 bg-white/10 rounded-xl shadow-inner text-gray-300 text-lg font-medium">

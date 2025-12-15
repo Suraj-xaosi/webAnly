@@ -13,82 +13,169 @@ const consumer = kafka.consumer({
   groupId: process.env.KAFKA_GROUP_ID || "event-processors",
 });
 
+function getHourBucket(date: Date) {
+  const d = new Date(date);
+  d.setUTCMinutes(0, 0, 0);
+  return d;
+}
+
+function getDayBucket(date: Date) {
+  const d = new Date(date);
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
+}
+
 async function run() {
-  console.log("Connecting to Kafka...");
   await consumer.connect();
+  await consumer.subscribe({
+    topic: process.env.TOPIC_NAME || "site-events",
+    fromBeginning: false,
+  });
 
-  const topic = process.env.TOPIC_NAME || "";
-  console.log(`Connected. Subscribing to topic '${topic}'...`);
-
-  await consumer.subscribe({ topic, fromBeginning: false });
+  console.log("✅ Kafka worker running");
 
   await consumer.run({
-    eachMessage: async ({ topic, partition, message }) => {
+    eachMessage: async ({ message }) => {
+      if (!message.value) return;
+
+      let eventData: any;
       try {
-        if (!message.value) {
-          console.warn("Message received but value is null");
-          return;
-        }
+        const parsed = JSON.parse(message.value.toString());
+        eventData = parsed.eventData || parsed;
+      } catch (err) {
+        console.error("❌ Invalid JSON message");
+        return;
+      }
 
-        const rawValue = message.value.toString();
-        console.log(`Raw message from Kafka: ${rawValue}`);
+      if (!eventData.siteId || !eventData.visitorId || !eventData.page) {
+        console.warn("⚠ Invalid event payload", eventData);
+        return;
+      }
 
-        let eventData;
+      const eventDate = eventData.date
+        ? new Date(eventData.date)
+        : new Date();
 
-        // Parse JSON safely
-        try {
-          const parsed = JSON.parse(rawValue);
+      const hour = getHourBucket(eventDate);
+      const day = getDayBucket(eventDate);
 
-          // Support both {eventData} wrapper or plain object
-          eventData = parsed.eventData || parsed;
-        } catch (err) {
-          console.error("❌ Failed to parse Kafka message JSON:", err);
-          return;
-        }
-
-        if (!eventData) {
-          console.warn("⚠ eventData missing in message");
-          return;
-        }
-
-        if (!eventData.siteId) {
-          console.warn("⚠ siteId missing:", eventData);
-          return;
-        }
-
-        console.log("Processing event:", eventData);
-
-        // Insert into dailyStat table
+      try {
+        /* ======================
+           1. RAW EVENT (ALWAYS)
+           ====================== */
         await prisma.dailyStat.create({
           data: {
             siteId: eventData.siteId,
-            visitorId:eventData.visitorId,
-            eventType: eventData.eventType || "unknown",
+            visitorId: eventData.visitorId,
+            eventType: eventData.eventType || "pageview",
+            date: eventDate,
             page: eventData.page,
             pageTitle: eventData.pageTitle || null,
             previousPage: eventData.previousPage || null,
-            os: eventData.os || null,
+            country: eventData.country || null,
             browser: eventData.browser || null,
             device: eventData.device || null,
-            country: eventData.country || null,
+            os: eventData.os || null,
             TimeSpent: eventData.timeSpent || null,
             IpAddress: eventData.ipAddress || null,
-
-            // Ensure date is always valid
-            date: eventData.date
-              ? new Date(eventData.date)
-              : new Date(),
           },
         });
+        console.log("✅ Raw event stored");
 
-        console.log("✅ Event processed successfully!");
-      } catch (error) {
-        console.error("❌ Error processing Kafka message:", error);
+        /* ======================
+           2. HOURLY VIEWS
+           ====================== */
+        await prisma.hourlySiteStat.upsert({
+          where: {
+            siteId_hour: {
+              siteId: eventData.siteId,
+              hour,
+            },
+          },
+          update: {
+            views: { increment: 1 },
+          },
+          create: {
+            siteId: eventData.siteId,
+            hour,
+            views: 1,
+            visitors: 0,
+          },
+        });
+          console.log("✅ Hourly views updated");
+        /* ======================
+           3. UNIQUE VISITOR / HOUR
+           ====================== */
+        try {
+          await prisma.hourlyVisitor.create({
+            data: {
+              siteId: eventData.siteId,
+              hour,
+              visitorId: eventData.visitorId,
+            },
+          });
+          console.log("✅ New visitor for the hour");
+          await prisma.hourlySiteStat.update({
+            where: {
+              siteId_hour: {
+                siteId: eventData.siteId,
+                hour,
+              },
+            },
+            data: {
+              visitors: { increment: 1 },
+            },
+          });
+        } catch {
+          console.log("ℹ️ something happend while updating hourly visitors");
+          // visitor already counted for this hour → ignore
+        }
+        console.log("✅ Hourly unique visitors updated");
+
+        /* ======================
+           4. DAILY BREAKDOWNS
+           ====================== */
+        const breakdowns = [
+          { type: "browser", key: eventData.browser },
+          { type: "country", key: eventData.country },
+          { type: "device", key: eventData.device },
+          { type: "os", key: eventData.os },
+          { type: "page", key: eventData.page },
+        ];
+
+        for (const b of breakdowns) {
+          if (!b.key) continue;
+
+          await prisma.dailyBreakdown.upsert({
+            where: {
+              siteId_date_type_key: {
+                siteId: eventData.siteId,
+                date: day,
+                type: b.type,
+                key: b.key,
+              },
+            },
+            update: {
+              views: { increment: 1 },
+            },
+            create: {
+              siteId: eventData.siteId,
+              date: day,
+              type: b.type,
+              key: b.key,
+              views: 1,
+            },
+          });
+        }
+        console.log("✅ Processed event", { siteId: eventData.siteId, visitorId: eventData.visitorId });
+
+      } catch (err) {
+        console.error("❌ Failed to process event", err);
       }
     },
   });
 }
 
 run().catch((err) => {
-  console.error("❌ Worker failed to start:", err);
+  console.error("❌ Worker crashed", err);
 });

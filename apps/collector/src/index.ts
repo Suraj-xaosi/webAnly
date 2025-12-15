@@ -54,7 +54,7 @@ app.post("/collect", async (req: Request, res: Response) => {
   const body = req.body || {};
   // Consider removing or redacting sensitive fields if logging in production
   // console.log("Incoming raw payload:", body);
-
+  console.log("Incoming event for siteId:", body.siteId || "unknown");
   const siteId = String(body.siteId || "");
   const siteName = String(body.siteName || ""); // Only store if needed later
   const page = String(body.pathname || ""); // preferred: pathname
@@ -69,7 +69,7 @@ app.post("/collect", async (req: Request, res: Response) => {
   const userAgent = req.get("user-agent") || String(body.userAgent || "");
 
   const ip = getClientIp(req);
-  const country = countryFromIp(ip);
+  const country = countryFromIp(ip) ||body.country || "Unknown";
 
   // Normalize date: accept ISO string, ms number, or fallback to now
   let date: Date;
@@ -109,7 +109,7 @@ app.post("/collect", async (req: Request, res: Response) => {
     os: body.os || "Unknown",
     timeSpent,
     date,
-    ipAddress: ip,
+    ipAddress: ip || body.ipAddress || "0.0.0.0",
   };
 
   // console.log("Collected event data:", eventData); // Remove or redact in production
@@ -119,7 +119,7 @@ app.post("/collect", async (req: Request, res: Response) => {
       topic: TOPIC_NAME,
       messages: [{ value: JSON.stringify(eventData) }],
     });
-
+    console.log("Event sent to Kafka:", eventData);
     return res.status(200).send("Event sent to Kafka");
   } catch (err) {
     console.error("Failed to send event to Kafka:", err);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { setSiteId, setDate } from "../../../store/slices/selectedDateSiteSlice";
+import { setSiteId, setFromDate, setToDate } from "../../../store/slices/selectedDateSiteSlice";
 import { useEffect, useState } from "react";
 
 export default function Header() {
@@ -9,32 +9,37 @@ export default function Header() {
 
   const sites = useAppSelector((s) => s.site.sites);
   const selectedSiteId = useAppSelector((s) => s.selectedDateSiteId.siteId);
-  const selectedDate = useAppSelector((s) => s.selectedDateSiteId.date);
+  const selectedDate = useAppSelector((s) => s.selectedDateSiteId.fromdate);
+  const todate = useAppSelector((s) => s.selectedDateSiteId.todate);
 
   // Local input state for date
-  const [dateInput, setDateInput] = useState("");
+  const [fromdateInput, setDateInput] = useState("");
+  const [todateInput, setToDateInput] = useState("");
 
   // Set default input = today's date OR redux date
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
 
     setDateInput(selectedDate || today || "");
+    setToDateInput(todate || today || "");
 
     // If redux has no date, set default date once
     if (!selectedDate) {
-      dispatch(setDate(today || ""));
+      dispatch(setFromDate(today || ""));
+      dispatch(setToDate(today || ""));
     }
   }, [selectedDate]);
 
   // Handle date submission
   const handleDateSubmit = () => {
-    if (!dateInput) return;
+    if (!fromdateInput || !todateInput) return;
 
     // yyyy-mm-dd validation
-    const isValid = /^\d{4}-\d{2}-\d{2}$/.test(dateInput);
+    const isValid = /^\d{4}-\d{2}-\d{2}$/.test(fromdateInput) && /^\d{4}-\d{2}-\d{2}$/.test(todateInput);
     if (!isValid) return alert("Please enter a valid date (YYYY-MM-DD)");
 
-    dispatch(setDate(dateInput));
+    dispatch(setFromDate(fromdateInput));
+    dispatch(setToDate(todateInput));
   };
 
     return (
@@ -60,14 +65,27 @@ export default function Header() {
           )}
 
           {/* Date Input */}
-          <input
-            type="date"
-            value={dateInput}
-            max={new Date().toISOString().split("T")[0]}
-            onChange={(e) => setDateInput(e.target.value)}
-            className="bg-[#A78BFA] text-white px-4 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full sm:w-auto transition"
-          />
+          <div>
+            from
+            <input
+              type="date"
+              value={fromdateInput}
+              max={new Date().toISOString().split("T")[0]}
+              onChange={(e) => setDateInput(e.target.value)}
+              className="bg-[#A78BFA] text-white px-4 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full sm:w-auto transition"
+            />
 
+          </div>
+          <div>
+            to
+            <input
+              type="date"
+              value={todateInput}
+              max={new Date().toISOString().split("T")[0]}
+              onChange={(e) => setToDateInput(e.target.value)}
+              className="bg-[#A78BFA] text-white px-4 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full sm:w-auto transition"
+            />
+          </div>
           {/* Apply Button */}
           <button
             onClick={handleDateSubmit}

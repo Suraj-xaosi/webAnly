@@ -66,7 +66,7 @@ export default function HomePage() {
           <Board />
         ) : (
           <h1 className="text-4xl font-extrabold p-12">
-            You don't have any domain added.
+            webAnly - Your Web Analytics Dashboard
           </h1>
         )}
       </main>

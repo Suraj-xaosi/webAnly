@@ -9,7 +9,7 @@ type dcd = {
 };
 
 export default function DevicesChart() {
-  const dChartdata = useAppSelector((state) => state.analytics.devices);
+  const dChartdata = useAppSelector((state) => state.breakdown.data.device);
   if (!dChartdata || dChartdata.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 bg-white/10 rounded-xl shadow-inner text-gray-300 text-lg font-medium">

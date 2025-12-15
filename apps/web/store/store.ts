@@ -1,16 +1,19 @@
 import { configureStore } from "@reduxjs/toolkit";
 
-import analyticsReducer from "./slices/analyticSlice";
 import selectedDateSiteIdReducer from "./slices/selectedDateSiteSlice";
 import siteReducer from "./slices/sitesSlice"
+import  breakdownReducer from "./slices/adv/breakdownSlice";
+
+import timeseriesReducer from "./slices/adv/timeseriesSlice";
+
 export const createStore = () => {
   return configureStore({
     reducer: {
       site: siteReducer,
-      analytics: analyticsReducer,
+      timeseries:timeseriesReducer,
       selectedDateSiteId: selectedDateSiteIdReducer,
-      
-
+      breakdown: breakdownReducer,
+     
     },
   });
 };

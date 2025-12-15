@@ -10,7 +10,7 @@ type PageData = {
 
 export default function PagesChart() {
 
-  const pageChartdata = useAppSelector((state) => state.analytics.pages);
+  const pageChartdata = useAppSelector((state) => state.breakdown.data.page);
   if (!pageChartdata || pageChartdata.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 bg-white/10 rounded-xl shadow-inner text-gray-300 text-lg font-medium">

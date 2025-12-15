@@ -13,11 +13,10 @@ model User {
   email     String   @unique
   password  String?
   createdAt DateTime @default(now())
-  sites     Site[]
 
-  // Add these 2 relations for OAuth + Sessions
-  accounts Account[]
-  sessions Session[]
+  sites     Site[]
+  accounts  Account[]
+  sessions  Session[]
 }
 
 model Account {
@@ -67,41 +66,66 @@ model Site {
   dailyStats DailyStat[]
 }
 
-/*model DailyStat {
-  id           String   @id @default(uuid())
-  siteId       String
-  eventType    String?
-  date         DateTime
-  previousPage String? //referrer: document.referrer 
-  page         String //pathname: window.location.pathname
-  pageTitle    String?
-  
-  country      String?
-  browser      String?
-  device       String?
-  os           String?
-  TimeSpent    Int? //timeSpent: custom implementation
-  
-  IpAddress    String? //ipAddress: custom implementation
-
-  site Site @relation(fields: [siteId], references: [id])
-}*/
-
+/* ===========================
+   RAW EVENTS (SOURCE OF TRUTH)
+   =========================== */
 model DailyStat {
   id           String   @id @default(uuid())
   siteId       String
-  visitorId    String   // ✅ new
+  visitorId    String
   eventType    String?
   date         DateTime
-  previousPage String?
   page         String
   pageTitle    String?
+  previousPage String?
   country      String?
   browser      String?
   device       String?
   os           String?
   TimeSpent    Int?
   IpAddress    String?
+
   site Site @relation(fields: [siteId], references: [id])
+
+  @@index([siteId, date])
+  @@index([siteId, visitorId])
+  @@index([siteId, page])
 }
 
+/* ===========================
+   HOURLY TIME-SERIES (FAST)
+   =========================== */
+model HourlySiteStat {
+  siteId   String
+  hour     DateTime
+  views    Int      @default(0)
+  visitors Int      @default(0)
+
+  @@id([siteId, hour])
+  @@index([siteId, hour])
+}
+
+/* ===========================
+   VISITOR DEDUP PER HOUR
+   =========================== */
+model HourlyVisitor {
+  siteId    String
+  hour      DateTime
+  visitorId String
+
+  @@id([siteId, hour, visitorId])
+}
+
+/* ===========================
+   DAILY BREAKDOWNS
+   =========================== */
+model DailyBreakdown {
+  siteId String
+  date   DateTime
+  type   String   // browser | country | device | os | page
+  key    String
+  views  Int      @default(0)
+
+  @@id([siteId, date, type, key])
+  @@index([siteId, date, type])
+}
