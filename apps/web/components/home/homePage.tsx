@@ -57,8 +57,7 @@ export default function HomePage() {
       {/* MAIN */}
       <main className="flex-1 overflow-auto">
 
-        {/* ✔ Header rendered only once */}
-        {sites.length > 0 && <Header />}
+        <Header />
 
         {sites.length > 0 ? (
           <Board />
@@ -71,3 +70,9 @@ export default function HomePage() {
     </div>
   );
 }
+
+
+
+/**
+ *  ✔
+ */

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import HomePage from "../components/home/homePage";
+import HomePage from "../Components/home/homePage";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 

@@ -1,9 +1,11 @@
 import express, { Request, Response } from "express";
 import { Kafka } from "kafkajs";
 import cors from "cors";
-import countryFromIp, { normalizeIp } from "./functions/countryFromIp.js";
+import countryFromIp from "./functions/countryFromIp.js";
+import getClientIp from "./functions/getClientIp.js";
 import dotenv from "dotenv";
-
+import parseTime  from "./functions/parseTimeSpent.js";
+import parseDate from "./functions/parseDate.js";
 dotenv.config();
 
 const TOPIC_NAME = process.env.TOPIC_NAME || "";
@@ -24,70 +26,33 @@ const kafka = new Kafka({
 });
 
 const producer = kafka.producer({
-  allowAutoTopicCreation: false, // prevents accidental topic creation
+  allowAutoTopicCreation: false, // just chill it only prevents accidental topic creation
 });
 
-function getClientIp(req: Request): string {
-  const xff = req.get("x-forwarded-for") || "";
-  //@ts-ignore
-  if (xff) return normalizeIp(xff.split(",")[0].trim());
-
-  const xr = req.get("x-real-ip");
-  if (xr) return normalizeIp(xr);
-
-  if (req.ip) return normalizeIp(req.ip);
-
-  // @ts-ignore
-  return normalizeIp(req.connection?.remoteAddress || "0.0.0.0");
-}
-
 app.post("/collect", async (req: Request, res: Response) => {
-  const body = req.body || {};
-
-  const siteId = String(body.siteId || "");
-  const siteName = String(body.siteName || ""); 
-  const page = String(body.pathname || ""); 
-
-  if (!siteId || !siteName || !page) {
+  const body = req.body || {}; 
+  if (!body.siteId || !body.page) {
     return res
       .status(400)
-      .send("Missing required: siteName or siteId or pathname");
+      .send("Missing required: siteId or pathname");
   }
 
   const referrer = String(body.referrer || body.referer || "");
-  const userAgent = req.get("user-agent") || String(body.userAgent || "");
-
   const ip = getClientIp(req);
   const country = countryFromIp(ip) ||body.country || "Unknown";
 
-  let date: Date;
-  if (body.ts) {
-    if (typeof body.ts === "string" || typeof body.ts === "number") {
-      const d = new Date(body.ts);
-      date = isNaN(d.getTime()) ? new Date() : d;
-    } else {
-      date = new Date();
-    }
-  } else {
-    date = new Date();
-  }
+  const date = parseDate(body.ts);
+  const timeSpent :number= parseTime(body.timeSpent);
 
-  let timeSpent = 0;
-  if (typeof body.timeSpent === "number") {
-    timeSpent = body.timeSpent;
-  } else if (typeof body.timeSpent === "string" && body.timeSpent.trim() !== "") {
-    const parsed = Number(body.timeSpent);
-    timeSpent = isNaN(parsed) ? 0 : parsed;
-  }
 
   const eventData = {
     eventType: body.eventType || "unknown",
-    siteId,
+    siteId:body.siteId,
     visitorId: body.visitorId || null,
     currentUrl: body.currentUrl || null,
     pageTitle: body.pageTitle || null,
     country,
-    page,
+    page:body.page,
     previousPage: referrer || null,
     browser: body.browser || "Unknown",
     device: body.device || "Unknown",
@@ -100,12 +65,12 @@ app.post("/collect", async (req: Request, res: Response) => {
   try {
     await producer.send({
       topic: TOPIC_NAME,
-      messages: [{ value: JSON.stringify(eventData) }],
+      messages: [{key: body.siteId, value: JSON.stringify(eventData) }],
     });
-    console.log("Event sent to Kafka:", eventData);
+    
     return res.status(200).send("Event sent to Kafka");
+    
   } catch (err) {
-    console.error("Failed to send event to Kafka:", err);
     return res.status(500).send("Failed to send event to Kafka.");
   }
 });

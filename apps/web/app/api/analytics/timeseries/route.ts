@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/db";
 
+const INTERVAL_DATE_TRUNC_MAP: Record<string, string> = {
+  day: "day",
+  week: "week",
+  month: "month",
+};
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -17,7 +23,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    if (!["day", "week", "month"].includes(interval)) {
+    const dateTrunc = INTERVAL_DATE_TRUNC_MAP[interval];
+    if (!dateTrunc) {
       return NextResponse.json(
         { error: "Invalid interval" },
         { status: 400 }
@@ -27,13 +34,6 @@ export async function GET(req: NextRequest) {
     const fromDate = new Date(from);
     const toDate = new Date(to);
     toDate.setHours(23, 59, 59, 999);
-
-    const dateTrunc =
-      interval === "day"
-        ? "day"
-        : interval === "week"
-        ? "week"
-        : "month";
 
     const rows = await prisma.$queryRaw<
       {

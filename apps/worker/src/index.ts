@@ -1,6 +1,6 @@
 import { Kafka } from "kafkajs";
 import dotenv from "dotenv";
-import { prisma } from "@repo/db";
+import dumpInDB from "./functions/dumpInDB.js";
 
 dotenv.config();
 
@@ -12,18 +12,6 @@ const kafka = new Kafka({
 const consumer = kafka.consumer({
   groupId: process.env.KAFKA_GROUP_ID || "event-processors",
 });
-
-function getHourBucket(date: Date) {
-  const d = new Date(date);
-  d.setUTCMinutes(0, 0, 0);
-  return d;
-}
-
-function getDayBucket(date: Date) {
-  const d = new Date(date);
-  d.setUTCHours(0, 0, 0, 0);
-  return d;
-}
 
 async function run() {
   await consumer.connect();
@@ -51,115 +39,7 @@ async function run() {
         console.warn("⚠ Invalid event payload", eventData);
         return;
       }
-
-      const eventDate = eventData.date
-        ? new Date(eventData.date)
-        : new Date();
-
-      const hour = getHourBucket(eventDate);
-      const day = getDayBucket(eventDate);
-
-      try {
-        await prisma.dailyStat.create({
-          data: {
-            siteId: eventData.siteId,
-            visitorId: eventData.visitorId,
-            eventType: eventData.eventType || "pageview",
-            date: eventDate,
-            page: eventData.page,
-            pageTitle: eventData.pageTitle || null,
-            previousPage: eventData.previousPage || null,
-            country: eventData.country || null,
-            browser: eventData.browser || null,
-            device: eventData.device || null,
-            os: eventData.os || null,
-            TimeSpent: eventData.timeSpent || null,
-            IpAddress: eventData.ipAddress || null,
-          },
-        });
-        console.log("✅ Raw event stored");
-
-        await prisma.hourlySiteStat.upsert({
-          where: {
-            siteId_hour: {
-              siteId: eventData.siteId,
-              hour,
-            },
-          },
-          update: {
-            views: { increment: 1 },
-          },
-          create: {
-            siteId: eventData.siteId,
-            hour,
-            views: 1,
-            visitors: 0,
-          },
-        });
-          console.log("✅ Hourly views updated");
-
-        try {
-          await prisma.hourlyVisitor.create({
-            data: {
-              siteId: eventData.siteId,
-              hour,
-              visitorId: eventData.visitorId,
-            },
-          });
-          console.log("✅ New visitor for the hour");
-          await prisma.hourlySiteStat.update({
-            where: {
-              siteId_hour: {
-                siteId: eventData.siteId,
-                hour,
-              },
-            },
-            data: {
-              visitors: { increment: 1 },
-            },
-          });
-        } catch {
-          console.log("ℹ️ something happend while updating hourly visitors");
-        }
-        console.log("✅ Hourly unique visitors updated");
-
-        const breakdowns = [
-          { type: "browser", key: eventData.browser },
-          { type: "country", key: eventData.country },
-          { type: "device", key: eventData.device },
-          { type: "os", key: eventData.os },
-          { type: "page", key: eventData.page },
-        ];
-
-        for (const b of breakdowns) {
-          if (!b.key) continue;
-
-          await prisma.dailyBreakdown.upsert({
-            where: {
-              siteId_date_type_key: {
-                siteId: eventData.siteId,
-                date: day,
-                type: b.type,
-                key: b.key,
-              },
-            },
-            update: {
-              views: { increment: 1 },
-            },
-            create: {
-              siteId: eventData.siteId,
-              date: day,
-              type: b.type,
-              key: b.key,
-              views: 1,
-            },
-          });
-        }
-        console.log("✅ Processed event", { siteId: eventData.siteId, visitorId: eventData.visitorId });
-
-      } catch (err) {
-        console.error("❌ Failed to process event", err);
-      }
+      await dumpInDB(eventData);
     },
   });
 }
@@ -167,3 +47,12 @@ async function run() {
 run().catch((err) => {
   console.error("❌ Worker crashed", err);
 });
+
+
+/**
+ * saving it  for later 
+ * ❌
+ * ✅
+ * ⚠ 
+ * ℹ️
+ */

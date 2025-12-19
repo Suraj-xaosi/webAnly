@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useAppSelector } from "../../../../store/hooks";
-import { removeSite } from "../../../../lib/sActions/removeSite"; // <-- your server action
+import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
+import { removeSite } from "../../../../lib/sActions/removeSite"; 
+import { fetchSiteInfo } from "../../../../store/slices/sitesSlice";
 
 export default function Sites() {
   const sites = useAppSelector((s) => s.site.sites);
-
+  const dispatch = useAppDispatch();
   const [open, setOpen] = useState(false);
   const [selectedSite, setSelectedSite] = useState<any>(null);
   const [deleting, setDeleting] = useState(false);
@@ -26,6 +27,7 @@ export default function Sites() {
       alert("Site removed successfully!");
       setOpen(false);
       setSelectedSite(null);
+      dispatch(fetchSiteInfo());
     } catch (err) {
       alert("Failed to delete site.");
     } finally {
@@ -93,3 +95,8 @@ export default function Sites() {
     </div>
   );
 }
+
+
+/**
+ * 🔥
+ */

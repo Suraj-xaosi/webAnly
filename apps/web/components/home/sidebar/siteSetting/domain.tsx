@@ -1,6 +1,5 @@
 import { useState } from "react";
 import Sites from "./sites";
-
 export default function Domain() {
     const [open, setOpen] = useState(false);
     return (
@@ -25,8 +24,7 @@ export default function Domain() {
                     >
                         X 
                     </div> 
-                    
-                    <Sites/>
+                      <Sites/>
                     </div>
                 </div>
             )}
