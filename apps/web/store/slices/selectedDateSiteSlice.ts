@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export type intervals= "day" | "week" |"month"
+export type intervals= "hour" |"day" | "week" |"month"
 
 export interface SelectedDateSiteState {
   siteId: string | null;
@@ -15,7 +15,7 @@ export const initialState: SelectedDateSiteState = {
   siteId: null,
   fromdate: today,
   todate: today,
-  interval: "day"
+  interval: "hour"
 };
 
 export const selectedDateSiteSlice = createSlice({
@@ -34,7 +34,10 @@ export const selectedDateSiteSlice = createSlice({
     setInterval(state, action:PayloadAction<string>){
       if(action.payload==="day"){
         state.interval="day";
-      }else if(action.payload==="week"){
+      }else if(action.payload==="hour"){
+        state.interval="hour";
+      }
+      else if(action.payload==="week"){
         state.interval="week";
       }else if( action.payload==="month"){
         state.interval="month";

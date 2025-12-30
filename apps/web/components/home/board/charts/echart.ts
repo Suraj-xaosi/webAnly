@@ -17,17 +17,19 @@ import {
   TransformComponent,
   VisualMapComponent,
   ToolboxComponent,
+  GeoComponent, 
 } from "echarts/components";
 
 import { CanvasRenderer } from "echarts/renderers";
 
-// Register only what you use across all charts
 echarts.use([
   LineChart,
   BarChart,
   PieChart,
   MapChart,
   ScatterChart,
+
+  // components
   TitleComponent,
   TooltipComponent,
   GridComponent,
@@ -36,6 +38,8 @@ echarts.use([
   TransformComponent,
   VisualMapComponent,
   ToolboxComponent,
+  GeoComponent, 
+
   CanvasRenderer,
 ]);
 

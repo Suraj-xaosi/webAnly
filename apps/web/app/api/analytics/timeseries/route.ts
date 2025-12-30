@@ -5,6 +5,7 @@ const INTERVAL_DATE_TRUNC_MAP: Record<string, string> = {
   day: "day",
   week: "week",
   month: "month",
+  hour: "hour",
 };
 
 export async function GET(req: NextRequest) {
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
     const siteId = searchParams.get("siteId");
     const from = searchParams.get("from");
     const to = searchParams.get("to");
-    const interval = searchParams.get("interval") || "day";
+    const interval = searchParams.get("interval") || "hour";
 
     if (!siteId || !from || !to) {
       return NextResponse.json(

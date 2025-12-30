@@ -29,7 +29,7 @@ export const fetchTimeseries = createAsyncThunk(
     siteId: string;
     from: string;
     to: string;
-    interval: "day" | "week" | "month";
+    interval: "hour" |"day" | "week" | "month";
   }) => {
     const res = await fetch(
       `/api/analytics/timeseries?siteId=${siteId}&from=${from}&to=${to}&interval=${interval}`

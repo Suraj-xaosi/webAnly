@@ -58,8 +58,7 @@ app.post("/collect", async (req: Request, res: Response) => {
     device: body.device || "Unknown",
     os: body.os || "Unknown",
     timeSpent,
-    date,
-    ipAddress: ip || body.ipAddress || "0.0.0.0",
+    date
   };
 
   try {

@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     const from = searchParams.get("from");
     const to = searchParams.get("to");
     const dimension = searchParams.get("dimension");
-    const limit = Number(searchParams.get("limit") || 10);
+    //const limit = Number(searchParams.get("limit") || 10);
 
     if (!siteId || !from || !to || !dimension) {
       return NextResponse.json(
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
         AND "date" <= ${toDate}
       GROUP BY 1
       ORDER BY views DESC
-      LIMIT ${limit}
+      LIMIT 1000
     `;
 
     const data = rows.map((row) => ({

@@ -95,6 +95,7 @@ export default function Header() {
                 className="bg-[#A78BFA] text-white px-4 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full sm:w-auto transition"
               >
                 <option value="day">Day</option>
+                <option value="hour">hour</option>
                 <option value="week">Week</option>
                 <option value="month">Month</option>
               </select>

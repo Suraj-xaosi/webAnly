@@ -39,7 +39,7 @@ async function run() {
         console.warn("⚠ Invalid event payload", eventData);
         return;
       }
-      await dumpInDB(eventData);
+      dumpInDB(eventData);
     },
   });
 }

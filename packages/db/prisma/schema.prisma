@@ -65,14 +65,8 @@ model Site {
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   dailyStats DailyStat[]
-  hourlyStats     HourlySiteStat[]
-  hourlyVisitors  HourlyVisitor[]
-  dailyBreakdowns DailyBreakdown[]
 }
 
-/* ===========================
-   RAW EVENTS (SOURCE OF TRUTH)
-   =========================== */
 model DailyStat {
   id           String   @id @default(uuid())
   siteId       String
@@ -87,7 +81,6 @@ model DailyStat {
   device       String?
   os           String?
   TimeSpent    Int?
-  IpAddress    String?
 
   site Site @relation(fields: [siteId], references: [id],onDelete: Cascade)
 
@@ -96,47 +89,4 @@ model DailyStat {
   @@index([siteId, page])
 }
 
-/* ===========================
-   HOURLY TIME-SERIES (FAST)
-   =========================== */
-model HourlySiteStat {
-  siteId   String
-  hour     DateTime
-  views    Int @default(0)
-  visitors Int @default(0)
 
-  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
-
-  @@id([siteId, hour])
-  @@index([siteId, hour])
-}
-
-
-/* ===========================
-   VISITOR DEDUP PER HOUR
-   =========================== */
-model HourlyVisitor {
-  siteId    String
-  hour      DateTime
-  visitorId String
-  
-  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
-
-  @@id([siteId, hour, visitorId])
-}
-
-/* ===========================
-   DAILY BREAKDOWNS
-   =========================== */
-model DailyBreakdown {
-  siteId String
-  date   DateTime
-  type   String   // browser | country | device | os | page
-  key    String
-  views  Int      @default(0)
-
-  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
-
-  @@id([siteId, date, type, key])
-  @@index([siteId, date, type])
-}
