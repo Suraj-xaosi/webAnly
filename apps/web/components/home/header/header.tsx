@@ -14,119 +14,145 @@ export default function Header() {
   // Local input state for date
   const [fromdateInput, setDateInput] = useState("");
   const [todateInput, setToDateInput] = useState("");
-  const [interval, setlocalInterval] = useState("day");
+  const [interval, setlocalInterval] = useState("hour");
 
   const handleDateSubmit = () => {
     if (!fromdateInput || !todateInput || !interval) return;
-
+    if (new Date(fromdateInput) > new Date(todateInput)) {
+      alert("'From' date cannot be later than 'To' date.");
+      return;
+    }
+    
     dispatch(setFromDate(fromdateInput));
-    dispatch(setToDate(todateInput));
+
+    if(interval === "hour"){
+      alert("Hour interval selected, data to will be set to 'From' date.");
+      dispatch(setToDate(fromdateInput));
+    }else{
+      dispatch(setToDate(todateInput));
+    }
+    
     dispatch(setInterval(interval));
     alert("Date range and interval updated!");
     setOpened(false);
   };
 
   return (
-      <header className="w-full flex flex-col sm:flex-row bg-[#6F42C1] justify-between items-center px-4 sm:px-8 py-4 text-white shadow-lg shadow-purple-800/30 gap-4 sm:gap-0">
-        {/* Left: Brand */}
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-wide drop-shadow mb-2 sm:mb-0">webAnly</h1>
+    <header className="w-full bg-gradient-to-r from-[#6F42C1] to-[#8B5CF6] shadow-lg shadow-purple-800/30 px-4 sm:px-8 py-4 flex items-center justify-between relative">
+      {/* Left: Brand */}
+      <h1 className="text-3xl font-extrabold tracking-wide drop-shadow text-white">webAnly</h1>
 
-        {/* Right Controls */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => setOpened(!opened)}
-          className="text-white bg-purple-700 hover:bg-purple-800 rounded-lg p-2 absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 cursor-pointer transition"
-        >
-          Controls
-        </div>
-        {opened && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center  p-6 backdrop-blur-sm">
-          <div className="bg-[#8B5CF6] backdrop-blur-xl p-6 w-[320px] rounded-2xl shadow-2xl animate-pop border border-purple-200">
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={()=>setOpened(false)}
-              className="absolute top-2 right-2 text-white bg-#8B5CF6] hover:bg-[#6F42C1] rounded-sm font-semibold p-2 "
+      {/* Right Controls Button */}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setOpened(!opened)}
+        className="text-white bg-gradient-to-r from-[#8B5CF6] to-[#6F42C1] hover:from-[#6F42C1] hover:to-[#8B5CF6] rounded-xl px-5 py-2 font-semibold shadow-md transition absolute right-4 top-4 sm:static sm:right-0 sm:top-0 cursor-pointer"
+      >
+        Controls
+      </div>
+
+      {/* Controls Modal */}
+      {opened && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="relative bg-gradient-to-br from-[#8B5CF6] to-[#6F42C1] p-8 w-full max-w-md rounded-3xl shadow-2xl animate-pop border border-purple-200 flex flex-col gap-6">
+            {/* Close Button */}
+            <button
+              onClick={() => setOpened(false)}
+              className="absolute top-4 right-4 text-white bg-[#6F42C1] hover:bg-[#8B5CF6] rounded-full font-bold p-2 w-8 h-8 flex items-center justify-center shadow-md transition"
+              aria-label="Close controls"
             >
-              X 
-            </div>
+              ×
+            </button>
+
+            <h2 className="text-2xl font-bold text-white mb-2 text-center">Controls</h2>
+
             {/* Site Selector */}
             {sites.length > 0 && (
-              <select
-                value={selectedSiteId || ""}
-                onChange={(e) => dispatch(setSiteId(e.target.value))}
-                className="bg-[#A78BFA] text-white px-4 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full sm:w-auto transition"
-              >
-                {sites.map((site) => (
-                  <option key={site.id} value={site.id} className="text-black">
-                    {site.domain}
-                  </option>
-                ))}
-              </select>
+              <div className="mb-2">
+                <label className="block text-white font-semibold mb-2">Select Site:</label>
+                <select
+                  value={selectedSiteId || ""}
+                  onChange={(e) => dispatch(setSiteId(e.target.value))}
+                  className="bg-[#A78BFA] text-white px-4 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full transition"
+                >
+                  {sites.map((site) => (
+                    <option key={site.id} value={site.id} className="text-black">
+                      {site.domain}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
+
             {/* Date Input */}
-            <div>
-              from
-              <input
-                type="date"
-                value={fromdateInput}
-                max={new Date().toISOString().split("T")[0]}
-                onChange={(e) => setDateInput(e.target.value)}
-                className="bg-[#A78BFA] text-white px-4 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full sm:w-auto transition"
-              />
+            <div className="flex flex-col gap-4">
+              <label className="text-white font-semibold">Select Dates:</label>
+              <div className="flex gap-2">
+                <div className="flex flex-col w-1/2">
+                  <span className="text-sm text-white mb-1">From</span>
+                  <input
+                    type="date"
+                    value={fromdateInput}
+                    max={new Date().toISOString().split("T")[0]}
+                    onChange={(e) => setDateInput(e.target.value)}
+                    className="bg-[#A78BFA] text-white px-3 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full transition"
+                  />
+                </div>
+                <div className="flex flex-col w-1/2">
+                  <span className="text-sm text-white mb-1">To</span>
+                  <input
+                    type="date"
+                    value={todateInput}
+                    max={new Date().toISOString().split("T")[0]}
+                    onChange={(e) => setToDateInput(e.target.value)}
+                    className="bg-[#A78BFA] text-white px-3 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full transition"
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              to
-              <input
-                type="date"
-                value={todateInput}
-              max={new Date().toISOString().split("T")[0]}
-              onChange={(e) => setToDateInput(e.target.value)}
-              className="bg-[#A78BFA] text-white px-4 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full sm:w-auto transition"
-              />
-            </div>
-            {/*interval */}
-            <div>
-              Interval
+
+            {/* Interval Selector */}
+            <div className="flex flex-col gap-2">
+              <label className="text-white font-semibold">Interval</label>
               <select
                 value={interval}
                 onChange={(e) => setlocalInterval(e.target.value)}
-                className="bg-[#A78BFA] text-white px-4 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full sm:w-auto transition"
+                className="bg-[#A78BFA] text-white px-4 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full transition"
               >
                 <option value="day">Day</option>
-                <option value="hour">hour</option>
+                <option value="hour">Hour</option>
                 <option value="week">Week</option>
                 <option value="month">Month</option>
               </select>
             </div>
+
             {/* Apply Button */}
             <button
               onClick={handleDateSubmit}
-              className="bg-gradient-to-r from-[#8B5CF6] to-[#6F42C1] hover:from-[#6F42C1] hover:to-[#8B5CF6] px-6 py-2 rounded-lg font-semibold shadow-md transition text-white w-full sm:w-auto"
+              className="bg-gradient-to-r from-[#8B5CF6] to-[#6F42C1] hover:from-[#6F42C1] hover:to-[#8B5CF6] px-6 py-2 rounded-xl font-semibold shadow-md transition text-white w-full mt-2"
             >
               Apply
             </button>
           </div>
-          </div>
-        )}
-        <style jsx>{`
-          .animate-pop {
-            animation: pop 0.25s ease-out;
-          }
+        </div>
+      )}
+      <style jsx>{`
+        .animate-pop {
+          animation: pop 0.25s ease-out;
+        }
 
-         @keyframes pop {
+        @keyframes pop {
           from {
             transform: scale(0.85);
-              opacity: 0;
+            opacity: 0;
           }
           to {
             transform: scale(1);
             opacity: 1;
           }
-        }`
         }
-        </style>
-      </header>
+      `}</style>
+    </header>
   );
 }

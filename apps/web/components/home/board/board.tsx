@@ -13,7 +13,7 @@ import { fetchTimeseries } from "../../../store/slices/adv/timeseriesSlice";
 import { fetchBreakdown } from "../../../store/slices/adv/breakdownSlice";
 
 
-const POLL_INTERVAL = 9999; // 30 seconds
+const POLL_INTERVAL = 30000; // 30 seconds
 
 export default function Dashboard() {
   const dispatch = useAppDispatch();

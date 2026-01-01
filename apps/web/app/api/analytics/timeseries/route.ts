@@ -32,7 +32,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const fromDate = new Date(from);
+    let fromDate = new Date(from);
+    fromDate.setHours(0, 0, 0, 0);
     const toDate = new Date(to);
     toDate.setHours(23, 59, 59, 999);
 
@@ -55,13 +56,23 @@ export async function GET(req: NextRequest) {
       GROUP BY 1
       ORDER BY 1 ASC
     `;
-
-    const data = rows.map((row) => ({
-      date: row.date.toISOString().split("T")[0],
-      views: row.views,
-      visitors: row.visitors,
-    }));
-    console.log("TimeSeries data fetched:", { siteId, from, to, interval, dataLength: data.length });
+    console.log("Raw timeseries rows:", rows);
+    function mapData() {
+      if (interval === "hour"){
+        return rows.map((row) => ({
+          date: String(row.date.getHours()),
+          views: row.views,
+          visitors: row.visitors,
+        }));
+      }
+      return rows.map((row) => ({
+        date: row.date.toISOString().split("T")[0],
+        views: row.views,
+        visitors: row.visitors,
+      }));
+    }
+    const data = mapData();
+    console.log("TimeSeries data fetched:", { siteId, from, to, interval, data: data });
 
     return NextResponse.json({
       interval,

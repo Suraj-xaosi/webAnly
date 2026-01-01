@@ -11,6 +11,7 @@ type chd = {
 
 export default function ViewsChart() {
   const chartdata = useAppSelector((state) => state.timeseries.data);
+  
   if (!chartdata || chartdata.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 bg-white/10 rounded-xl shadow-inner text-gray-300 text-lg font-medium">
