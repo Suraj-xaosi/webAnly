@@ -1,8 +1,12 @@
 "use client";
 
+
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { setSiteId, setFromDate, setToDate ,setInterval} from "../../../store/slices/selectedDateSiteSlice";
 import { useEffect, useState } from "react";
+import PopupCard from "../../appComponents/cards/popupCard";
+import AppInput from "../../appComponents/input/appInput";
+import { AppButton } from "../../appComponents/buttons/appButton";
 
 export default function Header() {
   const dispatch = useAppDispatch();
@@ -53,90 +57,72 @@ export default function Header() {
       </div>
 
       {/* Controls Modal */}
-      {opened && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="relative bg-gradient-to-br from-[#8B5CF6] to-[#6F42C1] p-8 w-full max-w-md rounded-3xl shadow-2xl animate-pop border border-purple-200 flex flex-col gap-6">
-            {/* Close Button */}
-            <button
-              onClick={() => setOpened(false)}
-              className="absolute top-4 right-4 text-white bg-[#6F42C1] hover:bg-[#8B5CF6] rounded-full font-bold p-2 w-8 h-8 flex items-center justify-center shadow-md transition"
-              aria-label="Close controls"
+      <PopupCard open={opened} onClose={() => setOpened(false)}>
+        <h2 className="text-2xl font-bold text-white mb-2 text-center">Controls</h2>
+        {/* Site Selector */}
+        {sites.length > 0 && (
+          <div className="mb-2">
+            <label className="block text-white font-semibold mb-2">Select Site:</label>
+            <select
+              value={selectedSiteId || ""}
+              onChange={(e) => dispatch(setSiteId(e.target.value))}
+              className="bg-[#A78BFA] text-white px-4 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full transition"
             >
-              ×
-            </button>
-
-            <h2 className="text-2xl font-bold text-white mb-2 text-center">Controls</h2>
-
-            {/* Site Selector */}
-            {sites.length > 0 && (
-              <div className="mb-2">
-                <label className="block text-white font-semibold mb-2">Select Site:</label>
-                <select
-                  value={selectedSiteId || ""}
-                  onChange={(e) => dispatch(setSiteId(e.target.value))}
-                  className="bg-[#A78BFA] text-white px-4 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full transition"
-                >
-                  {sites.map((site) => (
-                    <option key={site.id} value={site.id} className="text-black">
-                      {site.domain}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Date Input */}
-            <div className="flex flex-col gap-4">
-              <label className="text-white font-semibold">Select Dates:</label>
-              <div className="flex gap-2">
-                <div className="flex flex-col w-1/2">
-                  <span className="text-sm text-white mb-1">From</span>
-                  <input
-                    type="date"
-                    value={fromdateInput}
-                    max={new Date().toISOString().split("T")[0]}
-                    onChange={(e) => setDateInput(e.target.value)}
-                    className="bg-[#A78BFA] text-white px-3 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full transition"
-                  />
-                </div>
-                <div className="flex flex-col w-1/2">
-                  <span className="text-sm text-white mb-1">To</span>
-                  <input
-                    type="date"
-                    value={todateInput}
-                    max={new Date().toISOString().split("T")[0]}
-                    onChange={(e) => setToDateInput(e.target.value)}
-                    className="bg-[#A78BFA] text-white px-3 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full transition"
-                  />
-                </div>
-              </div>
+              {sites.map((site) => (
+                <option key={site.id} value={site.id} className="text-black">
+                  {site.domain}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {/* Date Input */}
+        <div className="flex flex-col gap-4">
+          <label className="text-white font-semibold">Select Dates:</label>
+          <div className="flex gap-2">
+            <div className="flex flex-col w-1/2">
+              <span className="text-sm text-white mb-1">From</span>
+              <AppInput
+                type="date"
+                value={fromdateInput}
+                max={new Date().toISOString().split("T")[0]}
+                onChange={(e) => setDateInput(e.target.value)}
+                className="bg-[#A78BFA] text-white px-3 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full transition"
+                name="fromdate"
+              />
             </div>
-
-            {/* Interval Selector */}
-            <div className="flex flex-col gap-2">
-              <label className="text-white font-semibold">Interval</label>
-              <select
-                value={interval}
-                onChange={(e) => setlocalInterval(e.target.value)}
-                className="bg-[#A78BFA] text-white px-4 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full transition"
-              >
-                <option value="day">Day</option>
-                <option value="hour">Hour</option>
-                <option value="week">Week</option>
-                <option value="month">Month</option>
-              </select>
+            <div className="flex flex-col w-1/2">
+              <span className="text-sm text-white mb-1">To</span>
+              <AppInput
+                type="date"
+                value={todateInput}
+                max={new Date().toISOString().split("T")[0]}
+                onChange={(e) => setToDateInput(e.target.value)}
+                className="bg-[#A78BFA] text-white px-3 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full transition"
+                name="todate"
+              />
             </div>
-
-            {/* Apply Button */}
-            <button
-              onClick={handleDateSubmit}
-              className="bg-gradient-to-r from-[#8B5CF6] to-[#6F42C1] hover:from-[#6F42C1] hover:to-[#8B5CF6] px-6 py-2 rounded-xl font-semibold shadow-md transition text-white w-full mt-2"
-            >
-              Apply
-            </button>
           </div>
         </div>
-      )}
+        {/* Interval Selector */}
+        <div className="flex flex-col gap-2">
+          <label className="text-white font-semibold">Interval</label>
+          <select
+            value={interval}
+            onChange={(e) => setlocalInterval(e.target.value)}
+            className="bg-[#A78BFA] text-white px-4 py-2 rounded-lg border border-purple-400 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm w-full transition"
+          >
+            <option value="day">Day</option>
+            <option value="hour">Hour</option>
+            <option value="week">Week</option>
+            <option value="month">Month</option>
+          </select>
+        </div>
+        {/* Apply Button */}
+        <AppButton type="button" onClick={handleDateSubmit} className="mt-2">
+          Apply
+        </AppButton>
+      </PopupCard>
       <style jsx>{`
         .animate-pop {
           animation: pop 0.25s ease-out;
