@@ -42,7 +42,7 @@ export default function Header() {
       {/* Left: Brand */}
       <h1 className="text-3xl font-extrabold tracking-wide drop-shadow text-white">webAnly</h1>
 
-      {/* Right Controls Button */}
+      {/* Controls Button */}
       <div
         role="button"
         tabIndex={0}

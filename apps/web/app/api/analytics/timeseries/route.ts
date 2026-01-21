@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    let fromDate = new Date(from);
+    const fromDate = new Date(from);
     fromDate.setHours(0, 0, 0, 0);
     const toDate = new Date(to);
     toDate.setHours(23, 59, 59, 999);
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
     function mapData() {
       if (interval === "hour"){
         return rows.map((row) => ({
-          date: String(row.date.getHours()),
+          date: String(row.date.getUTCHours()),
           views: row.views,
           visitors: row.visitors,
         }));
