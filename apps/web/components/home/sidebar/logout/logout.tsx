@@ -19,8 +19,8 @@ export default function LogoutLogic() {
 				sure! you want to log out ?
 			</p>
 			<div className="flex gap-3 justify-center">
-				<AppButton type="button" onClick={() => {}} className="bg-[#6F42C1]">Cancel</AppButton>
-				<AppButton type="button" onClick={handleLogout} loading={logoutLoading} className="bg-[#6F42C1] animate-bounce">Yes, Logout</AppButton>
+				<AppButton type="button" onClick={() => {}}>Cancel</AppButton>
+				<AppButton type="button" onClick={handleLogout} loading={logoutLoading}>Yes, Logout</AppButton>
 			</div>
 		</SidebarButton>
 	);

@@ -58,12 +58,12 @@ export default function LoginPage() {
             disabled={loading}
             name="password"
           />
-          <AppButton type="submit" loading={loading} className="animate-bounce">
+          <AppButton type="submit" loading={loading}>
             Login
           </AppButton>
         </form>
         {/* Error Popup */}
-        <PopupCard open={!!error} onClose={() => setError("")}> 
+        <PopupCard open={!!error} onClose={() => setError("")}>
           <div className="text-red-300 text-sm bg-red-500/10 p-2 rounded-lg text-center">
             {error}
           </div>
@@ -73,14 +73,12 @@ export default function LoginPage() {
           <AppButton
             type="button"
             onClick={() => signIn("google")}
-            className="bg-[#8B5CF6] hover:bg-[#6F42C1] border border-white/30"
           >
             Continue with Google
           </AppButton>
           <AppButton
             type="button"
             onClick={() => signIn("github")}
-            className="bg-[#8B5CF6] hover:bg-[#6F42C1]"
           >
             Continue with GitHub
           </AppButton>
