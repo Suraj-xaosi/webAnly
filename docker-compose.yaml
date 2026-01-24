@@ -1,72 +1,83 @@
 services:
   postgres:
     image: postgres:16
-    container_name: postgres
-    env_file:
-      - .env
+    container_name: webanly-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: suraj
+      POSTGRES_PASSWORD: surajpassword
+      POSTGRES_DB: webAnlyDB
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
 
-  kafka:
-    image: apache/kafka:3.7.1
-    container_name: kafka
+  redpanda:
+    image: redpandadata/redpanda:latest
+    container_name: webanly-redpanda
+    restart: unless-stopped
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp
+      - "1"
+      - --memory
+      - "1G"
+      - --reserve-memory
+      - "0M"
+      - --node-id
+      - "0"
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr
+      - PLAINTEXT://redpanda:9092
     ports:
       - "9092:9092"
-    environment:
-      KAFKA_KRAFT_MODE: "true"
-      KAFKA_BROKER_ID: 1
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
-      KAFKA_PROCESS_ROLES: "broker,controller"
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_NUM_PARTITIONS: 1
-      KAFKA_LOG_DIRS: /var/lib/kafka/data
-    volumes:
-      - kafka_data:/var/lib/kafka/data
-
-  collector:
-    container_name: collector
-    build:
-      context: .                             # 👈 repo root
-      dockerfile: ./apps/collector/Dockerfile
-    env_file:
-      - .env
-    environment:
-      NODE_ENV: production
-    depends_on:
-      - postgres
-      - kafka
-    ports:
-      - "4000:4000"
-
-  worker:
-    container_name: worker
-    build:
-      context: .                             # 👈 repo root
-      dockerfile: ./apps/worker/Dockerfile
-    env_file:
-      - .env
-    environment:
-      NODE_ENV: production
-    depends_on:
-      - postgres
-      - kafka
 
   web:
-    container_name: web
     build:
-      context: .                             # 👈 repo root
-      dockerfile: ./apps/web/Dockerfile
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: webanly-web
     env_file:
-      - ./apps/web/.env.local
-    environment:
-      NODE_ENV: production
+      - ./apps/web/.env
+      - ./packages/db/.env
+    depends_on:
+      postgres:
+        condition: service_started
+      redpanda:
+        condition: service_started
     ports:
       - "3000:3000"
 
+  collector:
+    build:
+      context: .
+      dockerfile: Dockerfile.collector
+    container_name: webanly-collector
+    env_file:
+      - ./apps/collector/.env
+      - ./packages/db/.env
+    depends_on:
+      postgres:
+        condition: service_started
+      redpanda:
+        condition: service_started
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: webanly-worker
+    env_file:
+      - ./apps/worker/.env
+      - ./packages/db/.env
+    depends_on:
+      postgres:
+        condition: service_started
+      redpanda:
+        condition: service_started
+
 volumes:
-  postgres_data:
-  kafka_data:
+  pgdata:

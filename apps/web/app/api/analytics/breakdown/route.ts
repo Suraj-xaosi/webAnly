@@ -52,7 +52,9 @@ export async function GET(req: NextRequest) {
       }[]
     >`
       SELECT
-        ${Prisma.raw(`"${column}"`)} AS name,
+        ${//@ts-ignore
+          Prisma.raw(`"${column}"`)
+        } AS name,
         COUNT(*)::int AS views,
         COUNT(DISTINCT "visitorId")::int AS visitors
       FROM "DailyStat"
@@ -64,7 +66,7 @@ export async function GET(req: NextRequest) {
       ORDER BY views DESC
       LIMIT 1000
     `;
-
+        //@ts-ignore
     const data = rows.map((row) => ({
       name: row.name || "Unknown",
       views: row.views,

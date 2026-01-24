@@ -1,0 +1,21 @@
+FROM node:24.13.0-alpine
+
+WORKDIR /app
+
+# Copy workspace files
+COPY package.json package-lock.json turbo.json ./
+COPY packages ./packages
+COPY apps ./apps
+
+# Install deps (workspace-aware)
+RUN npm ci
+
+# Generate Prisma client (shared)
+RUN npx prisma generate --schema=packages/db/prisma/schema.prisma
+
+# Build only web
+RUN npm run build --filter=web
+
+EXPOSE 3000
+
+CMD ["npm", "run", "start", "--filter=web"]

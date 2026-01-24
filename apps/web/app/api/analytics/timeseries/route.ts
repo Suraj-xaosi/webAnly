@@ -59,18 +59,21 @@ export async function GET(req: NextRequest) {
     console.log("Raw timeseries rows:", rows);
     function mapData() {
       if (interval === "hour"){
+        //@ts-ignore
         return rows.map((row) => ({
           date: String(row.date.getUTCHours()),
           views: row.views,
           visitors: row.visitors,
         }));
       }
+      //@ts-ignore
       return rows.map((row) => ({
         date: row.date.toISOString().split("T")[0],
         views: row.views,
         visitors: row.visitors,
       }));
     }
+    //@ts-ignore
     const data = mapData();
     console.log("TimeSeries data fetched:", { siteId, from, to, interval, data: data });
 
