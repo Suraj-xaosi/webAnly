@@ -5,11 +5,9 @@ WORKDIR /app
 COPY package.json package-lock.json turbo.json ./
 COPY packages ./packages
 COPY apps ./apps
+COPY entrypoint.sh ./entrypoint.sh
 
 RUN npm ci
+RUN chmod +x ./entrypoint.sh
 
-RUN npx prisma generate --schema=packages/db/prisma/schema.prisma
-
-RUN npm run build --filter=collector
-
-CMD ["npm", "run", "start", "--filter=collector"]
+ENTRYPOINT ["./entrypoint.sh", "collector"]

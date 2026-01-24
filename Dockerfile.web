@@ -6,16 +6,11 @@ WORKDIR /app
 COPY package.json package-lock.json turbo.json ./
 COPY packages ./packages
 COPY apps ./apps
+COPY entrypoint.sh ./entrypoint.sh
 
-# Install deps (workspace-aware)
 RUN npm ci
-
-# Generate Prisma client (shared)
-RUN npx prisma generate --schema=packages/db/prisma/schema.prisma
-
-# Build only web
-RUN npm run build --filter=web
+RUN chmod +x ./entrypoint.sh
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start", "--filter=web"]
+ENTRYPOINT ["./entrypoint.sh", "web"]
