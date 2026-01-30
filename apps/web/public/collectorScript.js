@@ -4,8 +4,8 @@
 
   const siteId = script.getAttribute("siteId");
   const siteName = script.getAttribute("siteName");
-  if (!siteId && !siteName) {
-    console.warn("Collector.js: Please provide a data-site-id or data-site-name attribute.");
+  if (!siteId) {
+    console.warn("Collector.js: Please provide a site-id  attribute in script.");
     return;
   }
    

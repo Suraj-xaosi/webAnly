@@ -19,10 +19,6 @@ npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
 
 
 npx prisma generate --schema=packages/db/prisma/schema.prisma
-
-# Build the app
-npm run build
-
 # Start the app (pass all arguments)
 if [ "$1" = "web" ]; then
   npm run start --workspace=web
