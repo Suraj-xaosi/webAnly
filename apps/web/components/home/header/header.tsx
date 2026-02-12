@@ -6,6 +6,7 @@ import Controls from "./contol";
 
 export default function Header() {
   const [opened, setOpened] = useState(false);
+  
 
   return (
     <header className="w-full bg-gradient-to-r from-[#6F42C1] to-[#8B5CF6] shadow-lg shadow-purple-800/30 px-4 sm:px-8 py-4 flex items-center justify-between relative">
@@ -21,6 +22,7 @@ export default function Header() {
       >
         Controls
       </div>
+
 
       {/* Controls Modal */}
       <Controls open={opened} onClose={() => setOpened(false)} />

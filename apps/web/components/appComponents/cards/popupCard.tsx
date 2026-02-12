@@ -1,5 +1,5 @@
-// apps/web/Components/cards/popupCard.tsx
 "use client";
+
 import { ReactNode } from "react";
 
 interface PopupCardProps {

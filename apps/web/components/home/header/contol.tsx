@@ -1,6 +1,6 @@
 
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { setSiteId, setFromDate, setToDate, setInterval } from "../../../store/slices/selectedDateSiteSlice";
+import { setSiteId, setFromDate, setToDate, setInterval} from "../../../store/slices/selectedDateSiteSlice";
 import { useState } from "react";
 import PopupCard from "../../appComponents/cards/popupCard";
 import AppInput from "../../appComponents/input/appInput";
@@ -33,6 +33,7 @@ export default function Controls({ open, onClose }: ControlsProps) {
 			dispatch(setToDate(todateInput));
 		}
 		dispatch(setInterval(interval));
+		
 		alert("Date range and interval updated!");
 		onClose();
 	};

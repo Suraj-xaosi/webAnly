@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     const from = searchParams.get("from");
     const to = searchParams.get("to");
     const dimension = searchParams.get("dimension");
-    //const limit = Number(searchParams.get("limit") || 10);
+    const limit = Number(searchParams.get("limit") || 100);
 
     if (!siteId || !from || !to || !dimension) {
       return NextResponse.json(
@@ -29,7 +29,6 @@ export async function GET(req: NextRequest) {
     }
 
     const column = DIMENSION_COLUMN_MAP[dimension];
-
     if (!column) {
       return NextResponse.json(
         { error: "Invalid dimension" },
@@ -41,14 +40,13 @@ export async function GET(req: NextRequest) {
     const toDate = new Date(to);
     toDate.setHours(23, 59, 59, 999);
 
-    /**
-     * Raw SQL
-     */
+    
     const rows = await prisma.$queryRaw<
       {
         name: string | null;
         views: number;
         visitors: number;
+        avgTimeSpent: number | null;
       }[]
     >`
       SELECT
@@ -56,27 +54,32 @@ export async function GET(req: NextRequest) {
           Prisma.raw(`"${column}"`)
         } AS name,
         COUNT(*)::int AS views,
-        COUNT(DISTINCT "visitorId")::int AS visitors
+        COUNT(DISTINCT "visitorId")::int AS visitors,
+        ROUND(AVG(COALESCE("TimeSpent", 0)))::int AS "avgTimeSpent"
       FROM "DailyStat"
       WHERE
         "siteId" = ${siteId}
         AND "date" >= ${fromDate}
         AND "date" <= ${toDate}
+        AND ${Prisma.raw(`"${column}"`)} IS NOT NULL
+        AND "eventType" = 'pageview'
       GROUP BY 1
       ORDER BY views DESC
-      LIMIT 1000
+      LIMIT ${limit}
     `;
         //@ts-ignore
     const data = rows.map((row) => ({
       name: row.name || "Unknown",
       views: row.views,
       visitors: row.visitors,
+      avgTimeSpent: row.avgTimeSpent || 0,
+      viewsPerVisitor: (row.views / row.visitors).toFixed(2),
     }));
-    console.log("Breakdown data fetched:", { siteId, from, to, dimension, dataLength: data.length });
 
     return NextResponse.json({
       dimension,
       data,
+      total: data.length,
     });
   } catch (error) {
     console.error("Breakdown API error:", error);
@@ -86,27 +89,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
-/* Example response
-{
-  "dimension": "browser",
-  "data": [
-    {
-      "name": "Chrome",
-      "views": 120,
-      "visitors": 45
-    }
-  ]
-}
-*/
-
-
-/*
-paramas
-
-siteId     (required)
-from       (yyyy-mm-dd)
-to         (yyyy-mm-dd)
-dimension  = page | browser | device | country | os | referrer
-limit      = optional (default 10)
-*/

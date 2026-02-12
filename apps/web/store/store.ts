@@ -2,9 +2,9 @@ import { configureStore } from "@reduxjs/toolkit";
 
 import selectedDateSiteIdReducer from "./slices/selectedDateSiteSlice";
 import siteReducer from "./slices/sitesSlice"
-import  breakdownReducer from "./slices/adv/breakdownSlice";
+import  breakdownReducer from "./slices/analytics/breakdownSlice";
 
-import timeseriesReducer from "./slices/adv/timeseriesSlice";
+import timeseriesReducer from "./slices/analytics/timeseriesSlice";
 
 export const createStore = () => {
   return configureStore({

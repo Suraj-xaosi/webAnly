@@ -4,6 +4,8 @@ export interface BreakdownItem {
   name: string;
   views: number;
   visitors: number;
+  avgTimeSpent: number | null;
+  viewsPerVistor:number| null;
 }
 
 export type Dimension =

@@ -1,5 +1,5 @@
-// apps/web/Components/buttons/sidebarButton.tsx
 "use client";
+
 import { ReactNode, useState } from "react";
 import PopupCard from "../cards/popupCard";
 interface SidebarButtonProps {

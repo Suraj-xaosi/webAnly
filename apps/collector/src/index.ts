@@ -26,7 +26,7 @@ const kafka = new Kafka({
 });
 
 const producer = kafka.producer({
-  allowAutoTopicCreation: false, // just chill it only prevents accidental topic creation
+  allowAutoTopicCreation: false, 
 });
 
 app.post("/collect", async (req: Request, res: Response) => {

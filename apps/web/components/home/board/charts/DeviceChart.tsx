@@ -1,12 +1,10 @@
 "use client";
+
+
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import echarts from "./echart"; 
 import { useAppSelector } from "../../../../store/hooks";
 
-type dcd = {
-  name: string;
-  views: number;
-};
 
 export default function DevicesChart() {
   const dChartdata = useAppSelector((state) => state.breakdown.data.device);

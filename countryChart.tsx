@@ -4,10 +4,12 @@ import { useState } from "react";
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import echarts from "./echart";
 import { useAppSelector } from "../../../../store/hooks";
-import ChartCard from "../../../appComponents/cards/chartcard";
+import ChartCard from "./chartcard";
 
 export default function CountryChart() {
-  const [selectedMetric, setSelectedMetric] = useState<"views" | "visitors" | "avgTimeSpent">("views");
+  const [selectedMetric, setSelectedMetric] = useState<
+    "views" | "visitors" | "avgTimeSpent"
+  >("views");
 
   const countryChartdata = useAppSelector(
     (state) => state.breakdown.data.country

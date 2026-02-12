@@ -7,6 +7,7 @@ export interface SelectedDateSiteState {
   fromdate: string | null;
   todate: string | null;
   interval: intervals;
+  
 }
 
 export const today:string= new Date().toISOString().split("T")[0] || " ";
@@ -15,13 +16,15 @@ export const initialState: SelectedDateSiteState = {
   siteId: null,
   fromdate: today,
   todate: today,
-  interval: "hour"
+  interval: "hour",
+ 
 };
 
 export const selectedDateSiteSlice = createSlice({
   name: "selectedDateSiteId",
   initialState,
   reducers: {
+
     setSiteId(state, action: PayloadAction<string>) {
       state.siteId = action.payload;
     },
@@ -31,6 +34,8 @@ export const selectedDateSiteSlice = createSlice({
     setToDate(state, action: PayloadAction<string>) {
       state.todate = action.payload;
     },
+    
+
     setInterval(state, action:PayloadAction<string>){
       if(action.payload==="day"){
         state.interval="day";
@@ -46,7 +51,7 @@ export const selectedDateSiteSlice = createSlice({
   },
 });
 
-export const { setSiteId, setFromDate, setToDate ,setInterval} =
+export const { setSiteId, setFromDate, setToDate ,setInterval, } =
   selectedDateSiteSlice.actions;
 
 export default selectedDateSiteSlice.reducer;
