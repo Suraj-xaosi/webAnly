@@ -3,12 +3,14 @@
 
 import SidebarButton from "../../../appComponents/buttons/sidebarButton";
 import { useAppSelector } from "../../../../store/hooks";
+import ShowScript from "./showScript";
+import { removeSite } from "../../../../lib/sActions/removeSite";
+
 
 
 export default function SiteList() {
 
   const sites = useAppSelector((s) => s.site.sites);
-
   function SitesList() {
 
 
@@ -17,18 +19,28 @@ export default function SiteList() {
       <div className="p-4 relative">
         {sites && sites.length > 0 ? (
           <ul className="space-y-3 ">
-            {sites.map((site) => (
+            {sites.map((site:{id:string,domain:string}) => (
               <li
                 key={site.id}
                 className="flex items-center justify-between bg-[#6F42C1] text-white font-semibold p-3 rounded-xl"
               >
                 <span className="w-full py-3 rounded-xl bg-[#6F42C1] text-white font-semibold">{site.domain}</span>
+
+                <SidebarButton label={<>Show Script</>} >
+                  <ShowScript site={site}/>
+                </SidebarButton>
+
+                <button 
+                  onClick={() => removeSite(site.id)}
+                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg"
+                >
+                  Delete
+                </button>
               </li>
             ))}
           </ul>
-        ) : (
-          <p>No sites available</p>
-        )}
+        ) : (<p className="text-red-500">No sites available</p>)
+        }
       </div>
 
     );

@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
       ORDER BY views DESC
       LIMIT ${limit}
     `;
-
+      //@ts-ignore
     const data = rows.map((row) => ({
       ...row,
       exitRate: row.views > 0 ? ((row.exitCount / row.views) * 100).toFixed(2) : "0.00",

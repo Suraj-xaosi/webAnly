@@ -1,5 +1,5 @@
 {
-  "name": "webAnly2",
+  "name": "webAnly1",
   "private": true,
   "scripts": {
     "build": "turbo run build",

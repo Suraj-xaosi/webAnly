@@ -1,44 +1,88 @@
-"use client"
+"use client";
+
+import { useState } from "react";
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import echarts from "./echart";
 import { useAppSelector } from "../../../../store/hooks";
-
-type PageData = {
-  name: string;
-  views: number;
-};
+import ChartCard from "../../../appComponents/cards/chartcard";
 
 export default function PagesChart() {
+  const [selectedMetric, setSelectedMetric] = useState<
+    "views" | "visitors" | "avgTimeSpent"
+  >("views");
 
   const pageChartdata = useAppSelector((state) => state.breakdown.data.page);
+
   if (!pageChartdata || pageChartdata.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 bg-white/10 rounded-xl shadow-inner text-gray-300 text-lg font-medium">
-        No data available
-      </div>
+      <ChartCard
+        chartName="Visits per Page"
+        onMetricChange={setSelectedMetric}
+        selectedMetric={selectedMetric}
+      >
+        <div className="flex items-center justify-center h-full bg-white/10 rounded-xl shadow-inner text-gray-300 text-lg font-medium">
+          No data available
+        </div>
+      </ChartCard>
     );
   }
+
+  // Helper function to get the label based on selected metric
+  const getMetricLabel = () => {
+    switch (selectedMetric) {
+      case "views":
+        return "Views";
+      case "visitors":
+        return "Visitors";
+      case "avgTimeSpent":
+        return "Avg Time Spent";
+      default:
+        return "Views";
+    }
+  };
+
+  // Helper function to format value for tooltip
+  const formatValue = (value: number) => {
+    if (selectedMetric === "avgTimeSpent") {
+      const minutes = Math.floor(value / 60);
+      const seconds = Math.floor(value % 60);
+      return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+    }
+    return value.toString();
+  };
 
   const option: echarts.EChartsCoreOption = {
     backgroundColor: "#232733",
     tooltip: {
       trigger: "item",
-      formatter: "{b}: {c} ({d}%)",
+      formatter: (params: any) => {
+        const formattedValue = formatValue(params.value);
+        return `${params.name}: ${formattedValue} (${params.percent}%)`;
+      },
     },
     series: [
       {
-        name: "Page Views",
+        name: getMetricLabel(),
         type: "pie",
         radius: "60%",
         center: ["50%", "55%"],
         roseType: "radius",
         data: pageChartdata.map((d) => ({
           name: d.name,
-          value: d.views,
+          value:
+            selectedMetric === "views"
+              ? d.views
+              : selectedMetric === "visitors"
+              ? d.visitors
+              : d.avgTimeSpent || 0,
         })),
         label: {
           color: "#fff",
           fontSize: 12,
+          formatter: (params: any) => {
+            const formattedValue = formatValue(params.value);
+            return `${params.name}: ${formattedValue}`;
+          },
         },
         labelLine: {
           smooth: 0.2,
@@ -64,15 +108,16 @@ export default function PagesChart() {
   };
 
   return (
-    <div className="w-full h-72 sm:h-80 md:h-96 p-4 sm:p-6 bg-gradient-to-br from-[#8B5CF6] to-[#6F42C1] rounded-2xl shadow-xl shadow-purple-800/40 flex flex-col">
-      <h2 className="text-sm sm:text-base text-white font-semibold mb-2 tracking-wide drop-shadow">Visits per Page</h2>
-      <div className="flex-1 min-h-0">
-        <ReactEChartsCore
-          echarts={echarts}
-          option={option}
-          style={{ height: "100%", width: "100%" }}
-        />
-      </div>
-    </div>
+    <ChartCard
+      chartName="Visits per Page"
+      onMetricChange={setSelectedMetric}
+      selectedMetric={selectedMetric}
+    >
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: "100%", width: "100%" }}
+      />
+    </ChartCard>
   );
 }

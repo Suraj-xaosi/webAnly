@@ -1,26 +1,29 @@
-FROM node:24.13.0-alpine AS builder
+FROM node:24.13.0-alpine
+
 WORKDIR /app
 
-# install all dependencies (including dev) and build
+# Copy workspace files
 COPY package.json package-lock.json turbo.json ./
 COPY packages ./packages
 COPY apps ./apps
-RUN npm ci
-RUN npm run build
+COPY entrypoint.sh ./entrypoint.sh
 
-FROM node:24.13.0-alpine AS runner
+RUN npm ci
+RUN chmod +x ./entrypoint.sh
+
+EXPOSE 3000
+
+ENTRYPOINT ["./entrypoint.sh", "web"]FROM node:24.13.0-alpine
+
 WORKDIR /app
 
-# copy package manifests and built outputs
+# Copy workspace files
 COPY package.json package-lock.json turbo.json ./
-COPY --from=builder /app/apps ./apps
-COPY --from=builder /app/packages ./packages
-
-# install only production dependencies
-RUN npm ci --production
-
-# copy entrypoint and make executable
+COPY packages ./packages
+COPY apps ./apps
 COPY entrypoint.sh ./entrypoint.sh
+
+RUN npm ci
 RUN chmod +x ./entrypoint.sh
 
 EXPOSE 3000

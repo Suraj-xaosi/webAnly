@@ -61,7 +61,8 @@ export async function GET(req: NextRequest) {
         "siteId" = ${siteId}
         AND "date" >= ${fromDate}
         AND "date" <= ${toDate}
-        AND ${Prisma.raw(`"${column}"`)} IS NOT NULL
+        AND ${//@ts-ignore
+        Prisma.raw(`"${column}"`)} IS NOT NULL
         AND "eventType" = 'pageview'
       GROUP BY 1
       ORDER BY views DESC
