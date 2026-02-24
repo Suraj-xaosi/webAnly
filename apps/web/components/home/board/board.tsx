@@ -12,14 +12,14 @@ import PagesChart from "./charts/pageChart";
 import { fetchTimeseries } from "../../../store/slices/analytics/timeseriesSlice";
 import { fetchBreakdown } from "../../../store/slices/analytics/breakdownSlice";
 
-const POLL_INTERVAL = 30_000; // 30 seconds
+const POLL_INTERVAL = 10_000; // 30 seconds
 
 export default function Dashboard() {
   const dispatch = useAppDispatch();
-  const { siteId, fromdate, todate, interval } =
-    useAppSelector((s) => s.selectedDateSiteId);
+  const { siteId, fromdate, todate, interval } = useAppSelector((s) => s.selectedDateSiteId);
 
   useEffect(() => {
+
     if (!siteId || !fromdate || !todate || !interval) return;
 
     const fetchAll = () => {
@@ -28,12 +28,15 @@ export default function Dashboard() {
       dispatch(fetchBreakdown({ siteId, from: fromdate, to: todate, dimension: "country" }));
       dispatch(fetchBreakdown({ siteId, from: fromdate, to: todate, dimension: "browser" }));
       dispatch(fetchBreakdown({ siteId, from: fromdate, to: todate, dimension: "device" }));
+      
     };
     fetchAll();
 
-    const toMs = new Date(todate).getTime();
-    const isLiveRange = Date.now() - toMs < 60_000;
-    if (!isLiveRange) return;
+    
+   
+    const today = new Date().toISOString().split("T")[0];
+    const isLive = todate === today;
+    if (!isLive) return;
 
 
     const intervalId = setInterval(fetchAll, POLL_INTERVAL);
@@ -44,7 +47,7 @@ export default function Dashboard() {
   if (!siteId) return null;
 
   return (
-    <div className="w-full min-h-screen p-2 sm:p-4 md:p-8 flex flex-col gap-6">
+    <div className="w-full   md:p-8 flex flex-col gap-6 ">
       <ViewChart />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

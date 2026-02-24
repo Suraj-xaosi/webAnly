@@ -2,15 +2,21 @@
 
 
 import SidebarButton from "../../../appComponents/buttons/sidebarButton";
-import { useAppSelector } from "../../../../store/hooks";
+import { useAppSelector,useAppDispatch } from "../../../../store/hooks";
 import ShowScript from "./showScript";
 import { removeSite } from "../../../../lib/sActions/removeSite";
+import { fetchSiteInfo } from "../../../../store/slices/sitesSlice";
 
 
 
 export default function SiteList() {
 
   const sites = useAppSelector((s) => s.site.sites);
+  const dispatch = useAppDispatch();
+  async function handleRemoveSite(siteId: string) {
+    await removeSite(siteId);
+    dispatch(fetchSiteInfo());
+  }
   function SitesList() {
 
 
@@ -31,7 +37,7 @@ export default function SiteList() {
                 </SidebarButton>
 
                 <button 
-                  onClick={() => removeSite(site.id)}
+                  onClick={() => handleRemoveSite(site.id)}
                   className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg"
                 >
                   Delete

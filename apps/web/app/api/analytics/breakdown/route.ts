@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
         AND "date" <= ${toDate}
         AND ${//@ts-ignore
         Prisma.raw(`"${column}"`)} IS NOT NULL
-        AND "eventType" = 'pageview'
+        AND "eventType" != 'exit'
       GROUP BY 1
       ORDER BY views DESC
       LIMIT ${limit}
@@ -76,6 +76,7 @@ export async function GET(req: NextRequest) {
       avgTimeSpent: row.avgTimeSpent || 0,
       viewsPerVisitor: (row.views / row.visitors).toFixed(2),
     }));
+    console.log(`Breakdown for ${dimension}:`, data);
 
     return NextResponse.json({
       dimension,

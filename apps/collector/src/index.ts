@@ -1,11 +1,10 @@
 import express, { Request, Response } from "express";
 import { Kafka } from "kafkajs";
 import cors from "cors";
-import countryFromIp from "./functions/countryFromIp.js";
-import getClientIp from "./functions/getClientIp.js";
 import dotenv from "dotenv";
-import parseTime  from "./functions/parseTimeSpent.js";
+import parseTime from "./functions/parseTimeSpent.js";
 import parseDate from "./functions/parseDate.js";
+import  { extractRealIp } from "./functions/extractIP.js";
 dotenv.config();
 
 const TOPIC_NAME = process.env.TOPIC_NAME || "";
@@ -30,46 +29,49 @@ const producer = kafka.producer({
 });
 
 app.post("/collect", async (req: Request, res: Response) => {
-  const body = req.body || {}; 
+  const body = req.body || {};
   if (!body.siteId || !body.page) {
-    return res
-      .status(400)
-      .send("Missing required: siteId or pathname");
+    return res.status(400).send("Missing required: siteId or pathname");
   }
 
+  
+
+  // Extract real IP from request (handles proxies, IPv6, etc)
+  const rawIp = req.ip || req.headers["x-forwarded-for"] || "";
+  const ip = extractRealIp(rawIp);
+  // Get country from IP (now async)
+  //const country = await countryFromIp(ip);
+
+
   const referrer = String(body.referrer || body.referer || "");
-  const ip = getClientIp(req);
-  const country = countryFromIp(ip) ||body.country || "Unknown";
-
   const date = parseDate(body.ts);
-  const timeSpent :number= parseTime(body.timeSpent);
-
+  const timeSpent: number = parseTime(body.timeSpent);
 
   const eventData = {
     eventType: body.eventType || "unknown",
-    siteId:body.siteId,
+    siteId: body.siteId,
     visitorId: body.visitorId || null,
     currentUrl: body.currentUrl || null,
     pageTitle: body.pageTitle || null,
-    country,
-    page:body.page,
+    ip,
+    page: body.page,
     previousPage: referrer || null,
     browser: body.browser || "Unknown",
     device: body.device || "Unknown",
     os: body.os || "Unknown",
     timeSpent,
-    date
+    date,
   };
 
   try {
     await producer.send({
       topic: TOPIC_NAME,
-      messages: [{key: body.siteId, value: JSON.stringify(eventData) }],
+      messages: [{ key: body.siteId, value: JSON.stringify(eventData) }],
     });
-    
+
     return res.status(200).send("Event sent to Kafka");
-    
   } catch (err) {
+    console.error("Error sending to Kafka:", err);
     return res.status(500).send("Failed to send event to Kafka.");
   }
 });

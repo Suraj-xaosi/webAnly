@@ -27,6 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <script src="http://localhost:3000/collectorScript.js" data-site-id="6929f820-e536-4763-82ba-9044761f3e3d" data-site-name="meow meow"></script>
         <Providers>
           {children}
         </Providers>

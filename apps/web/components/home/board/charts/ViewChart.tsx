@@ -18,9 +18,6 @@ export default function ViewsChart() {
 
   const option = {
   color: ['#80FFA5', '#00DDFF', '#37A2FF', '#FF0087', '#FFBF00'],
-  title: {
-    text: 'Gradient Stacked Area Chart'
-  },
   tooltip: {
     trigger: 'axis',
     axisPointer: {
@@ -31,7 +28,7 @@ export default function ViewsChart() {
     }
   },
   legend: {
-    data: ['Line 1', 'Line 2']
+    data: ['views', 'visitors']
   },
   toolbox: {
     feature: {
@@ -52,7 +49,7 @@ export default function ViewsChart() {
   ],
   series: [
     {
-      name: 'Line 1',
+      name: 'views',
       type: 'line',
       stack: 'Total',
       smooth: true,
@@ -79,7 +76,7 @@ export default function ViewsChart() {
       data: chartdata.map((d) => d.views)
     },
     {
-      name: 'Line 2',
+      name: 'visitors',
       type: 'line',
       stack: 'Total',
       smooth: true,
@@ -111,15 +108,15 @@ export default function ViewsChart() {
 
 
   return (
-    <div className="w-full h-80 sm:h-96 md:h-[28rem] p-4 sm:p-6 bg-gradient-to-br from-[#8B5CF6] to-[#6F42C1] rounded-2xl shadow-xl shadow-purple-800/40 flex flex-col mb-4">
-      <h2 className="text-lg sm:text-xl text-white font-semibold mb-2 tracking-wide drop-shadow">Total Landings</h2>
-      <div className="flex-1 min-h-0">
+    <div className="w-full h-80 sm:h-96 md:h-[35rem] p-4 sm:p-6 bg-gradient-to-br from-[#8B5CF6] to-[#6F42C1] rounded-2xl shadow-xl shadow-purple-800/40 flex flex-col mb-4">
+      <h2 className="text-lg  text-white font-semibold">visits</h2>
+     
         <ReactEChartsCore
           echarts={echarts}
           option={option}
           style={{ height: "100%", width: "100%" }}
         />
-      </div>
+      
     </div>
   );
 }

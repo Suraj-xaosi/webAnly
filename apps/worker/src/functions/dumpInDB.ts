@@ -1,4 +1,5 @@
 import prisma from '@repo/db';
+import countryFromIp from './countryfromip';
 
 
 type eventData = {
@@ -7,6 +8,7 @@ type eventData = {
 	page: string;
 	eventType?: string;
 	date?: Date;
+	ip?:string;
 	pageTitle?: string;
 	previousPage?: string;
 	country?: string;
@@ -19,7 +21,19 @@ type eventData = {
 
 export default async function dumpInDB(eventData: eventData) {
 	const eventDate = eventData.date ? new Date(eventData.date) : new Date();
-	
+	try{
+
+		if(eventData.ip){
+			eventData.country=await countryFromIp(eventData.ip);
+		}else{
+			eventData.country="unknown"
+		}
+		
+
+	}catch(err){
+		eventData.country="unknown"
+		console.log(err);
+	}
 	try {
 		await prisma.dailyStat.create({
 			data: {

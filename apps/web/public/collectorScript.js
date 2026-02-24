@@ -2,19 +2,38 @@
   const COLLECT_URL = "http://localhost:4000/collect";
   const script = document.currentScript;
 
-  const siteId = script.getAttribute("siteId");
-  const siteName = script.getAttribute("siteName");
+  const siteId = script.getAttribute("data-site-id");
+  const siteName = script.getAttribute("data-site-name");
   if (!siteId) {
-    console.warn("Collector.js: Please provide a site-id  attribute in script.");
+    console.warn("Collector.js: Please provide a site-id attribute in script.");
     return;
   }
-   
+
+  // ─── VISITOR ID ───────────────────────────────────────────────
+  function getVisitorId() {
+    try {
+      let id = localStorage.getItem("_vid");
+      if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem("_vid", id);
+      }
+      return id;
+    } catch (e) {
+      // localStorage blocked (private mode / iframe) → fallback to session only
+      return crypto.randomUUID();
+    }
+  }
+  const visitorId = getVisitorId(); // generate once, reuse for all events
+  // ──────────────────────────────────────────────────────────────
+
+
   function getDeviceType() {
     const ua = navigator.userAgent;
     if (/tablet|ipad|playbook|silk/i.test(ua)) return "tablet";
     if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry/i.test(ua)) return "mobile";
     return "desktop";
   }
+
 
   function getOS() {
     const p = navigator.platform.toLowerCase();
@@ -36,7 +55,7 @@
     return "Unknown";
   }
 
-  //  PAGE SESSION 
+  //  PAGE SESSION
   let pageStart = Date.now();
 
   function send(payload) {
@@ -62,33 +81,33 @@
       eventType: eventType,
       siteId: siteId,
       siteName: siteName,
+      visitorId: visitorId||"000",          
       currentUrl: window.location.href,
-      pathname: window.location.pathname,
+      page: window.location.pathname,
       referrer: document.referrer || null,
       pageTitle: document.title || null,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       browser: getBrowser(),
       os: getOS(),
       device: getDeviceType(),
-      timeSpent: (Date.now() - pageStart) / 1000, // seconds
+      timeSpent: (Date.now() - pageStart) / 1000,
       ts: new Date().toISOString(),
     };
   }
 
-  //  INITIAL PAGE VIEW 
+  //  INITIAL PAGE VIEW
   send(buildPayload("pageview"));
 
-  //  EXIT PAGE (user leaves) 
+  //  EXIT PAGE (user leaves)
   window.addEventListener("beforeunload", function () {
     send(buildPayload("exit"));
   });
 
-  //  SPA ROUTE CHANGES (pushState / replaceState / back forward) 
+  //  SPA ROUTE CHANGES (pushState / replaceState / back forward)
   ["pushState", "replaceState"].forEach((methodName) => {
     const original = history[methodName];
     history[methodName] = function () {
       const result = original.apply(this, arguments);
-      pageStart = Date.now(); // reset timer
+      pageStart = Date.now();
       send(buildPayload("route-change"));
       return result;
     };

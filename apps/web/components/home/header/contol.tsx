@@ -21,17 +21,21 @@ export default function Controls({ open, onClose }: ControlsProps) {
 
 	const handleDateSubmit = () => {
 		if (!fromdateInput || !todateInput || !interval) return;
+
 		if (new Date(fromdateInput) > new Date(todateInput)) {
 			alert("'From' date cannot be later than 'To' date.");
 			return;
 		}
+
 		dispatch(setFromDate(fromdateInput));
+
 		if (interval === "hour") {
 			alert("Hour interval selected, data to will be set to 'From' date.");
 			dispatch(setToDate(fromdateInput));
 		} else {
 			dispatch(setToDate(todateInput));
 		}
+		
 		dispatch(setInterval(interval));
 		
 		alert("Date range and interval updated!");

@@ -23,6 +23,8 @@ export default function HomePage() {
 
   const selected = useAppSelector((s) => s.selectedDateSiteId);
 
+
+
   useEffect(() => {
 
     dispatch(fetchSiteInfo());
@@ -97,11 +99,25 @@ export default function HomePage() {
 
       )}
 
+      <button
+        onClick={() => {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+          } else {
+            document.exitFullscreen();
+          }
+        }}
+        className="absolute bottom-4 right-4 bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg text-sm font-semibold border border-white/30 transition"
+        title={document.fullscreenElement ? "Exit Fullscreen" : "Enter Fullscreen"}
+      >
+        {document.fullscreenElement ? "⛶" : "⛶"}
+      </button>
+
 
 
       {/* MAIN */}
 
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto scrollbar-hide">
 
 
         <Header />
@@ -122,6 +138,16 @@ export default function HomePage() {
         )}
 
       </main>
+
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
 
     </div>
 
