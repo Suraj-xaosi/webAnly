@@ -10,21 +10,7 @@
   }
 
   // ─── VISITOR ID ───────────────────────────────────────────────
-  function getVisitorId() {
-    try {
-      let id = localStorage.getItem("_vid");
-      if (!id) {
-        id = crypto.randomUUID();
-        localStorage.setItem("_vid", id);
-      }
-      return id;
-    } catch (e) {
-      // localStorage blocked (private mode / iframe) → fallback to session only
-      return crypto.randomUUID();
-    }
-  }
-  const visitorId = getVisitorId(); // generate once, reuse for all events
-  // ──────────────────────────────────────────────────────────────
+
 
 
   function getDeviceType() {
@@ -80,8 +66,7 @@
     return {
       eventType: eventType,
       siteId: siteId,
-      siteName: siteName,
-      visitorId: visitorId||"000",          
+      siteName: siteName,          
       currentUrl: window.location.href,
       page: window.location.pathname,
       referrer: document.referrer || null,

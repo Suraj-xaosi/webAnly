@@ -37,8 +37,10 @@ app.post("/collect", async (req: Request, res: Response) => {
   
 
   // Extract real IP from request (handles proxies, IPv6, etc)
-  const rawIp = req.ip || req.headers["x-forwarded-for"] || "";
-  const ip = extractRealIp(rawIp);
+  const ip = req.ip  || "";
+  console.log("Raw IP from request:", ip);
+  const visitorID = extractRealIp(ip);
+  console.log("Extracted visitor ID :", visitorID);
   // Get country from IP (now async)
   //const country = await countryFromIp(ip);
 
@@ -50,10 +52,9 @@ app.post("/collect", async (req: Request, res: Response) => {
   const eventData = {
     eventType: body.eventType || "unknown",
     siteId: body.siteId,
-    visitorId: body.visitorId || null,
+    visitorId: visitorID,
     currentUrl: body.currentUrl || null,
     pageTitle: body.pageTitle || null,
-    ip,
     page: body.page,
     previousPage: referrer || null,
     browser: body.browser || "Unknown",

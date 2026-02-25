@@ -11,10 +11,10 @@ export default async function countryFromIp(ip: string): Promise<string> {
     return countryCache[ip];
    }
 
-  // Skip private/local IPs
-  if (!ip ||ip === "0.0.0.0" ||ip.startsWith("127.") ||ip.startsWith("192.168.") ||ip.startsWith("10.") ||ip.startsWith("172.")) {
-    return "Unknown";
-  }
+    // Skip private/local IPs
+    if (!ip ||ip === "0.0.0.0" ||ip === "::1" || ip.startsWith("127.") ||ip.startsWith("192.168.") ||ip.startsWith("10.") ||ip.startsWith("172.")) {
+      return "India";
+    }
 
   
   if (countryCache[ip]) {

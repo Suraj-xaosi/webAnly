@@ -1,5 +1,10 @@
 import prisma from '@repo/db';
-import countryFromIp from './countryfromip';
+import countryFromIp from './countryfromip.js';
+import { createHash } from 'crypto';
+
+function hashVisitorId(visitorId: string): string {
+	return createHash('sha256').update(visitorId).digest('hex');
+}
 
 
 type eventData = {
@@ -8,7 +13,7 @@ type eventData = {
 	page: string;
 	eventType?: string;
 	date?: Date;
-	ip?:string;
+	
 	pageTitle?: string;
 	previousPage?: string;
 	country?: string;
@@ -23,8 +28,8 @@ export default async function dumpInDB(eventData: eventData) {
 	const eventDate = eventData.date ? new Date(eventData.date) : new Date();
 	try{
 
-		if(eventData.ip){
-			eventData.country=await countryFromIp(eventData.ip);
+		if(eventData.visitorId){
+			eventData.country=await countryFromIp(eventData.visitorId);
 		}else{
 			eventData.country="unknown"
 		}
@@ -34,11 +39,12 @@ export default async function dumpInDB(eventData: eventData) {
 		eventData.country="unknown"
 		console.log(err);
 	}
+	// visitor id hash should be below this line.
 	try {
 		await prisma.dailyStat.create({
 			data: {
 				siteId: eventData.siteId,
-				visitorId: eventData.visitorId,
+				visitorId: hashVisitorId(eventData.visitorId),
 				eventType: eventData.eventType || "pageview",
 				date: eventDate,
 				page: eventData.page,

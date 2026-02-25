@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/functions/countryfromip.ts","./src/functions/parsedate.ts","./src/functions/parsetimespent.ts"],"version":"5.9.2"}
+{"root":["./src/index.ts","./src/functions/extractip.ts","./src/functions/parsedate.ts","./src/functions/parsetimespent.ts"],"version":"5.9.2"}
