@@ -37,6 +37,8 @@ export async function GET(req: NextRequest) {
     const toDate = new Date(to);
     toDate.setHours(23, 59, 59, 999);
 
+
+
     const rows = await prisma.$queryRaw<
       {
         date: Date;
@@ -89,24 +91,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
-/*
-    Example response:{
-  "interval": "day",
-  "data": [
-    {
-      "date": "2025-09-10",
-      "views": 123,
-      "visitors": 45
-    }
-  ]
-}
-    */
-
-/*
-Query Parameters:
-siteId   (required)
-from     (yyyy-mm-dd)
-to       (yyyy-mm-dd)
-interval = day | week | month
-*/

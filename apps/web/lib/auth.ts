@@ -7,7 +7,7 @@ import GitHubProvider from "next-auth/providers/github";
 import bcrypt from "bcryptjs";
 import  prisma from "@repo/db"
 export const authOptions: NextAuthOptions = {
-  
+  //adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       
@@ -68,7 +68,7 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
-    // persist user.id into the JWT when they sign in
+    //  user.id into the JWT when user sign in
     async jwt({ token, user, account }) {
       // On first sign in, `user` will be available
       if (user && (user as any).id) {

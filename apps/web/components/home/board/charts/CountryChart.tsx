@@ -53,7 +53,7 @@ export default function CountryChart() {
   };
 
   const option: echarts.EChartsCoreOption = {
-    backgroundColor: "#232733",
+    backgroundColor: "",
     tooltip: {
       trigger: "item",
       formatter: (params: any) => {
