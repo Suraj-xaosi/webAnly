@@ -46,9 +46,9 @@ webAnly is a powerful, full-stack web analytics platform designed to deliver rea
    - its important to npm clean install for preventing package conflicts.
 
 
-4  **for prisma run following comands**
+4  **for prisma run following comands  (make sure you have db connection string url in env)**
     
-	- cd packages/db                (make sure you have db connection string url in env)
+	- cd packages/db                
 	- npx prisma migrate dev
 	- npx prisma generate 
 
@@ -97,7 +97,14 @@ webAnly is a powerful, full-stack web analytics platform designed to deliver rea
 
 
 
+## some images :-
 
 
+<img width="1366" height="768" alt="Screenshot 2026-03-04 105424" src="https://github.com/user-attachments/assets/c36abfea-e2d0-4aa8-8c32-57e6d4136286" />
 
+<img width="1366" height="768" alt="Screenshot 2026-03-03 233506" src="https://github.com/user-attachments/assets/4917d38a-3ec6-4ae2-98f9-b4e9ab1c35f3" />
+
+<img width="1366" height="768" alt="Screenshot 2026-03-03 233552" src="https://github.com/user-attachments/assets/2aa9dd40-bc53-4528-8c0b-6594cad718bc" />
+
+<img width="1366" height="768" alt="Screenshot 2026-03-04 105435" src="https://github.com/user-attachments/assets/9a1c6bd9-0d2d-4aa7-9aec-c89c019ef793" />
 
