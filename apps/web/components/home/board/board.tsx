@@ -12,7 +12,7 @@ import PagesChart from "./charts/pageChart";
 import { fetchTimeseries } from "../../../store/slices/analytics/timeseriesSlice";
 import { fetchBreakdown } from "../../../store/slices/analytics/breakdownSlice";
 
-const POLL_INTERVAL = 10_000; // 30 seconds
+const POLL_INTERVAL = 60_000; // 60 seconds
 
 export default function Dashboard() {
   const dispatch = useAppDispatch();

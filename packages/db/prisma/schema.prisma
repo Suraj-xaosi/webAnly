@@ -63,11 +63,15 @@ model Site {
   userId    String
   domain    String   @unique
   createdAt DateTime @default(now())
+  viewsIn5min Int? @default(0)
+  expectedViewsIn5min Int? @default(100)
 
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  
   dailyStats DailyStat[]
 }
+
+
 
 model DailyStat {
   id           String   @id @default(uuid())

@@ -72,7 +72,7 @@ export default function CountryChart() {
         type: "pie",
         radius: ["20%", "70%"],
         center: ["50%", "55%"],
-        roseType: "radius", // 🌹 Nightingale (rose) style
+        roseType: "radius", 
         itemStyle: {
           borderRadius: 8,
         },

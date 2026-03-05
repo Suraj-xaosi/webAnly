@@ -1,0 +1,25 @@
+{
+  "name": "worker2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -b .",
+    "start": "tsc -b && node ./dist/index.js",
+    "dev": "tsc -b && node ./dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@repo/db": "^1.0.0",
+    "@types/kafkajs": "^1.8.2",
+    "dotenv": "^16.0.3",
+    "kafkajs": "^2.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "typescript": "^5.6.3"
+  }
+}

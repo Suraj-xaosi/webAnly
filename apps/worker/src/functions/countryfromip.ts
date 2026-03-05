@@ -13,13 +13,10 @@ export default async function countryFromIp(ip: string): Promise<string> {
 
     // Skip private/local IPs
     if (!ip ||ip === "0.0.0.0" ||ip === "::1" || ip.startsWith("127.") ||ip.startsWith("192.168.") ||ip.startsWith("10.") ||ip.startsWith("172.")) {
-      return "India";
+      return "local";
     }
 
-  
-  if (countryCache[ip]) {
-    return countryCache[ip];
-  }
+
 
   try {
     

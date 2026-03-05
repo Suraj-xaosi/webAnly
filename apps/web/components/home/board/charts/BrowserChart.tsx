@@ -116,7 +116,7 @@ export default function BrowsersChart() {
         type: "bar",
         data: values,
         itemStyle: {
-          color: "#4fa3ff",
+          color: "#5470c6",
           borderRadius: [4, 4, 0, 0],
         },
         barWidth: "40%",

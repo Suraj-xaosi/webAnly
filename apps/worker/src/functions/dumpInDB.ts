@@ -57,8 +57,13 @@ export default async function dumpInDB(eventData: eventData) {
 				TimeSpent: eventData.timeSpent || null,
 			},
 		});
+		await prisma.site.update({
+			where: { id: eventData.siteId },
+			data: {
+				viewsIn5min: { increment: 1 },
+			},
+		});
 		console.log("✅ Raw event stored");
-
 		console.log("✅ Processed event", { siteId: eventData.siteId, visitorId: eventData.visitorId });
 	} catch (err) {
 		console.error("❌ Failed to process event", err);
