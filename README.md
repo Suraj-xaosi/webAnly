@@ -21,6 +21,10 @@ webAnly is a powerful, full-stack web analytics platform designed to deliver rea
 - **Backend:** Next.js API routes, Prisma ORM, PostgreSQL, kafka 
 - **Authentication:** NextAuth.js ,OAuth
 - **Monorepo Management:** TurboRepo for efficient builds and workspace management
+- 
+<img width="2769" height="1931" alt="diagram-export-3-5-2026-8_57_50-PM" src="https://github.com/user-attachments/assets/252f2ab8-9403-4ceb-988e-89ed7a23066c" />
+
+
 
 
 ## Getting started :--
