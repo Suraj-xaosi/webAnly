@@ -16,9 +16,10 @@ interface HorizontalNavbarProps {
     avatar: string
   }
   themeSwitcher?: React.ReactNode
+  onNavigate?: (href: string) => void
 }
 
-export function HorizontalNavbar({ user, themeSwitcher }: HorizontalNavbarProps) {
+export function HorizontalNavbar({ user, themeSwitcher, onNavigate }: HorizontalNavbarProps) {
   const { resolvedTheme, setTheme } = useTheme()
   const [cmdOpen, setCmdOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
@@ -96,7 +97,7 @@ export function HorizontalNavbar({ user, themeSwitcher }: HorizontalNavbarProps)
         </div>
       </header>
 
-      <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
+      <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} onNavigate={onNavigate} />
     </>
   )
 }
