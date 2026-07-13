@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes"
+import { ThemeNameSync } from "./theme-name-sync"
 
 function ThemeProvider({
   children,
@@ -16,6 +17,7 @@ function ThemeProvider({
       {...props}
     >
       <ThemeHotkey />
+      <ThemeNameSync />
       {children}
     </NextThemesProvider>
   )

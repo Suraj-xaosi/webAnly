@@ -64,7 +64,7 @@ export function DomainSwitcher({ domains, activeDomainId, onSelect }: DomainSwit
                 {getDomainInitial(activeDomain.domainName)}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{activeDomain.domainName}</span>
+                <span className="truncate font-heading font-medium">{activeDomain.domainName}</span>
               </div>
               <ChevronsUpDownIcon className="ml-auto" />
             </SidebarMenuButton>
@@ -87,7 +87,7 @@ export function DomainSwitcher({ domains, activeDomainId, onSelect }: DomainSwit
                 <div className="flex size-6 items-center justify-center rounded-md border">
                   {getDomainInitial(domain.domainName)}
                 </div>
-                {domain.domainName}
+                <span className="font-heading">{domain.domainName}</span>
                 <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
               </DropdownMenuItem>
             ))}

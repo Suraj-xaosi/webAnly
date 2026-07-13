@@ -1,11 +1,13 @@
+//apps/packages/ui/components/horizontalnavabar.tsx
 "use client"
 
 import * as React from "react"
+import { useTheme } from "next-themes"
 import { Bell, Sun, Moon, Settings, Search } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar"
 import { SidebarTrigger } from "@workspace/ui/components/sidebar"
-import { CommandPalette } from "@workspace/ui/components/main/commandPalette" // 👈
+import { CommandPalette } from "@workspace/ui/components/main/commandPalette"
 
 interface HorizontalNavbarProps {
   user?: {
@@ -13,13 +15,18 @@ interface HorizontalNavbarProps {
     email: string
     avatar: string
   }
+  themeSwitcher?: React.ReactNode
 }
 
-export function HorizontalNavbar({ user }: HorizontalNavbarProps) {
-  const [isDark, setIsDark] = React.useState(true)
-  const [cmdOpen, setCmdOpen] = React.useState(false) // 👈
+export function HorizontalNavbar({ user, themeSwitcher }: HorizontalNavbarProps) {
+  const { resolvedTheme, setTheme } = useTheme()
+  const [cmdOpen, setCmdOpen] = React.useState(false)
+  const [mounted, setMounted] = React.useState(false)
 
-  // ⌘K / Ctrl+K keyboard shortcut
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -36,13 +43,12 @@ export function HorizontalNavbar({ user }: HorizontalNavbarProps) {
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background px-4">
         <SidebarTrigger className="-ml-1" />
 
-        {/* Search bar — clicking opens command palette */}
         <button
-          onClick={() => setCmdOpen(true)} // 👈
+          onClick={() => setCmdOpen(true)}
           className="flex flex-1 items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground max-w-md hover:bg-muted transition-colors cursor-pointer"
         >
           <Search className="h-3.5 w-3.5 shrink-0" />
-          <span className="flex-1 text-left">Search...</span>
+          <span className="flex-1 font-heading text-left">Search...</span>
           <kbd className="pointer-events-none hidden select-none rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-flex gap-0.5">
             <span>⌘</span><span>K</span>
           </kbd>
@@ -52,7 +58,7 @@ export function HorizontalNavbar({ user }: HorizontalNavbarProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="hidden sm:flex text-purple-400 hover:text-purple-300 hover:bg-purple-400/10 font-semibold text-xs px-2"
+            className="hidden sm:flex text-primary hover:text-primary/80 hover:bg-primary/10 font-semibold text-xs px-2"
           >
             Get Pro
           </Button>
@@ -62,8 +68,19 @@ export function HorizontalNavbar({ user }: HorizontalNavbarProps) {
             <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-destructive ring-1 ring-background" />
           </Button>
 
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsDark(!isDark)}>
-            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          {themeSwitcher}
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          >
+            {mounted && resolvedTheme === "dark" ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
           </Button>
 
           <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -72,15 +89,14 @@ export function HorizontalNavbar({ user }: HorizontalNavbarProps) {
 
           <Avatar className="h-8 w-8 cursor-pointer">
             <AvatarImage src={user?.avatar} alt={user?.name} />
-            <AvatarFallback className="text-xs font-semibold bg-violet-600 text-white">
+            <AvatarFallback className="text-xs font-heading font-semibold bg-primary text-primary-foreground">
               {user?.name?.slice(0, 2).toUpperCase() ?? "TB"}
             </AvatarFallback>
           </Avatar>
         </div>
       </header>
 
-      {/* Command palette modal */}
-      <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} /> {/* 👈 */}
+      <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
     </>
   )
 }

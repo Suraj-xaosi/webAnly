@@ -80,7 +80,7 @@ export function DateRangePicker({ value, onApply }: DateRangePickerProps) {
   return (
     <Popover open={open} onOpenChange={handleOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className="gap-2 font-heading">
           <CalendarIcon className="w-4 h-4" />
           {formatRange(applied)}
           <ChevronDown className="w-3 h-3 text-muted-foreground" />
@@ -99,7 +99,7 @@ export function DateRangePicker({ value, onApply }: DateRangePickerProps) {
                 key={p.label}
                 onClick={() => handlePreset(p)}
                 className={cn(
-                  "text-left px-4 py-2 text-sm transition-all border-l-2",
+                  "text-left px-4 py-2 text-sm font-heading transition-all border-l-2",
                   activePreset === p.label
                     ? "bg-accent text-accent-foreground border-foreground"
                     : "text-muted-foreground border-transparent hover:bg-accent hover:text-accent-foreground hover:border-muted-foreground"
@@ -122,7 +122,7 @@ export function DateRangePicker({ value, onApply }: DateRangePickerProps) {
             />
 
             <div className="border-t pt-3 flex items-center justify-between gap-4">
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs font-heading text-muted-foreground">
                 {tmp.from && tmp.to ? (
                   <>
                     <span className="text-foreground">{format(tmp.from, "dd MMM")}</span>
