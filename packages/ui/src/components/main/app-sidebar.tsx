@@ -1,12 +1,11 @@
+//apps/packages/ui/src/components/main/app-sidebar.tsx
 "use client"
 
 import * as React from "react"
 
 import { NavMain } from "@workspace/ui/components/nav-main"
-//import { NavProjects } from "@workspace/ui/components/nav-projects"
 import { NavUser } from "@workspace/ui/components/nav-user"
-//import { TeamSwitcher } from "@workspace/ui/components/domain-switcher"
-import {SidebarBrand} from "@workspace/ui/components/sidebarBrand"
+import { SidebarBrand } from "@workspace/ui/components/sidebarBrand"
 import {
   Sidebar,
   SidebarContent,
@@ -15,7 +14,6 @@ import {
   SidebarRail,
 } from "@workspace/ui/components/sidebar"
 import { GalleryVerticalEndIcon, AudioLinesIcon, TerminalIcon, TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon, FrameIcon, PieChartIcon, MapIcon } from "lucide-react"
-import { Avatar } from "radix-ui"
 
 // This is sample data.
 const data = {
@@ -26,26 +24,17 @@ const data = {
   teams: [
     {
       name: "webAnly",
-      logo: (
-        <GalleryVerticalEndIcon
-        />
-      ),
+      logo: <GalleryVerticalEndIcon />,
       plan: "pro",
     },
     {
       name: "Acme Corp.",
-      logo: (
-        <AudioLinesIcon
-        />
-      ),
+      logo: <AudioLinesIcon />,
       plan: "premium",
     },
     {
       name: "Evil Corp.",
-      logo: (
-        <TerminalIcon
-        />
-      ),
+      logo: <TerminalIcon />,
       plan: "Free",
     },
   ],
@@ -53,126 +42,47 @@ const data = {
     {
       title: "domain",
       url: "/domain",
-      icon: (
-        <TerminalSquareIcon
-        />
-      ),
+      icon: <TerminalSquareIcon />,
       isActive: true,
       items: [
-        
-        {
-          title: "domains & scripts",
-          url: "/domain#scripts",
-        },
-        {
-          title: "domain - apikey",
-          url: "/domain#apikey",
-        },
-        {
-          title: "add & update domain",
-          url: "/domain#add",
-        },
+        { title: "domains & scripts", url: "/domain#scripts" },
+        { title: "domain - apikey", url: "/domain#apikey" },
+        { title: "add & update domain", url: "/domain#add" },
       ],
     },
     {
       title: "dashboard",
       url: "/dashboard",
-      icon: (
-        <BotIcon
-        />
-      ),
+      icon: <BotIcon />,
       items: [
-        {
-          title: "analytics dashboard",
-          url: "/dashboard",
-        },
-        {
-          title: "Live dashboard",
-          url: "/liveDashboard",
-        },
-        {
-          title: "Public dashboard",
-          url: "#",
-        },
+        { title: "analytics dashboard", url: "/dashboard" },
+        { title: "Live dashboard", url: "/liveDashboard" },
+        { title: "Public dashboard", url: "#" },
       ],
     },
     {
       title: "Documentation",
       url: "#",
-      icon: (
-        <BookOpenIcon
-        />
-      ),
+      icon: <BookOpenIcon />,
       items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Rules",
-          url: "#",
-        },
+        { title: "Introduction", url: "#" },
+        { title: "Get Started", url: "#" },
+        { title: "Tutorials", url: "#" },
+        { title: "Rules", url: "#" },
       ],
     },
     {
       title: "Settings",
       url: "#",
-      icon: (
-        <Settings2Icon
-        />
-      ),
+      icon: <Settings2Icon />,
       items: [
-        {
-          title: "Account settings",
-          url: "#",
-        },
-        {
-          title: "Dashboard settings",
-          url: "#",
-        },
-        {
-          title: "Domain settings",
-          url: "#",
-        },
-      
-        
+        { title: "Account settings", url: "#" },
+        { title: "Dashboard settings", url: "#" },
+        { title: "Domain settings", url: "#" },
       ],
     },
   ],
-  projects: [
-    /*{
-      name: "Design Engineering",
-      url: "#",
-      icon: (
-        <FrameIcon
-        />
-      ),
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: (
-        <PieChartIcon
-        />
-      ),
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: (
-        <MapIcon
-        />
-      ),
-    },*/
-  ],
+  projects: [],
 }
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -182,25 +92,22 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     avatar?: string | null
   }
   onSignOut?: () => void
+  LinkComponent?: React.ElementType
 }
 
-export function AppSidebar({ user, onSignOut, ...props }: AppSidebarProps) {
+export function AppSidebar({ user, onSignOut, LinkComponent, ...props }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        
-        <SidebarBrand brand={data.brand}/>
-        {/* <TeamSwitcher teams={data.teams} /> */}
+        <SidebarBrand brand={data.brand} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        {/* <NavProjects projects={data.projects} /> */}
+        <NavMain items={data.navMain} LinkComponent={LinkComponent} />
       </SidebarContent>
       <SidebarFooter>
         {user && <NavUser user={user} onSignOut={onSignOut} />}
       </SidebarFooter>
       <SidebarRail />
-      {/* i need here  <HorizontalNavbar /> */}
     </Sidebar>
   )
 }

@@ -37,24 +37,23 @@ export default function DashboardPage() {
 
   return (
     <div className="grid gap-6">
-      <Card>
-        <CardContent className="flex flex-wrap items-center justify-between gap-4 p-6">
-          <div className="w-fit">
-            <DomainSwitch />
-          </div>
-          <DateRangePicker
-            value={{ from: new Date(from), to: new Date(to) }}
-            onApply={(range) => {
-              if (range.from && range.to) {
-                dispatch(setDateRange({
-                  from: format(range.from, "yyyy-MM-dd"),
-                  to: format(range.to, "yyyy-MM-dd"),
-                }));
-              }
-            }}
-          />
-        </CardContent>
-      </Card>
+
+      <div className="flex items-center justify-between gap-4">
+        <div className="w-fit">
+          <DomainSwitch />
+        </div>
+        <DateRangePicker
+          value={{ from: new Date(from), to: new Date(to) }}
+          onApply={(range) => {
+            if (range.from && range.to) {
+              dispatch(setDateRange({
+                from: format(range.from, "yyyy-MM-dd"),
+                to:   format(range.to, "yyyy-MM-dd"),
+              }));
+            }
+          }}
+        />
+      </div>
 
       <TimeseriesCard
         data={timeseries.data?.data ?? []}

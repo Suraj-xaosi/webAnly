@@ -1,6 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { authClient } from "@/lib/auth-client"
 import { AppSidebar as AppSidebarBase } from "@workspace/ui/components/main/app-sidebar"
 import { useEffect, useState } from "react"
@@ -30,5 +31,12 @@ export function AppSidebarWrapper(props: React.ComponentProps<typeof AppSidebarB
     avatar: session.user.image,
   }
 
-  return <AppSidebarBase {...props} user={user} onSignOut={handleSignOut} />
+  return (
+    <AppSidebarBase
+      {...props}
+      user={user}
+      onSignOut={handleSignOut}
+      LinkComponent={Link}
+    />
+  )
 }

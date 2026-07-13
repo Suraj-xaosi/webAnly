@@ -1,14 +1,13 @@
 // web/pages/LiveDashboardPage.tsx
 "use client"
 
-import { format } from "date-fns";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectDomainId, selectFrom, selectTo, setDateRange } from "@/store/slices/dashboardSlice";
 import { useRealtimeTimeseries } from "@/hooks/useRealtimeTimeseries";
 import { useRealtimeDimension } from "@/hooks/useRealtimeDimension";
 import { TimeseriesCard } from "@/components/timeseriesCard";
 import { DimensionCard } from "@/components/dimensionCard";
-import { DateRangePicker } from "@workspace/ui/components/main/dateRangePicker";
+
 import {
   Card,
   CardContent,
@@ -41,14 +40,12 @@ export default function liveDashboardPage() {
 
   return (
     <div className="grid gap-6">
-      <Card>
-        <CardContent className="flex flex-wrap items-center justify-between gap-4 p-6">
+      
+
           <div className="w-fit">
             <DomainSwitch />
           </div>
-          
-        </CardContent>
-      </Card>
+      
 
       {!domainId ? (
         <Card className="border-dashed">

@@ -19,6 +19,7 @@ import { ChevronRightIcon } from "lucide-react"
 
 export function NavMain({
   items,
+  LinkComponent = "a",
 }: {
   items: {
     title: string
@@ -30,6 +31,8 @@ export function NavMain({
       url: string
     }[]
   }[]
+  /** Pass Next's `Link` (or any router's link component) from the app layer for client-side navigation. Defaults to a plain <a> if omitted. */
+  LinkComponent?: React.ElementType
 }) {
   return (
     <SidebarGroup>
@@ -55,9 +58,9 @@ export function NavMain({
                   {item.items?.map((subItem) => (
                     <SidebarMenuSubItem key={subItem.title}>
                       <SidebarMenuSubButton asChild>
-                        <a href={subItem.url}>
+                        <LinkComponent href={subItem.url}>
                           <span className="font-heading">{subItem.title}</span>
-                        </a>
+                        </LinkComponent>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   ))}
