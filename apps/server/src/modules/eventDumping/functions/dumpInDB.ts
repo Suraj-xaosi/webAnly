@@ -18,6 +18,8 @@ type EventData = {
   browser?:   string;
   device?:    string;
   os?:        string;
+  timezone?:  string;
+  exitType?:  string | null;
   timeSpent?: number;
 };
 
@@ -35,6 +37,8 @@ export default async function dumpInDB(eventData: EventData) {
         browser:    eventData.browser   || "unknown",
         device:     eventData.device    || "unknown",
         os:         eventData.os        || "unknown",
+        timezone:   eventData.timezone  || "unknown",
+        exitType:   eventData.exitType  || null,
         timeSpent:  eventData.timeSpent || 0,
         visitorId:  hashVisitorId(eventData.visitorId),
       },

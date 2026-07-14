@@ -33,3 +33,4 @@
   }
 }
 //npx turbo run db:migrate -- --name init 
+//npx turbo run db:migrate -- --name my-migration-name

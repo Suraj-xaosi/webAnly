@@ -1,13 +1,3 @@
-//apps/web/public/script.js
-
-/**
- * <script 
-    src="http://localhost:3000/script.js" 
-    data-domain-name="yourdomain.com" 
-    data-api-key="your-api-key-12345">
-  </script>
- */
-
 (function () {
   const COLLECT_URL = "http://localhost:4000/collect";
   const script = document.currentScript;
@@ -69,6 +59,7 @@
   };
 
   let lastPath = state.page; // dedup guard
+  let flushed = false; // prevent double-flush (e.g. pagehide firing right after hidden)
 
   // ── SEND ───────────────────────────────────────────────────────────────────
 
@@ -89,10 +80,14 @@
   }
 
   // ── FLUSH ──────────────────────────────────────────────────────────────────
-  // Called when user leaves current page (tab close OR SPA navigation).
+  // Called when user leaves current page (tab close, tab hide, OR SPA navigation).
   // Sends the completed visit for the page they're leaving.
+  // exitType tells the server WHY this flush happened:
+  //   "navigation" - user moved to another page on this same site (NOT a real exit)
+  //   "pagehide"   - tab/browser closing, or navigating away entirely (real exit)
+  //   "hidden"     - tab hidden (switched tabs, minimized) — ambiguous, might come back
 
-  function flush() {
+  function flush(exitType) {
     send({
       apikey,
       page:      state.page,
@@ -104,6 +99,7 @@
       device:    getDevice(),
       timezone:  Intl.DateTimeFormat().resolvedOptions().timeZone,
       visitedAt: new Date(state.startedAt).toISOString(), // when they ARRIVED, not when they left
+      exitType,
     });
   }
 
@@ -114,8 +110,8 @@
     if (newPath === lastPath) return; // ignore hash jumps / replaceState quirks
     lastPath = newPath;
 
-    // 1. Flush the page they just left
-    flush();
+    // 1. Flush the page they just left — this is NOT an exit, they're still on the site
+    flush("navigation");
 
     // 2. Wait one tick so framework updates document.title
     setTimeout(() => {
@@ -123,9 +119,10 @@
       state = {
         page:      window.location.pathname,
         pageTitle: document.title,
-        referrer:  state.page,        // previous page becomes referrer
+        referrer:  document.referrer || null,    
         startedAt: Date.now(),
       };
+      flushed = false; // reset for the new page
     }, 0);
   }
 
@@ -139,10 +136,17 @@
 
   // ── EXIT DETECTION ─────────────────────────────────────────────────────────
 
-  window.addEventListener("pagehide", flush);
+  window.addEventListener("pagehide", function () {
+    if (flushed) return; // already sent via visibilitychange right before this
+    flushed = true;
+    flush("pagehide");
+  });
 
   document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState === "hidden") flush();
+    if (document.visibilityState === "hidden" && !flushed) {
+      flushed = true;
+      flush("hidden");
+    }
   });
 
   // ── INIT ───────────────────────────────────────────────────────────────────

@@ -1,14 +1,9 @@
 "use client"
 
-import { TrendingUp } from "lucide-react"
 import { Bar, BarChart, XAxis, YAxis } from "recharts"
 
 import {
-  Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@workspace/ui/components/card"
 import {
   ChartContainer,
@@ -17,7 +12,6 @@ import {
   type ChartConfig,
 } from "@workspace/ui/components/chart"
 
-export const description = "A mixed bar chart"
 export type DataKey = "visitors" | "views" | "avgDwell" | "viewsPerVisitor"
 
 export interface DimensionPoint {
@@ -27,7 +21,6 @@ export interface DimensionPoint {
   avgDwell:        number;   // seconds
   viewsPerVisitor: number;
 }
-
 
 interface BarChartProps {
   data: DimensionPoint[];
@@ -53,36 +46,39 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
+function truncateLabel(value: string, maxLength = 14): string {
+  return value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value
+}
+
 export function ChartBarMixed({ data, dataKey }: BarChartProps) {
   return (
-  
-      <CardContent>
-        <ChartContainer config={chartConfig}>
-          <BarChart
-            accessibilityLayer
-            data={data}
-            layout="vertical"
-            margin={{
-              left: 0,
-            }}
-          >
-            <YAxis
-              dataKey="name"
-              type="category"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-            />
-            <XAxis dataKey={dataKey} type="number" hide />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
-            <Bar dataKey={dataKey} fill={`var(--color-${dataKey})`} radius={5} />
-          </BarChart>
-        </ChartContainer>
-      </CardContent>
-
-    
+    <CardContent>
+      <ChartContainer config={chartConfig}>
+        <BarChart
+          accessibilityLayer
+          data={data}
+          layout="vertical"
+          margin={{
+            left: 12,
+          }}
+        >
+          <YAxis
+            dataKey="name"
+            type="category"
+            tickLine={false}
+            tickMargin={10}
+            axisLine={false}
+            width={110}
+            tickFormatter={(value) => truncateLabel(value)}
+          />
+          <XAxis dataKey={dataKey} type="number" hide />
+          <ChartTooltip
+            cursor={false}
+            content={<ChartTooltipContent hideLabel />}
+          />
+          <Bar dataKey={dataKey} fill={`var(--color-${dataKey})`} radius={5} />
+        </BarChart>
+      </ChartContainer>
+    </CardContent>
   )
 }

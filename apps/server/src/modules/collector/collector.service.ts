@@ -7,6 +7,13 @@ import parseDate                  from "./functions/parseDate";
 import { extractRealIp }          from "./functions/extractIP";
 import countryFromIp              from "../eventDumping/functions/countryFromIp";
 import { Request }                from "express";
+import { extractReferrerHostname } from "./functions/extractReferrerHostname";
+
+const VALID_EXIT_TYPES = new Set(["navigation", "pagehide", "hidden"]);
+
+function parseExitType(exitType: any): string | null {
+  return typeof exitType === "string" && VALID_EXIT_TYPES.has(exitType) ? exitType : null;
+}
 
 export async function handleCollectEvent(req: Request) {
   const body = req.body || {};
@@ -17,6 +24,8 @@ export async function handleCollectEvent(req: Request) {
   const visitorID = extractRealIp(req.ip || "");
   const visitedAt = parseDate(body.visitedAt) || new Date();
   const timeSpent = parseTime(body.timeSpent);
+  const exitType  = parseExitType(body.exitType);
+  const referrer  = extractReferrerHostname(body.referrer);
 
   let country = "unknown";
   try {
@@ -31,12 +40,13 @@ export async function handleCollectEvent(req: Request) {
     visitorId: visitorID,
     pageTitle: body.pageTitle || null,
     page: body.page,
-    referrer: body.referrer || null,
+    referrer,
     browser: body.browser || "Unknown",
     device: body.device || "Unknown",
     os: body.os || "Unknown",
     timezone: body.timezone || "Unknown",
     country,
+    exitType,
     timeSpent,
     visitedAt,
   };

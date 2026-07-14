@@ -100,7 +100,9 @@ model PageVisit {
   browser   String?
   device    String?
   os        String?
-  
+
+  exitType  String?
+
   timeSpent Int
 
   domain Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)

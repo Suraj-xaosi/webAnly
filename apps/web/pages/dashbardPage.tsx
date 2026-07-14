@@ -15,6 +15,8 @@ import {
 } from "@workspace/ui/components/card";
 import DomainSwitch from "@/components/domainSwitch";
 import type { Dimension } from "@/hooks/useDimension";
+import { useExitPages } from "@/hooks/useExitPages";
+import { ExitPageCard } from "@/components/exitPageCard";
 
 const DIMENSIONS: Dimension[] = ["browser", "country", "device", "os", "referrer", "page"];
 
@@ -32,6 +34,8 @@ export default function DashboardPage() {
   const os = useDimension({ domainId, from, to, dimension: "os" });
   const referrer = useDimension({ domainId, from, to, dimension: "referrer" });
   const page = useDimension({ domainId, from, to, dimension: "page" });
+  const exitPages = useExitPages({ domainId, from, to });
+  
 
   const dimensionMap = { browser, country, device, os, referrer, page };
 
@@ -63,6 +67,12 @@ export default function DashboardPage() {
       />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <ExitPageCard
+          data={exitPages.data?.data ?? []}
+          isLoading={exitPages.isLoading}
+          isError={exitPages.isError}
+          error={exitPages.error}
+        />
         {DIMENSIONS.map((dimension) => {
           const result = dimensionMap[dimension];
           return (
