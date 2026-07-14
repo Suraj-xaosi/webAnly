@@ -18,6 +18,7 @@ import {
 } from "@workspace/ui/components/chart"
 
 export const description = "A mixed bar chart"
+export type DataKey = "visitors" | "views" | "avgDwell" | "viewsPerVisitor"
 
 export interface DimensionPoint {
   name:            string;
@@ -27,7 +28,6 @@ export interface DimensionPoint {
   viewsPerVisitor: number;
 }
 
-type DataKey = "visitors" | "views" | "avgDwell" | "viewsPerVisitor"
 
 interface BarChartProps {
   data: DimensionPoint[];
@@ -55,11 +55,7 @@ const chartConfig = {
 
 export function ChartBarMixed({ data, dataKey }: BarChartProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Bar Chart - Mixed</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
-      </CardHeader>
+  
       <CardContent>
         <ChartContainer config={chartConfig}>
           <BarChart
@@ -87,6 +83,6 @@ export function ChartBarMixed({ data, dataKey }: BarChartProps) {
         </ChartContainer>
       </CardContent>
 
-    </Card>
+    
   )
 }
