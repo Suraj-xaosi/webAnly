@@ -5,7 +5,7 @@ import { KAFKA_TOPICS }           from "../../config/kafka";
 import parseTime                  from "./functions/parseTimeSpent";
 import parseDate                  from "./functions/parseDate";
 import { extractRealIp }          from "./functions/extractIP";
-import countryFromIp              from "../eventDumping/functions/countryFromIp";
+import countryFromIp              from "./functions/countryFromIp";
 import { Request }                from "express";
 import { extractReferrerHostname } from "./functions/extractReferrerHostname";
 

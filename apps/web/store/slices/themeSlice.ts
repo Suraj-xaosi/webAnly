@@ -1,13 +1,19 @@
+// store/slices/themeSlice.ts
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-export type ThemeName = "artdeco" | "ocean" | "sunset" | "monochrome";
+export type ThemeName =
+  | "atelier-deco"
+  | "spring-notebook"
+  | "mediterranean"
+  | "studio-desk"
+  | "golden-hour";
 
 export interface ThemeState {
   themeName: ThemeName;
 }
 
 const initialState: ThemeState = {
-  themeName: "artdeco",
+  themeName: "atelier-deco",
 };
 
 const themeSlice = createSlice({

@@ -14,10 +14,11 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { selectThemeName, setThemeName, type ThemeName } from "@/store/slices/themeSlice"
 
 const THEMES: { id: ThemeName; label: string }[] = [
-  { id: "artdeco",    label: "Art Deco" },
-  { id: "ocean",      label: "Ocean" },
-  { id: "sunset",     label: "Sunset" },
-  { id: "monochrome", label: "Monochrome" },
+  { id: "atelier-deco",     label: "Atelier Deco" },
+  { id: "spring-notebook",  label: "Spring Notebook" },
+  { id: "mediterranean",    label: "Mediterranean Sketchbook" },
+  { id: "studio-desk",      label: "Studio Desk" },
+  { id: "golden-hour",      label: "Golden Hour" },
 ]
 
 export function ThemeSwitcher() {
