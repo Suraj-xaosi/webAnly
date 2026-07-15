@@ -58,12 +58,13 @@ export async function GET(req: NextRequest) {
       LIMIT ${limit}
     `;
 
-    const data = rows.map((row) => ({
-      name:     row.name,
-      views:    row.views,
-      exits:    row.exits,
-      exitRate: row.views > 0 ? +((row.exits / row.views) * 100).toFixed(1) : 0,
-    }));
+    const data = rows
+      .filter((row) => row.exits > 0)
+      .map((row) => ({
+        name:     row.name,
+        exits:    row.exits,
+        exitRate: row.views > 0 ? +((row.exits / row.views) * 100).toFixed(1) : 0,
+      }));
 
     return NextResponse.json({ from, to, total: data.length, data });
   } catch (err) {
