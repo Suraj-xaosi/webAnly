@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 
-export type Interval = "hour" | "day" | "week" | "month";
+export type Interval = "hour" | "dayname" | "day" | "week" | "month";
 
 export interface TimeseriesPoint {
   date: string;
@@ -31,7 +31,7 @@ export interface ApiError {
 }
 
 async function fetchTimeseries(params: TimeseriesParams): Promise<TimeseriesResponse> {
-  const { domainId, from, to, interval = "hour" } = params;
+  const { domainId, from, to, interval } = params;
 
   const { data } = await axios.get<TimeseriesResponse>("/api/analytics/timeseries", {
     params: { domainId, from, to, interval },

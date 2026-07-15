@@ -1,38 +1,3 @@
-/*"use client"
-import { useTimeseries, type TimeseriesPoint, type Interval } from "@/hooks/useTimeseries";
-import { AreaChartGradient } from "@workspace/ui/components/main/areaChartGradient";
-
-interface TimeseriesProps {
-  domainId: string;
-  from: string;
-  to: string;
-  interval?: Interval;
-}
-
-
-
-export function TimeseriesCard({ domainId, from, to, interval }: TimeseriesProps) {
-  const res = useTimeseries({ domainId, from, to, interval });
-  const data:TimeseriesPoint[] = res.data?.data || [];
-  
-  if (res.isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (res.isError) {
-    return <div>Error: {res.error?.message}</div>;
-  }
-
-  return (
-    <div>
-      <h2>Timeseries Data</h2>
-      <pre>{JSON.stringify(data, null, 2)}</pre>
-      <AreaChartGradient data={data} />
-    </div>
-  );
-}
-*/
-
 //web/components/timeseriesCard.tsx
 "use client"
 import { AreaChartGradient } from "@workspace/ui/components/main/areaChartGradient";

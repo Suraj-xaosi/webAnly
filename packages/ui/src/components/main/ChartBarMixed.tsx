@@ -69,6 +69,7 @@ export function ChartBarMixed({ data, dataKey }: BarChartProps) {
             tickMargin={10}
             axisLine={false}
             width={110}
+            tick={{ fontSize: 13, fontWeight: 600, fill: "var(--foreground)" }}
             tickFormatter={(value) => truncateLabel(value)}
           />
           <XAxis dataKey={dataKey} type="number" hide />

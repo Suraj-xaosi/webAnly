@@ -53,6 +53,7 @@ export function ChartBarExit({ data, dataKey }: ChartBarExitProps) {
           type="category"
           tickLine={false}
           tickMargin={10}
+          tick={{ fontSize: 13, fontWeight: 600, fill: "var(--foreground)" }}
           axisLine={false}
           width={110}
           tickFormatter={(value) => truncateLabel(value)}

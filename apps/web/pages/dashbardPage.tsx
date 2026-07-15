@@ -3,7 +3,7 @@
 
 import { format } from "date-fns";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { selectDomainId, selectFrom, selectTo, setDateRange } from "@/store/slices/dashboardSlice";
+import { selectDomainId, selectFrom, selectTo, selectInterval, setDateRange } from "@/store/slices/dashboardSlice";
 import { useTimeseries } from "@/hooks/useTimeseries";
 import { useDimension } from "@/hooks/useDimension";
 import { TimeseriesCard } from "@/components/timeseriesCard";
@@ -25,8 +25,9 @@ export default function DashboardPage() {
   const domainId = useAppSelector(selectDomainId);
   const from = useAppSelector(selectFrom);
   const to = useAppSelector(selectTo);
+  const interval = useAppSelector(selectInterval);
 
-  const timeseries = useTimeseries({ domainId, from, to });
+  const timeseries = useTimeseries({ domainId, from, to, interval });
 
   const browser = useDimension({ domainId, from, to, dimension: "browser" });
   const country = useDimension({ domainId, from, to, dimension: "country" });
@@ -35,7 +36,7 @@ export default function DashboardPage() {
   const referrer = useDimension({ domainId, from, to, dimension: "referrer" });
   const page = useDimension({ domainId, from, to, dimension: "page" });
   const exitPages = useExitPages({ domainId, from, to });
-  
+
 
   const dimensionMap = { browser, country, device, os, referrer, page };
 
@@ -48,11 +49,12 @@ export default function DashboardPage() {
         </div>
         <DateRangePicker
           value={{ from: new Date(from), to: new Date(to) }}
-          onApply={(range) => {
+          onApply={(range, interval) => {
             if (range.from && range.to) {
               dispatch(setDateRange({
-                from: format(range.from, "yyyy-MM-dd"),
-                to:   format(range.to, "yyyy-MM-dd"),
+                from:     format(range.from, "yyyy-MM-dd"),
+                to:       format(range.to, "yyyy-MM-dd"),
+                interval,
               }));
             }
           }}

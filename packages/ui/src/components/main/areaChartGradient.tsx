@@ -59,7 +59,7 @@ export function AreaChartGradient({ data }: AreaChartGradientProps) {
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tickFormatter={(value) => value.slice(0, 3)}
+              tick={{ fontSize: 13, fontWeight: 600, fill: "var(--foreground)" }}
             />
             <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
             <defs>

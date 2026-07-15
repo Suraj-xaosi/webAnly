@@ -13,27 +13,30 @@ import { cn } from "@workspace/ui/lib/utils"
 
 const today = new Date()
 
+export type Interval = "hour" | "dayname" | "day" | "week" | "month"
+
 const PRESETS = [
-  { label: "Today",        getRange: () => ({ from: today, to: today }) },
-  { label: "Yesterday",    getRange: () => { const y = subDays(today, 1); return { from: y, to: y } } },
-  { label: "This Week",    getRange: () => ({ from: startOfWeek(today), to: today }) },
-  { label: "Last 7 Days",  getRange: () => ({ from: subDays(today, 6), to: today }) },
-  { label: "Last 28 Days", getRange: () => ({ from: subDays(today, 27), to: today }) },
-  { label: "This Month",   getRange: () => ({ from: startOfMonth(today), to: today }) },
-  { label: "Last Month",   getRange: () => ({ from: startOfMonth(subMonths(today, 1)), to: endOfMonth(subMonths(today, 1)) }) },
-  { label: "This Year",    getRange: () => ({ from: startOfYear(today), to: today }) },
+  { label: "Today",        interval: "hour" as Interval,    getRange: () => ({ from: today, to: today }) },
+  { label: "Yesterday",    interval: "hour" as Interval,    getRange: () => { const y = subDays(today, 1); return { from: y, to: y } } },
+  { label: "This Week",    interval: "dayname" as Interval, getRange: () => ({ from: startOfWeek(today), to: today }) },
+  { label: "Last 7 Days",  interval: "day" as Interval,     getRange: () => ({ from: subDays(today, 6), to: today }) },
+  { label: "Last 28 Days", interval: "day" as Interval,     getRange: () => ({ from: subDays(today, 27), to: today }) },
+  { label: "This Month",   interval: "week" as Interval,    getRange: () => ({ from: startOfMonth(today), to: today }) },
+  { label: "Last Month",   interval: "day" as Interval,     getRange: () => ({ from: startOfMonth(subMonths(today, 1)), to: endOfMonth(subMonths(today, 1)) }) },
+  { label: "This Year",    interval: "month" as Interval,   getRange: () => ({ from: startOfYear(today), to: today }) },
 ]
 
 const DEFAULT_RANGE: DateRange = {
   from: subDays(today, 27),
   to: today,
 }
+const DEFAULT_INTERVAL: Interval = "day" // matches "Last 28 Days" default
 
 interface DateRangePickerProps {
   /** Externally-controlled applied range (e.g. from Redux). If omitted, component manages its own state. */
   value?: DateRange
-  /** Fired when the user clicks "Apply" with the newly chosen range. */
-  onApply?: (range: DateRange) => void
+  /** Fired when the user clicks "Apply" with the newly chosen range and its resolved interval. */
+  onApply?: (range: DateRange, interval: Interval) => void
 }
 
 export function DateRangePicker({ value, onApply }: DateRangePickerProps) {
@@ -41,6 +44,7 @@ export function DateRangePicker({ value, onApply }: DateRangePickerProps) {
   const [internalApplied, setInternalApplied] = useState<DateRange>(value ?? DEFAULT_RANGE)
   const [tmp, setTmp] = useState<DateRange>(value ?? DEFAULT_RANGE)
   const [activePreset, setActivePreset] = useState("Last 28 Days")
+  const [activeInterval, setActiveInterval] = useState<Interval>(DEFAULT_INTERVAL)
 
   // Keep internal state in sync if parent controls `value` and changes it externally
   useEffect(() => {
@@ -58,7 +62,14 @@ export function DateRangePicker({ value, onApply }: DateRangePickerProps) {
 
   function handlePreset(preset: (typeof PRESETS)[0]) {
     setActivePreset(preset.label)
+    setActiveInterval(preset.interval)
     setTmp(preset.getRange())
+  }
+
+  function handleCalendarSelect(r: DateRange) {
+    setTmp(r)
+    setActivePreset("")
+    setActiveInterval(DEFAULT_INTERVAL) // manual drag always falls back to day+date
   }
 
   function handleApply() {
@@ -66,7 +77,7 @@ export function DateRangePicker({ value, onApply }: DateRangePickerProps) {
       // uncontrolled mode — manage our own applied state
       setInternalApplied(tmp)
     }
-    onApply?.(tmp)
+    onApply?.(tmp, activeInterval)
     setOpen(false)
   }
 
@@ -116,7 +127,7 @@ export function DateRangePicker({ value, onApply }: DateRangePickerProps) {
               mode="range"
               selected={tmp}
               onSelect={(r) => {
-                if (r) { setTmp(r); setActivePreset("") }
+                if (r) handleCalendarSelect(r)
               }}
               numberOfMonths={1}
             />
