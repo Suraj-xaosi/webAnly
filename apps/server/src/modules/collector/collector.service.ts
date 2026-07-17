@@ -8,6 +8,7 @@ import { extractRealIp }          from "./functions/extractIP";
 import countryFromIp              from "./functions/countryFromIp";
 import { Request }                from "express";
 import { extractReferrerHostname } from "./functions/extractReferrerHostname";
+import {normalizePath} from "./functions/normalizepath";
 
 const VALID_EXIT_TYPES = new Set(["navigation", "pagehide", "hidden"]);
 
@@ -26,7 +27,7 @@ export async function handleCollectEvent(req: Request) {
   const timeSpent = parseTime(body.timeSpent);
   const exitType  = parseExitType(body.exitType);
   const referrer  = extractReferrerHostname(body.referrer);
-
+ const page = normalizePath(body.page);
   let country = "unknown";
   try {
     country = visitorID ? await countryFromIp(visitorID) : "unknown";
@@ -39,7 +40,7 @@ export async function handleCollectEvent(req: Request) {
     domainName: domain.domainName,
     visitorId: visitorID,
     pageTitle: body.pageTitle || null,
-    page: body.page,
+    page,
     referrer,
     browser: body.browser || "Unknown",
     device: body.device || "Unknown",
@@ -56,8 +57,10 @@ export async function handleCollectEvent(req: Request) {
     messages: [{ key: domain.domainId, value: JSON.stringify(eventData) }],
   });
 
+  if(exitType != "hidden") {
   await producer.send({
     topic: KAFKA_TOPICS.SOCKET_EVENTS,
     messages: [{ key: domain.domainId, value: JSON.stringify(eventData) }],
   });
+  }
 }

@@ -19,9 +19,10 @@ export function useRealtimeDimension(
   to: string,
   apikey: string,
   enabled: boolean,
+  timezone?: string,
   limit?: number
 ): RealtimeDimensionResult {
-  const restQuery = useDimension({ domainId, from, to, dimension, limit });
+  const restQuery = useDimension({ domainId, from, to, dimension, limit, timezone });
 
   const [dimensionMap, setDimensionMap] = useState<Map<string, DimensionPoint>>(new Map());
   const [isLive, setIsLive] = useState(false);

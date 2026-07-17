@@ -18,8 +18,9 @@ export function useRealtimeTimeseries(
   to: string,
   apikey: string,
   enabled: boolean,
+  timezone?: string
 ): RealtimeTimeseriesResult {
-  const restQuery = useTimeseries({ domainId, from, to, interval: "hour" });
+  const restQuery = useTimeseries({ domainId, from, to, interval: "hour", timezone });
 
   const [timeseriesData, setTimeseriesData] = useState<TimeseriesPoint[]>([]);
   const [isLive, setIsLive] = useState(false);

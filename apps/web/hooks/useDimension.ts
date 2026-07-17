@@ -26,6 +26,7 @@ export interface DimensionParams {
   domainId:  string;
   from:      string;       // "YYYY-MM-DD"
   to:        string;       // "YYYY-MM-DD"
+  timezone?: string;       // optional timezone, e.g., "UTC", "America/New_York"
   dimension: Dimension;
   limit?:    number;       // default 100, max 500
 }
@@ -38,10 +39,10 @@ export interface ApiError {
 // ─── fetcher ──────────────────────────────────────────────────────────────────
 
 async function fetchDimension(params: DimensionParams): Promise<DimensionResponse> {
-  const { domainId, from, to, dimension, limit = 100 } = params;
+  const { domainId, from, to, dimension, limit = 100,timezone } = params;
 
   const { data } = await axios.get<DimensionResponse>("/api/analytics/dimension", {
-    params: { domainId, from, to, dimension, limit },
+    params: { domainId, from, to, dimension, limit, timezone },
     timeout: 10_000,
   });
 
@@ -64,11 +65,11 @@ export function normalizeDimensionError(error: unknown): ApiError {
 // ─── hook ─────────────────────────────────────────────────────────────────────
 
 export function useDimension(params: DimensionParams) {
-  const { domainId, from, to, dimension, limit = 100 } = params;
+  const { domainId, from, to, dimension, limit = 100 , timezone} = params;
 
   return useQuery<DimensionResponse, ApiError>({
 
-    queryKey: ["dimension", domainId, from, to, dimension, limit],
+    queryKey: ["dimension", domainId, from, to, dimension, limit, timezone],
 
     queryFn: () => fetchDimension(params),
 

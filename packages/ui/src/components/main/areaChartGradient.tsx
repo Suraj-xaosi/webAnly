@@ -41,7 +41,7 @@ export function AreaChartGradient({ data }: AreaChartGradientProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Area Chart - Gradient</CardTitle>
+        <CardTitle>TimeSeries Data - Gradient</CardTitle>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
@@ -60,6 +60,8 @@ export function AreaChartGradient({ data }: AreaChartGradientProps) {
               axisLine={false}
               tickMargin={8}
               tick={{ fontSize: 13, fontWeight: 600, fill: "var(--foreground)" }}
+              padding={{ left: 15, right: 20 }}
+              interval="preserveStartEnd"
             />
             <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
             <defs>

@@ -91,7 +91,7 @@ export function HorizontalNavbar({ user, themeSwitcher, onNavigate }: Horizontal
           <Avatar className="h-8 w-8 cursor-pointer">
             <AvatarImage src={user?.avatar} alt={user?.name} />
             <AvatarFallback className="text-xs font-heading font-semibold bg-primary text-primary-foreground">
-              {user?.name?.slice(0, 2).toUpperCase() ?? "TB"}
+              {mounted ? (user?.name?.slice(0, 2).toUpperCase() ?? "TB") : "TB"}
             </AvatarFallback>
           </Avatar>
         </div>

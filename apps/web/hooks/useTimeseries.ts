@@ -22,6 +22,7 @@ export interface TimeseriesParams {
   from: string;       // "YYYY-MM-DD"
   to: string;         // "YYYY-MM-DD"
   interval?: Interval;
+  timezone?: string;
 }
 
 
@@ -31,10 +32,10 @@ export interface ApiError {
 }
 
 async function fetchTimeseries(params: TimeseriesParams): Promise<TimeseriesResponse> {
-  const { domainId, from, to, interval } = params;
+  const { domainId, from, to, interval, timezone } = params;
 
   const { data } = await axios.get<TimeseriesResponse>("/api/analytics/timeseries", {
-    params: { domainId, from, to, interval },
+    params: { domainId, from, to, interval, timezone },
     // Abort if server takes more than 10s
     timeout: 10_000,
   });
@@ -43,11 +44,11 @@ async function fetchTimeseries(params: TimeseriesParams): Promise<TimeseriesResp
 }
 
 export function useTimeseries(params: TimeseriesParams) {
-  const { domainId, from, to, interval = "hour" } = params;
+  const { domainId, from, to, interval = "hour", timezone } = params;
 
   return useQuery<TimeseriesResponse, ApiError>({
     
-    queryKey: ["timeseries", domainId, from, to, interval],
+    queryKey: ["timeseries", domainId, from, to, interval, timezone],
 
     queryFn: () => fetchTimeseries(params),
 

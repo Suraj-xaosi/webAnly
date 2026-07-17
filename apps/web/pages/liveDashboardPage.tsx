@@ -2,7 +2,7 @@
 "use client"
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { selectDomainId, selectFrom, selectTo, setDateRange } from "@/store/slices/dashboardSlice";
+import { selectDomainId, selectFrom, selectTo, selectTimezone } from "@/store/slices/dashboardSlice";
 import { useRealtimeTimeseries } from "@/hooks/useRealtimeTimeseries";
 import { useRealtimeDimension } from "@/hooks/useRealtimeDimension";
 import { TimeseriesCard } from "@/components/timeseriesCard";
@@ -15,6 +15,7 @@ import {
 import DomainSwitch from "@/components/domainSwitch";
 import { useApiKey } from "@/hooks/useApikey";
 import type { Dimension } from "@/hooks/useDimension";
+import TimezonePicker from "@/components/timezonePicker";
 
 const DIMENSIONS: Dimension[] = ["browser", "country", "device", "os", "referrer", "page"];
 
@@ -23,27 +24,31 @@ export default function liveDashboardPage() {
   const domainId = useAppSelector(selectDomainId);
   const from = useAppSelector(selectFrom);
   const to = useAppSelector(selectTo);
+  const timezone = useAppSelector(selectTimezone);
 
   const { data: apikey, isPending: apikeyLoading } = useApiKey(domainId);
   const enabled = !!apikey && !apikeyLoading;
 
-  const timeseries = useRealtimeTimeseries(domainId, from, to, apikey ?? "", enabled);
+  const timeseries = useRealtimeTimeseries(domainId, from, to, apikey ?? "", enabled, timezone);
 
-  const browser = useRealtimeDimension("browser", domainId, from, to, apikey ?? "", enabled);
-  const country = useRealtimeDimension("country", domainId, from, to, apikey ?? "", enabled);
-  const device = useRealtimeDimension("device", domainId, from, to, apikey ?? "", enabled);
-  const os = useRealtimeDimension("os", domainId, from, to, apikey ?? "", enabled);
-  const referrer = useRealtimeDimension("referrer", domainId, from, to, apikey ?? "", enabled);
-  const page = useRealtimeDimension("page", domainId, from, to, apikey ?? "", enabled);
+  const browser = useRealtimeDimension("browser", domainId, from, to, apikey ?? "", enabled, timezone);
+  const country = useRealtimeDimension("country", domainId, from, to, apikey ?? "", enabled, timezone);
+  const device = useRealtimeDimension("device", domainId, from, to, apikey ?? "", enabled, timezone);
+  const os = useRealtimeDimension("os", domainId, from, to, apikey ?? "", enabled, timezone);
+  const referrer = useRealtimeDimension("referrer", domainId, from, to, apikey ?? "", enabled, timezone);
+  const page = useRealtimeDimension("page", domainId, from, to, apikey ?? "", enabled, timezone);
 
   const dimensionMap = { browser, country, device, os, referrer, page };
 
   return (
     <div className="grid gap-6">
-      
-
-          <div className="w-fit">
-            <DomainSwitch />
+    <div className="flex items-center justify-between gap-4">
+            <div className="w-fit">
+              <DomainSwitch />
+            </div>
+    
+            <TimezonePicker />
+    
           </div>
       
 

@@ -1,11 +1,10 @@
 // app/api/analytics/timeseries/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@repo/db";
+import { prisma, Prisma } from "@repo/db";
 
 const VALID_INTERVALS = ["hour", "dayname", "day", "week", "month"] as const;
 type Interval = (typeof VALID_INTERVALS)[number];
 
-// Grouping used for the non-week intervals (week is handled by its own query below)
 const TRUNC_FOR: Record<Exclude<Interval, "week">, string> = {
   hour:    "hour",
   dayname: "day",
@@ -21,14 +20,30 @@ const DAY_NAMES = [
   "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
 ];
 
+
+function isValidTimeZone(tz: string): boolean {
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
 
     const domainId = searchParams.get("domainId");
     const from     = searchParams.get("from");    // e.g. "2024-05-01"
-    const to       = searchParams.get("to");      // e.g. "2024-05-07"
-    const interval = (searchParams.get("interval") || "hour") as Interval;
+    const to       = searchParams.get("to");      // e.g. "2024-05-07" or "live"
+    let interval = (searchParams.get("interval") || "hour") as Interval;
+    if(from === to){
+      interval = "hour";
+    }
+    // Viewer's IANA timezone, e.g. "Asia/Kolkata". Defaults to UTC so existing
+
+    const timezone = searchParams.get("timezone") || "UTC";
 
     if (!domainId || !from || !to) {
       return NextResponse.json(
@@ -44,49 +59,37 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Validate dates before using them
-    const fromDate = new Date(`${from}T00:00:00.000Z`);
-
-    let toDateExclusive: Date;
-    if (to.toLowerCase() === "live") {
-      toDateExclusive = new Date();
-    } else {
-      toDateExclusive = new Date(`${to}T00:00:00.000Z`);
-      toDateExclusive.setUTCDate(toDateExclusive.getUTCDate() + 1); // exclusive upper bound
-    }
-
-    if (isNaN(fromDate.getTime()) || isNaN(toDateExclusive.getTime())) {
+    if (!isValidTimeZone(timezone)) {
       return NextResponse.json(
-        { error: "Invalid date format. Use YYYY-MM-DD." },
+        { error: "Invalid timezone. Use an IANA name like 'Asia/Kolkata'." },
         { status: 400 }
       );
     }
 
-    if (fromDate >= toDateExclusive) {
-      return NextResponse.json(
-        { error: "'from' must be before 'to'" },
-        { status: 400 }
-      );
-    }
+ 
+
+    const lowerBoundSql = Prisma.sql`(${from}::date::timestamp AT TIME ZONE ${timezone})`;
+
+    const upperBoundSql =  Prisma.sql`((${to}::date + INTERVAL '1 day')::timestamp AT TIME ZONE ${timezone})`;
+
+
 
     let data: { date: string; views: number; visitors: number }[];
 
     if (interval === "week") {
-      // "This Month" only. Groups directly in SQL by week-of-month (1-indexed),
-      // so COUNT(DISTINCT "visitorId") is correct per week — summing pre-aggregated
-      // daily distinct-visitor counts would double-count returning visitors.
+
       type WeekRow = { week_num: number; views: number; visitors: number };
 
       const rows = await prisma.$queryRaw<WeekRow[]>`
         SELECT
-          ((EXTRACT(DAY FROM "visitedAt"::timestamptz)::int - 1) / 7) + 1 AS week_num,
+          ((EXTRACT(DAY FROM ("visitedAt"::timestamptz AT TIME ZONE ${timezone}))::int - 1) / 7) + 1 AS week_num,
           COUNT(*)::int                                                   AS views,
           COUNT(DISTINCT "visitorId")::int                                AS visitors
         FROM "PageVisit"
         WHERE
           "domainId" = ${domainId}
-          AND "visitedAt"::timestamptz >= ${fromDate}::timestamptz
-          AND "visitedAt"::timestamptz <  ${toDateExclusive}::timestamptz
+          AND "visitedAt"::timestamptz >= ${lowerBoundSql}
+          AND "visitedAt"::timestamptz <  ${upperBoundSql}
         GROUP BY 1
         ORDER BY 1 ASC
       `;
@@ -103,14 +106,14 @@ export async function GET(req: NextRequest) {
 
       const rows = await prisma.$queryRaw<Row[]>`
         SELECT
-          date_trunc(${trunc}, "visitedAt"::timestamptz) AS bucket,
+          date_trunc(${trunc}, "visitedAt"::timestamptz AT TIME ZONE ${timezone}) AS bucket,
           COUNT(*)::int                                  AS views,
           COUNT(DISTINCT "visitorId")::int                AS visitors
         FROM "PageVisit"
         WHERE
           "domainId" = ${domainId}
-          AND "visitedAt"::timestamptz >= ${fromDate}::timestamptz
-          AND "visitedAt"::timestamptz <  ${toDateExclusive}::timestamptz
+          AND "visitedAt"::timestamptz >= ${lowerBoundSql}
+          AND "visitedAt"::timestamptz <  ${upperBoundSql}
         GROUP BY 1
         ORDER BY 1 ASC
       `;
@@ -119,11 +122,10 @@ export async function GET(req: NextRequest) {
         let date: string;
         switch (interval) {
           case "hour": {
-            const isoDate = row.bucket.toISOString().split("T")[0] ?? "";
             const hours = row.bucket.getUTCHours();
             const period = hours >= 12 ? "pm" : "am";
             const hour12 = hours % 12 === 0 ? 12 : hours % 12;
-            date = `${isoDate}-${hour12}${period}`;
+            date = `${hour12}${period}`;
             break;
           }
           case "dayname":
@@ -144,9 +146,10 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ interval, from, to, data });
+    return NextResponse.json({ interval, from, to, timezone, data });
   } catch (err) {
     console.error("[timeseries] error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+ 

@@ -8,7 +8,7 @@
     console.warn("Collector: missing data-api-key on script tag.");
     return;
   }
-  
+
   if (!domainName) {
     console.warn("Collector: missing data-domain-name on script tag.");
     return;
@@ -16,7 +16,48 @@
   if (domainName !== window.location.hostname) {
     console.warn("Collector: data-domain-name does not match current hostname.");
   }
-  
+
+  // ── OPTIONAL PATH NORMALIZATION ─────────────────────────────────────────────
+  // Customer can optionally supply their own regex to clean up dynamic URL
+  // segments (e.g. product IDs) BEFORE the event is sent. This is optional —
+  // if not provided, the raw pathname is sent as-is. The server runs its own
+  // normalization on top regardless, so this is a refinement layer, not a
+  // replacement for it: get it wrong (or skip it) and the server-side function
+  // still catches the common cases.
+  //
+  // Format: data-normalize-pattern="REGEX::REPLACEMENT"
+  // Example: data-normalize-pattern="\/product\/[\w-]+-\d+::/product/:id"
+
+  const rawPattern = script.getAttribute("data-normalize-pattern");
+  let customNormalizer = null;
+
+  if (rawPattern) {
+    const parts = rawPattern.split("::");
+    if (parts.length === 2) {
+      try {
+        const regex = new RegExp(parts[0]);
+        const replacement = parts[1];
+        customNormalizer = function (path) {
+          return path.replace(regex, replacement);
+        };
+      } catch (e) {
+        console.warn("Collector: invalid data-normalize-pattern, ignoring.", e);
+      }
+    } else {
+      console.warn('Collector: data-normalize-pattern must be in "REGEX::REPLACEMENT" format, ignoring.');
+    }
+  }
+
+  function normalizePage(path) {
+    if (!customNormalizer) return path;
+    try {
+      return customNormalizer(path);
+    } catch (e) {
+      // if the customer's regex throws at runtime for some edge-case input,
+      // never let it break tracking — fall back to the raw path.
+      return path;
+    }
+  }
 
   // ── DEVICE INFO ────────────────────────────────────────────────────────────
 
@@ -52,13 +93,13 @@
   // Send it all when they LEAVE.
 
   let state = {
-    page:      window.location.pathname,
+    page:      normalizePage(window.location.pathname),
     pageTitle: document.title,
     referrer:  document.referrer || null,
     startedAt: Date.now(),
   };
 
-  let lastPath = state.page; // dedup guard
+  let lastPath = window.location.pathname; // dedup guard — compare against RAW path, not normalized
   let flushed = false; // prevent double-flush (e.g. pagehide firing right after hidden)
 
   // ── SEND ───────────────────────────────────────────────────────────────────
@@ -90,7 +131,7 @@
   function flush(exitType) {
     send({
       apikey,
-      page:      state.page,
+      page:      state.page, // already normalized when state was set
       pageTitle: state.pageTitle,
       referrer:  state.referrer,
       timeSpent: Math.round((Date.now() - state.startedAt) / 1000),
@@ -117,9 +158,9 @@
     setTimeout(() => {
       // 3. Snapshot the new page they've arrived on
       state = {
-        page:      window.location.pathname,
+        page:      normalizePage(window.location.pathname),
         pageTitle: document.title,
-        referrer:  document.referrer || null,    
+        referrer:  document.referrer || null,
         startedAt: Date.now(),
       };
       flushed = false; // reset for the new page
@@ -137,14 +178,14 @@
   // ── EXIT DETECTION ─────────────────────────────────────────────────────────
 
   window.addEventListener("pagehide", function () {
-    if (flushed) return; // already sent via visibilitychange right before this
+    if (flushed) return; 
     flushed = true;
     flush("pagehide");
   });
 
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState === "hidden" && !flushed) {
-      flushed = true;
+      
       flush("hidden");
     }
   });

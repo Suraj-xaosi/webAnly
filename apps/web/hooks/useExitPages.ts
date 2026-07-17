@@ -21,6 +21,7 @@ export interface ExitPagesParams {
   from:     string;
   to:       string;
   limit?:   number;
+  timezone?: string;
 }
 
 export interface ApiError {
@@ -29,10 +30,10 @@ export interface ApiError {
 }
 
 async function fetchExitPages(params: ExitPagesParams): Promise<ExitPagesResponse> {
-  const { domainId, from, to, limit = 100 } = params;
+  const { domainId, from, to, limit = 100, timezone } = params;
 
   const { data } = await axios.get<ExitPagesResponse>("/api/analytics/exit-pages", {
-    params: { domainId, from, to, limit },
+    params: { domainId, from, to, limit, timezone },
     timeout: 10_000,
   });
 

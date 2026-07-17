@@ -17,9 +17,6 @@ export function TimeseriesCard({ data, isLoading, isError, error }: TimeseriesCa
 
   return (
     <div>
-      <div className="flex items-center gap-2">
-        <h2>Timeseries Data</h2>
-      </div>
       <AreaChartGradient data={data} />
     </div>
   );

@@ -80,6 +80,7 @@ model Domain {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   pageVisits PageVisit[]
+  pageHiddens PageHidden[]
   @@index([userId])
 }
 
@@ -109,5 +110,20 @@ model PageVisit {
 
   @@index([domainId, visitedAt])
   @@index([domainId, visitorId])
+  @@index([domainId, page])
+}
+
+model PageHidden {
+  id         String   @id @default(uuid())
+  domainId   String
+  visitorId  String
+
+  page       String        // which page they were hiding on
+  hiddenAt   DateTime      // when tab went hidden
+  hiddenFor  Int           // duration in seconds (computed on visible/exit)
+
+  domain     Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+
+  @@index([domainId, hiddenAt])
   @@index([domainId, page])
 }
