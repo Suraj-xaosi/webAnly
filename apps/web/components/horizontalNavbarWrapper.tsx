@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { HorizontalNavbar } from "@workspace/ui/components/main/horizontalNavbar"
 import { ThemeSwitcher } from "@/components/theme-switcher"
+import NotificationBell from "@/components/notify/notificationBell"
 import { authClient } from "@/lib/auth-client"
 
 export function HorizontalNavbarWrapper() {
@@ -17,6 +18,7 @@ export function HorizontalNavbarWrapper() {
   return (
     <HorizontalNavbar
       themeSwitcher={<ThemeSwitcher />}
+      notificationBell={<NotificationBell />}
       user={user}
       onNavigate={(href) => router.push(href)}
     />

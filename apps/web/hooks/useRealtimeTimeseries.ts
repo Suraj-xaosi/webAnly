@@ -12,17 +12,24 @@ export interface RealtimeTimeseriesResult {
   isLive: boolean;
 }
 
+// Internal shape: same as TimeseriesPoint, plus a numeric hour for sorting.
+// hour24 never leaves this hook — the returned `data` is structurally still
+// TimeseriesPoint[], consumers don't see or need this field.
+interface InternalPoint extends TimeseriesPoint {
+  hour24: number;
+}
+
 export function useRealtimeTimeseries(
   domainId: string,
   from: string,
   to: string,
   apikey: string,
   enabled: boolean,
-  timezone?: string
+  timezone: string = "UTC"
 ): RealtimeTimeseriesResult {
   const restQuery = useTimeseries({ domainId, from, to, interval: "hour", timezone });
 
-  const [timeseriesData, setTimeseriesData] = useState<TimeseriesPoint[]>([]);
+  const [timeseriesData, setTimeseriesData] = useState<InternalPoint[]>([]);
   const [isLive, setIsLive] = useState(false);
 
   const seenVisitorsRef = useRef<Set<string>>(new Set());
@@ -33,7 +40,7 @@ export function useRealtimeTimeseries(
 
   const { isConnected } = useWebSocket(domainId, apikey, (message: WebSocketMessage) => {
     if (!enabled) return;
-    handleWebSocketMessage(message, domainId, seenVisitorsRef, setTimeseriesData);
+    handleWebSocketMessage(message, domainId, timezone, seenVisitorsRef, setTimeseriesData);
   });
 
   useEffect(() => {
@@ -47,7 +54,14 @@ export function useRealtimeTimeseries(
     if (seededKeyRef.current === seedKey) return; // already seeded this combo — don't reset live data
     seededKeyRef.current = seedKey;
 
-    setTimeseriesData(restQuery.data.data);
+    // REST rows only carry {date, views, visitors} — backfill hour24 from the
+    // label so seeded rows sort correctly alongside live WebSocket rows.
+    const seeded: InternalPoint[] = restQuery.data.data.map((point) => ({
+      ...point,
+      hour24: parseHourLabel(point.date),
+    }));
+
+    setTimeseriesData(seeded);
 
     // New domain/date-range means old dedupe state is meaningless — reset it.
     seenVisitorsRef.current = new Set();
@@ -67,23 +81,53 @@ export function useRealtimeTimeseries(
   };
 }
 
-function getBucketKey(dateStr: string): string {
+// Converts a UTC timestamp into the given IANA timezone's local hour, and
+// builds the same label format the API produces: "2pm", "12am", etc.
+// (hour12, no leading zero, lowercase period, no space — matches the
+// route.ts logic: `${hour12}${period}` from getUTCHours() after AT TIME ZONE.)
+function getBucketKey(dateStr: string, timezone: string): { label: string; hour24: number } {
   const date = new Date(dateStr);
-  return date.toISOString().substring(0, 13) + ":00:00.000Z";
+
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    hourCycle: "h23",
+    hour: "numeric",
+  }).formatToParts(date);
+
+  const hourPart = parts.find((p) => p.type === "hour");
+  const hour24 = hourPart ? parseInt(hourPart.value, 10) : date.getUTCHours();
+
+  const period = hour24 >= 12 ? "pm" : "am";
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  const label = `${hour12}${period}`;
+
+  return { label, hour24 };
+}
+
+// Reverse of the API's label format — used only when seeding from REST,
+// since REST rows arrive with a label but no raw hour number.
+// "12am" -> 0, "1am" -> 1, "12pm" -> 12, "1pm" -> 13, "11pm" -> 23
+function parseHourLabel(label: string): number {
+  const period = label.slice(-2);
+  const hour12 = parseInt(label, 10);
+
+  if (period === "am") return hour12 === 12 ? 0 : hour12;
+  return hour12 === 12 ? 12 : hour12 + 12;
 }
 
 async function handleWebSocketMessage(
   message: WebSocketMessage,
   domainId: string,
+  timezone: string,
   seenVisitorsRef: React.RefObject<Set<string>>,
-  setTimeseriesData: (updater: (prev: TimeseriesPoint[]) => TimeseriesPoint[]) => void
+  setTimeseriesData: (updater: (prev: InternalPoint[]) => InternalPoint[]) => void
 ) {
   if (message.type !== "new_event" || !message.data) return;
 
-  const eventData      = message.data;
+  const eventData = message.data;
   const eventTimestamp = eventData.visitedAt || eventData.timestamp || new Date().toISOString();
-  const bucketKey      = getBucketKey(eventTimestamp);
-  const visitorId      = eventData.visitorId as string;
+  const { label, hour24 } = getBucketKey(eventTimestamp, timezone);
+  const visitorId = eventData.visitorId as string;
 
   let isNewVisitor = false;
 
@@ -98,24 +142,26 @@ async function handleWebSocketMessage(
   }
 
   setTimeseriesData((prev) => {
-    const newData     = [...prev];
-    const existingIdx = newData.findIndex((p) => p.date === bucketKey);
+    const newData = [...prev];
+    const existingIdx = newData.findIndex((p) => p.date === label);
 
     if (existingIdx !== -1) {
       const existing = newData[existingIdx]!;
       newData[existingIdx] = {
-        date:     existing.date,
-        views:    existing.views + 1,
+        date: existing.date,
+        hour24: existing.hour24,
+        views: existing.views + 1,
         visitors: existing.visitors + (isNewVisitor ? 1 : 0),
       };
     } else {
       newData.push({
-        date:     bucketKey,
-        views:    1,
+        date: label,
+        hour24,
+        views: 1,
         visitors: isNewVisitor ? 1 : 0,
       });
     }
 
-    return newData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return newData.sort((a, b) => a.hour24 - b.hour24);
   });
 }

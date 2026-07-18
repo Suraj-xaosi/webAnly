@@ -36,7 +36,8 @@ export async function startAnalyticsWorker() {
       // Store event in database
       await dumpInDB(eventData);
 
-      // Publish domain activity for spike detection
+      // Publish domain activity for spike detection  
+      //had chceck if exit type is hidden then block sending 
       try {
         await producer.send({
           topic: KAFKA_TOPICS.DOMAIN_ACTIVITY,

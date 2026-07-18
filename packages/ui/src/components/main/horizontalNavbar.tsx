@@ -16,10 +16,11 @@ interface HorizontalNavbarProps {
     avatar: string
   }
   themeSwitcher?: React.ReactNode
+  notificationBell?: React.ReactNode
   onNavigate?: (href: string) => void
 }
 
-export function HorizontalNavbar({ user, themeSwitcher, onNavigate }: HorizontalNavbarProps) {
+export function HorizontalNavbar({ user, themeSwitcher, notificationBell, onNavigate }: HorizontalNavbarProps) {
   const { resolvedTheme, setTheme } = useTheme()
   const [cmdOpen, setCmdOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
@@ -64,11 +65,8 @@ export function HorizontalNavbar({ user, themeSwitcher, onNavigate }: Horizontal
             Get Pro
           </Button>
 
-          <Button variant="ghost" size="icon" className="relative h-8 w-8">
-            <Bell className="h-4 w-4" />
-            <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-destructive ring-1 ring-background" />
-          </Button>
-
+          
+          {notificationBell}
           {themeSwitcher}
 
           <Button

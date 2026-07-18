@@ -18,6 +18,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   domains       Domain[]
+  notifications Notification[]
 
   @@map("user")
 }
@@ -126,4 +127,30 @@ model PageHidden {
 
   @@index([domainId, hiddenAt])
   @@index([domainId, page])
+}
+
+enum NotificationType {
+  SPIKE_ALERT
+  WEEKLY_REPORT
+  BILLING
+  SYSTEM
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  date      DateTime         @default(now())
+
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notification")
 }
