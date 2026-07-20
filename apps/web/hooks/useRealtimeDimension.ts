@@ -117,9 +117,9 @@ async function handleWebSocketMessage(
     if (seenSet.has(visitorId)) {
       isNewVisitor = false;
     } else {
-      const seenInDb = await checkVisitor(domainId, visitorId);
-      seenSet.add(visitorId);
-      isNewVisitor = !seenInDb;
+      seenSet.add(visitorId); // reserve immediately, before the await
+      //const seenInDb = await checkVisitor(domainId, visitorId);
+      isNewVisitor =  true; //!seenInDb;
     }
   }
 

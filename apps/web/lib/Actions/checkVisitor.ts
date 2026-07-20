@@ -1,5 +1,5 @@
 // web/lib/actions/checkVisitor.ts
-"use server";
+"use server"
 
 import { prisma } from "@repo/db";
 import { createHash } from "crypto";

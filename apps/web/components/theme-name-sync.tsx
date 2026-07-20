@@ -5,7 +5,13 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { selectThemeName, setThemeName, type ThemeName } from "@/store/slices/themeSlice"
 
 const STORAGE_KEY = "theme-name"
-const VALID_THEMES: ThemeName[] = ["artdeco", "ocean", "sunset", "monochrome"]
+const VALID_THEMES: ThemeName[] = [
+  "atelier-deco",
+  "spring-notebook",
+  "mediterranean",
+  "studio-desk",
+  "golden-hour",
+]
 
 export function ThemeNameSync() {
   const themeName = useAppSelector(selectThemeName)

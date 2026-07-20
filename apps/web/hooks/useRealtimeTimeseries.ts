@@ -135,9 +135,9 @@ async function handleWebSocketMessage(
     if (seenVisitorsRef.current.has(visitorId)) {
       isNewVisitor = false;
     } else {
-      const seenInDb = await checkVisitor(domainId, visitorId);
-      seenVisitorsRef.current.add(visitorId);
-      isNewVisitor = !seenInDb;
+      seenVisitorsRef.current.add(visitorId); // reserve the slot immediately
+      //const seenInDb = await checkVisitor(domainId, visitorId);
+      isNewVisitor = true; //!seenInDb;
     }
   }
 
