@@ -20,8 +20,8 @@ export async function handleCollectEvent(req: Request) {
   const body = req.body || {};
 
   const domain = await apikeyChecker(body.apikey);
-  if (!domain.isActive) throw new Error("DOMAIN_INACTIVE");
-
+  if (!domain.isActive) return;
+  
   const visitorID = extractRealIp(req.ip || "");
   const visitedAt = parseDate(body.visitedAt) || new Date();
   const timeSpent = parseTime(body.timeSpent);
@@ -56,11 +56,18 @@ export async function handleCollectEvent(req: Request) {
     topic: KAFKA_TOPICS.SITE_EVENTS,
     messages: [{ key: domain.domainId, value: JSON.stringify(eventData) }],
   });
+  
 
   if(exitType != "hidden") {
-  await producer.send({
-    topic: KAFKA_TOPICS.SOCKET_EVENTS,
-    messages: [{ key: domain.domainId, value: JSON.stringify(eventData) }],
-  });
+    if (domain.ispro){
+      let socketEventData = {
+        ...eventData,
+        timezone: domain.defaultTimezone,
+      };
+      await producer.send({
+        topic: KAFKA_TOPICS.SOCKET_EVENTS,
+        messages: [{ key: domain.domainId, value: JSON.stringify(socketEventData) }],
+      });
+    }
   }
 }

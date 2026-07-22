@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useDimension, type Dimension, type DimensionPoint, type ApiError } from "./useDimension";
 import { useWebSocket, type WebSocketMessage } from "./useWebSocket";
-import { checkVisitor } from "../lib/Actions/checkVisitor";
 
 export interface RealtimeDimensionResult {
   data: DimensionPoint[];
@@ -27,8 +26,6 @@ export function useRealtimeDimension(
   const [dimensionMap, setDimensionMap] = useState<Map<string, DimensionPoint>>(new Map());
   const [isLive, setIsLive] = useState(false);
 
-  const seenVisitorsRef = useRef<Map<string, Set<string>>>(new Map());
-
   // Tracks which domain/date-range/dimension combo we've already seeded from REST.
   // Prevents a background refetch (tab refocus, refetch interval, etc.) from
   // wiping out live WebSocket-accumulated counts.
@@ -36,13 +33,7 @@ export function useRealtimeDimension(
 
   const { isConnected } = useWebSocket(domainId, apikey, (message: WebSocketMessage) => {
     if (!enabled) return;
-    handleWebSocketMessage(
-      message,
-      dimension,
-      domainId,
-      seenVisitorsRef,
-      setDimensionMap
-    );
+    handleWebSocketMessage(message, dimension, setDimensionMap);
   });
 
   useEffect(() => {
@@ -65,9 +56,6 @@ export function useRealtimeDimension(
       restQuery.data.data.map((point) => [point.name, point])
     );
     setDimensionMap(newMap);
-
-    // New domain/date-range means old dedupe state is meaningless — reset it.
-    seenVisitorsRef.current = new Map();
   }, [restQuery.data, restQuery.isPlaceholderData, enabled, domainId, from, to, dimension]);
 
   // isLive tracks the socket connection only — independent of REST fetch timing.
@@ -94,58 +82,42 @@ function getDimensionValue(eventData: Record<string, any>, dimension: Dimension)
 async function handleWebSocketMessage(
   message: WebSocketMessage,
   dimension: Dimension,
-  domainId: string,
-  seenVisitorsRef: React.RefObject<Map<string, Set<string>>>,
   setDimensionMap: (updater: (prev: Map<string, DimensionPoint>) => Map<string, DimensionPoint>) => void
 ) {
   if (message.type !== "new_event" || !message.data) return;
 
-  const eventData    = message.data;
+  const eventData = message.data as Record<string, any>;
   const dimensionKey = getDimensionValue(eventData, dimension);
   if (!dimensionKey) return;
 
-  const visitorId = eventData.visitorId as string;
-
-  if (!seenVisitorsRef.current.has(dimensionKey)) {
-    seenVisitorsRef.current.set(dimensionKey, new Set());
-  }
-  const seenSet = seenVisitorsRef.current.get(dimensionKey)!;
-
-  let isNewVisitor = false;
-
-  if (visitorId) {
-    if (seenSet.has(visitorId)) {
-      isNewVisitor = false;
-    } else {
-      seenSet.add(visitorId); // reserve immediately, before the await
-      //const seenInDb = await checkVisitor(domainId, visitorId);
-      isNewVisitor =  true; //!seenInDb;
-    }
-  }
+  const shouldCountVisitor =
+    typeof eventData.isNewVisitorFor?.[dimension] === "boolean"
+      ? eventData.isNewVisitorFor[dimension]
+      : false;
 
   setDimensionMap((prev) => {
-    const newMap   = new Map(prev);
+    const newMap = new Map(prev);
     const existing = newMap.get(dimensionKey);
 
     if (existing) {
-      const totalViews    = existing.views + 1;
-      const totalVisitors = existing.visitors + (isNewVisitor ? 1 : 0);
+      const totalViews = existing.views + 1;
+      const totalVisitors = existing.visitors + (shouldCountVisitor ? 1 : 0);
 
       newMap.set(dimensionKey, {
         ...existing,
-        views:           totalViews,
-        visitors:        totalVisitors,
-        avgDwell:        Math.round(
+        views: totalViews,
+        visitors: totalVisitors,
+        avgDwell: Math.round(
           (existing.avgDwell * existing.views + (eventData.timeSpent || 0)) / totalViews
         ),
         viewsPerVisitor: +(totalViews / Math.max(totalVisitors, 1)).toFixed(2),
       });
     } else {
       newMap.set(dimensionKey, {
-        name:            dimensionKey,
-        views:           1,
-        visitors:        isNewVisitor ? 1 : 0,
-        avgDwell:        eventData.timeSpent || 0,
+        name: dimensionKey,
+        views: 1,
+        visitors: shouldCountVisitor ? 1 : 0,
+        avgDwell: eventData.timeSpent || 0,
         viewsPerVisitor: 1,
       });
     }

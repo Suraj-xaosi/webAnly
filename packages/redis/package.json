@@ -1,0 +1,10 @@
+{
+  "name": "@repo/redis",
+  "version": "0.0.0",
+  "main": "src/index.ts",
+  "type": "module",
+  "types": "src/index.ts",
+  "dependencies": {
+    "ioredis": "^5.4.1"
+  }
+}

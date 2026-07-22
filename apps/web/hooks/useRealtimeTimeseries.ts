@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTimeseries, type TimeseriesPoint, type ApiError } from "./useTimeseries";
 import { useWebSocket, type WebSocketMessage } from "./useWebSocket";
-import { checkVisitor } from "../lib/Actions/checkVisitor";
 
 export interface RealtimeTimeseriesResult {
   data: TimeseriesPoint[];
@@ -32,15 +31,13 @@ export function useRealtimeTimeseries(
   const [timeseriesData, setTimeseriesData] = useState<InternalPoint[]>([]);
   const [isLive, setIsLive] = useState(false);
 
-  const seenVisitorsRef = useRef<Set<string>>(new Set());
-
   // Tracks which domain/date-range combo we've already seeded from REST.
   // Prevents a background refetch from wiping out live WebSocket-accumulated data.
   const seededKeyRef = useRef<string | null>(null);
 
   const { isConnected } = useWebSocket(domainId, apikey, (message: WebSocketMessage) => {
     if (!enabled) return;
-    handleWebSocketMessage(message, domainId, timezone, seenVisitorsRef, setTimeseriesData);
+    handleWebSocketMessage(message, timezone, setTimeseriesData);
   });
 
   useEffect(() => {
@@ -62,9 +59,6 @@ export function useRealtimeTimeseries(
     }));
 
     setTimeseriesData(seeded);
-
-    // New domain/date-range means old dedupe state is meaningless — reset it.
-    seenVisitorsRef.current = new Set();
   }, [restQuery.data, restQuery.isPlaceholderData, enabled, domainId, from, to]);
 
   // isLive tracks the socket connection only — independent of REST fetch timing.
@@ -115,35 +109,37 @@ function parseHourLabel(label: string): number {
   return hour12 === 12 ? 12 : hour12 + 12;
 }
 
-async function handleWebSocketMessage(
+function handleWebSocketMessage(
   message: WebSocketMessage,
-  domainId: string,
   timezone: string,
-  seenVisitorsRef: React.RefObject<Set<string>>,
   setTimeseriesData: (updater: (prev: InternalPoint[]) => InternalPoint[]) => void
 ) {
   if (message.type !== "new_event" || !message.data) return;
 
+  // Debug: log incoming messages to help diagnose why views aren't updating
+  try {
+    // Keep logs lightweight and safe if message contains circular refs
+    console.debug("[useRealtimeTimeseries] WS message type:", message.type);
+    console.debug("[useRealtimeTimeseries] WS message data:", message.data);
+  } catch (e) {
+    /* ignore logging errors */
+  }
+
   const eventData = message.data;
   const eventTimestamp = eventData.visitedAt || eventData.timestamp || new Date().toISOString();
   const { label, hour24 } = getBucketKey(eventTimestamp, timezone);
-  const visitorId = eventData.visitorId as string;
 
-  let isNewVisitor = false;
-
-  if (visitorId) {
-    if (seenVisitorsRef.current.has(visitorId)) {
-      isNewVisitor = false;
-    } else {
-      seenVisitorsRef.current.add(visitorId); // reserve the slot immediately
-      //const seenInDb = await checkVisitor(domainId, visitorId);
-      isNewVisitor = true; //!seenInDb;
-    }
-  }
+  const isNewVisitor = Boolean(eventData.isNewVisitor);
 
   setTimeseriesData((prev) => {
     const newData = [...prev];
     const existingIdx = newData.findIndex((p) => p.date === label);
+
+    try {
+      console.debug("[useRealtimeTimeseries] bucket update:", { label, hour24, isNewVisitor, existingIdx });
+    } catch (e) {
+      /* ignore logging errors */
+    }
 
     if (existingIdx !== -1) {
       const existing = newData[existingIdx]!;

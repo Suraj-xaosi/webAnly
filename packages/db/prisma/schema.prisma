@@ -3,6 +3,8 @@ generator client {
   output   = "../generated/prisma"
 }
 
+//npx turbo run db:migrate -- --name my-migration-name
+
 datasource db {
   provider = "postgresql"
 }
@@ -78,6 +80,8 @@ model Domain {
   isActive            Boolean  @default(true)
   createdAt           DateTime @default(now())
   expectedVisitors    Int      @default(7)
+  pro                 Boolean  @default(true)
+  defaultTimezone     String   @default("UTC")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   pageVisits PageVisit[]

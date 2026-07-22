@@ -14,6 +14,7 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
     "@repo/db": "*",
+    "@repo/redis": "*",
     "@tanstack/react-query": "^5.99.0",
     "@tanstack/react-query-devtools": "^5.99.0",
     

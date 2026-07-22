@@ -26,7 +26,7 @@ const COMMON_TIMEZONES = [
   "Australia/Sydney",
 ];
 
-function getTimezoneOptions() {
+export function getTimezoneOptions() {
   const seen = new Set<string>(COMMON_TIMEZONES);
 
   if (typeof Intl !== "undefined" && typeof Intl.supportedValuesOf === "function") {
@@ -41,7 +41,7 @@ function getTimezoneOptions() {
   });
 }
 
-function getBrowserTimezone() {
+export function getBrowserTimezone() {
   if (typeof Intl !== "undefined" && typeof Intl.DateTimeFormat === "function") {
     const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     if (browserTimezone) {

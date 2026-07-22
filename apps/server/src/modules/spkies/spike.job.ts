@@ -5,6 +5,7 @@ import { createConsumer }  from "../../kafka/kafkaClient";
 import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../config/kafka";
 
 // Track domains with activity in this batch
+//not putting this set . but if we put this set in redis then we can have multiple instances of spike job running and they can share the same set of domains with activity. but for now we will keep it simple and use a local set.
 const domainActivitySet = new Set<string>();
 let consumerInitialized = false;
 
@@ -47,7 +48,7 @@ export async function startSpikeJob() {
     const domains = [...domainActivitySet];
     domainActivitySet.clear(); // clear before async work so new events during check go into next batch
 
-    await Promise.all(domains.map((domainId) => spikeCheck(domainId)));
+    await Promise.all(domains.map((domainId) => spikeCheck(domainId,)));
   });
 
   console.log("✅ Spike job scheduled (every 5 min)");

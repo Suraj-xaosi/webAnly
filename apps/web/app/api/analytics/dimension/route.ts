@@ -1,6 +1,7 @@
 // app/api/analytics/dimension/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, Prisma } from "@repo/db";
+import { getCache, setCache } from "@repo/redis";
 
 const DIMENSION_COL_MAP: Record<string, string> = {
   page:     "page",
@@ -13,6 +14,9 @@ const DIMENSION_COL_MAP: Record<string, string> = {
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+const CACHE_TTL_TODAY = 30;        // seconds
+const CACHE_TTL_PAST  = 600;       // 10 minutes
+
 function isValidTimeZone(tz: string): boolean {
   try {
     Intl.DateTimeFormat(undefined, { timeZone: tz });
@@ -20,6 +24,12 @@ function isValidTimeZone(tz: string): boolean {
   } catch {
     return false;
   }
+}
+
+// Returns "YYYY-MM-DD" for "now" as seen in the given IANA timezone.
+function todayInTimeZone(timezone: string): string {
+  // en-CA locale formats as YYYY-MM-DD, which matches DATE_RE directly
+  return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date());
 }
 
 export async function GET(req: NextRequest) {
@@ -31,7 +41,6 @@ export async function GET(req: NextRequest) {
     const to        = searchParams.get("to");
     const dimension = searchParams.get("dimension");
     const limit     = Math.min(Number(searchParams.get("limit") || 100), 500);
-    // Viewer's IANA timezone. Defaults to UTC for callers not sending it yet.
     const timezone  = searchParams.get("timezone") || "UTC";
 
     if (!domainId || !from || !to || !dimension) {
@@ -72,10 +81,14 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Same boundary fix as timeseries route: midnight of `from`/`to` computed
-    // in the VIEWER'S timezone, not hardcoded UTC. This route doesn't bucket
-    // by date (no date_trunc here), but which rows fall inside the requested
-    // range still depends on this being correct.
+    // Cache key includes every param that changes the query result.
+    const cacheKey = `dimension:${domainId}:${dimension}:${from}:${to}:${timezone}:${limit}`;
+
+    const cached = await getCache<any>(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
+
     const lowerBoundSql = Prisma.sql`(${from}::date::timestamp AT TIME ZONE ${timezone})`;
     const upperBoundSql = Prisma.sql`((${to}::date + INTERVAL '1 day')::timestamp AT TIME ZONE ${timezone})`;
 
@@ -83,9 +96,6 @@ export async function GET(req: NextRequest) {
 
     const colId = Prisma.raw(`"${col}"`);
 
-    // PageVisit has no "eventType" column (that was specific to the old DailyStat table) —
-    // every row here is already one pageview, so the old "!= 'exit'" filter is dropped.
-    // timeSpent is non-nullable on PageVisit, but COALESCE kept as a safety net.
     const rows = await prisma.$queryRaw<Row[]>`
       SELECT
         ${colId}                                       AS name,
@@ -107,14 +117,23 @@ export async function GET(req: NextRequest) {
       name:            row.name ?? "Unknown",
       views:           row.views,
       visitors:        row.visitors,
-      avgDwell:        row.avgDwell ?? 0,          // seconds
+      avgDwell:        row.avgDwell ?? 0,
       viewsPerVisitor: row.visitors > 0 ? +(row.views / row.visitors).toFixed(2) : 0,
     }));
 
-    return NextResponse.json({ dimension, from, to, timezone, total: data.length, data });
+    const responseBody = { dimension, from, to, timezone, total: data.length, data };
+
+    // "to" being today (in the viewer's own timezone) means the day is still
+    // accumulating events — short TTL. A past "to" date is immutable history,
+    // so it's safe to cache much longer.
+    const isToToday = to === todayInTimeZone(timezone);
+    const ttl = isToToday ? CACHE_TTL_TODAY : CACHE_TTL_PAST;
+
+    await setCache(cacheKey, responseBody, ttl);
+
+    return NextResponse.json(responseBody);
   } catch (err) {
     console.error("[dimension] error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
- 

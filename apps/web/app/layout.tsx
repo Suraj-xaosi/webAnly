@@ -33,10 +33,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
       <body>
         <script
-          src="http://localhost:3000/script.js"
-          data-domain-name="localhost"
-          data-api-key="4f0d41e0-2270-4f70-9c51-a4d217a63011">
-        </script>
+  src="http://localhost:3000/script.js"
+  data-domain-name="webanly.com"
+  data-api-key="12f36f22-904d-4505-82f3-ad3b46f299a7">
+</script>
         <ReactqueryProvider>
           <ThemeProvider>
             <TooltipProvider>

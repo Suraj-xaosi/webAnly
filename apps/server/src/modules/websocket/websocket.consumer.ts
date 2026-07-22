@@ -3,6 +3,7 @@ import { WebSocket }      from "ws";
 import { createConsumer } from "../../kafka/kafkaClient";
 import { domainClients }  from "./websocket.server";
 import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../config/kafka";
+import { checkVisitorNewness } from "./functions/trackVisitor";
 
 const consumer = createConsumer(KAFKA_GROUPS.WEBSOCKET_CONSUMERS);
 
@@ -21,9 +22,24 @@ export async function startWebSocketConsumer() {
       const domainId = event.domainId as string;
 
       const clients = domainClients.get(domainId);
-      if (!clients || clients.size === 0) return;
+      if (!clients || clients.size === 0) return; // skip Redis call if no one's listening
 
-      const payload = JSON.stringify({ type: "new_event", data: event });
+      const { isNewVisitor, isNewVisitorFor } = await checkVisitorNewness(
+        domainId,
+        event.visitorId,
+        event.timezone,
+        {
+          page: event.page,
+          referrer: event.referrer,
+          browser: event.browser,
+          os: event.os,
+          device: event.device,
+          country: event.country,
+        }
+      );
+
+      const payloadEvent = { ...event, isNewVisitor, isNewVisitorFor };
+      const payload = JSON.stringify({ type: "new_event", data: payloadEvent });
 
       for (const ws of clients) {
         if (ws.readyState === WebSocket.OPEN) {

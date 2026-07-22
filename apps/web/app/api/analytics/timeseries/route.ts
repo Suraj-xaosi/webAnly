@@ -1,6 +1,7 @@
 // app/api/analytics/timeseries/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, Prisma } from "@repo/db";
+import { getCache, setCache } from "@repo/redis";
 
 const VALID_INTERVALS = ["hour", "dayname", "day", "week", "month"] as const;
 type Interval = (typeof VALID_INTERVALS)[number];
@@ -20,6 +21,8 @@ const DAY_NAMES = [
   "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
 ];
 
+const CACHE_TTL_TODAY = 30;        // seconds
+const CACHE_TTL_PAST  = 600;       // 10 minutes
 
 function isValidTimeZone(tz: string): boolean {
   try {
@@ -30,6 +33,11 @@ function isValidTimeZone(tz: string): boolean {
   }
 }
 
+// Returns "YYYY-MM-DD" for "now" as seen in the given IANA timezone.
+function todayInTimeZone(timezone: string): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date());
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -38,7 +46,7 @@ export async function GET(req: NextRequest) {
     const from     = searchParams.get("from");    // e.g. "2024-05-01"
     const to       = searchParams.get("to");      // e.g. "2024-05-07" or "live"
     let interval = (searchParams.get("interval") || "hour") as Interval;
-    if(from === to){
+    if (from === to) {
       interval = "hour";
     }
     // Viewer's IANA timezone, e.g. "Asia/Kolkata". Defaults to UTC so existing
@@ -66,13 +74,18 @@ export async function GET(req: NextRequest) {
       );
     }
 
- 
+    // Cache key uses the *effective* interval (post from===to override), since
+    // that's what actually determines the query and the shape of `data`.
+    const cacheKey = `timeseries:${domainId}:${interval}:${from}:${to}:${timezone}`;
+
+    const cached = await getCache<any>(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
 
     const lowerBoundSql = Prisma.sql`(${from}::date::timestamp AT TIME ZONE ${timezone})`;
 
     const upperBoundSql =  Prisma.sql`((${to}::date + INTERVAL '1 day')::timestamp AT TIME ZONE ${timezone})`;
-
-
 
     let data: { date: string; views: number; visitors: number }[];
 
@@ -146,10 +159,19 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ interval, from, to, timezone, data });
+    const responseBody = { interval, from, to, timezone, data };
+
+    // Same "to is today" freshness rule as the dimension route: today's bucket
+    // is still accumulating events, so keep the TTL short; past ranges are
+    // immutable history and can be cached much longer.
+    const isToToday = to === todayInTimeZone(timezone);
+    const ttl = isToToday ? CACHE_TTL_TODAY : CACHE_TTL_PAST;
+
+    await setCache(cacheKey, responseBody, ttl);
+
+    return NextResponse.json(responseBody);
   } catch (err) {
     console.error("[timeseries] error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
- 
