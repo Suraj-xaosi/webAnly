@@ -7,6 +7,8 @@ import {
   PlusCircle,
   LayoutDashboard,
   Radio,
+  BookOpen,
+  Sparkles,
 } from "lucide-react"
 import {
   Command,
@@ -27,6 +29,10 @@ const commandItems = {
   Dashboard: [
     { label: "Analytics dashboard", icon: LayoutDashboard, href: "/dashboard" },
     { label: "Live dashboard", icon: Radio, href: "/liveDashboard" },
+  ],
+  Documentation: [
+    { label: "Introduction", icon: BookOpen, href: "/documentation#introduction" },
+    { label: "Get Started", icon: Sparkles, href: "/documentation#get-started" },
   ],
 }
 

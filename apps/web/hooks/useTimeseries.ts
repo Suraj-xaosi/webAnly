@@ -23,6 +23,7 @@ export interface TimeseriesParams {
   to: string;         // "YYYY-MM-DD"
   interval?: Interval;
   timezone?: string;
+  
 }
 
 
@@ -35,7 +36,7 @@ async function fetchTimeseries(params: TimeseriesParams): Promise<TimeseriesResp
   const { domainId, from, to, interval, timezone } = params;
 
   const { data } = await axios.get<TimeseriesResponse>("/api/analytics/timeseries", {
-    params: { domainId, from, to, interval, timezone },
+    params: { domainId, from, to, interval, timezone, },
     // Abort if server takes more than 10s
     timeout: 10_000,
   });

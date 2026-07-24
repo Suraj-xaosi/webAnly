@@ -9,11 +9,16 @@ import countryFromIp              from "./functions/countryFromIp";
 import { Request }                from "express";
 import { extractReferrerHostname } from "./functions/extractReferrerHostname";
 import {normalizePath} from "./functions/normalizepath";
+import { isOriginAllowed } from "./functions/checkOrigin";
+import { createHash }  from "crypto";
 
 const VALID_EXIT_TYPES = new Set(["navigation", "pagehide", "hidden"]);
 
 function parseExitType(exitType: any): string | null {
   return typeof exitType === "string" && VALID_EXIT_TYPES.has(exitType) ? exitType : null;
+}
+function hashVisitorId(visitorId: string): string {
+  return createHash("sha256").update(visitorId).digest("hex");
 }
 
 export async function handleCollectEvent(req: Request) {
@@ -21,6 +26,16 @@ export async function handleCollectEvent(req: Request) {
 
   const domain = await apikeyChecker(body.apikey);
   if (!domain.isActive) return;
+    const allowed = isOriginAllowed(
+    req.headers.origin as string | undefined,
+    req.headers.referer as string | undefined,
+    domain.domainName
+  );
+
+  if (!allowed) {
+    console.warn(`Collector: origin mismatch for domain ${domain.domainName}`);
+     // letting it pass here for now .
+  }
   
   const visitorID = extractRealIp(req.ip || "");
   const visitedAt = parseDate(body.visitedAt) || new Date();
@@ -35,10 +50,10 @@ export async function handleCollectEvent(req: Request) {
     country = "unknown";
   }
 
-  const eventData = {
+  let eventData = {
     domainId: domain.domainId,
     domainName: domain.domainName,
-    visitorId: visitorID,
+    visitorId: hashVisitorId(visitorID),
     pageTitle: body.pageTitle || null,
     page,
     referrer,
@@ -56,12 +71,13 @@ export async function handleCollectEvent(req: Request) {
     topic: KAFKA_TOPICS.SITE_EVENTS,
     messages: [{ key: domain.domainId, value: JSON.stringify(eventData) }],
   });
+
   
 
   if(exitType != "hidden") {
     if (domain.ispro){
       let socketEventData = {
-        ...eventData,
+         ...eventData,  
         timezone: domain.defaultTimezone,
       };
       await producer.send({

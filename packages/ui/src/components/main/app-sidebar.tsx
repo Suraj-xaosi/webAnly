@@ -57,20 +57,20 @@ const data = {
       items: [
         { title: "analytics dashboard", url: "/dashboard" },
         { title: "Live dashboard", url: "/liveDashboard" },
-        { title: "Public dashboard", url: "#" },
+        
       ],
     },
     {
       title: "Documentation",
-      url: "#",
+      url: "/documentation",
       icon: <BookOpenIcon />,
       items: [
-        { title: "Introduction", url: "#" },
-        { title: "Get Started", url: "#" },
+        { title: "Introduction", url: "/documentation#introduction" },
+        { title: "Get Started", url: "/documentation#get-started" },
         { title: "Tutorials", url: "#" },
         { title: "Rules", url: "#" },
       ],
-    },
+},
     {
       title: "Settings",
       url: "#",

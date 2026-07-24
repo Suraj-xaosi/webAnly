@@ -1,10 +1,7 @@
 // src/modules/eventDumping/functions/dumpInDB.ts
 import { prisma }      from "@repo/db";
-import { createHash }  from "crypto";
 
-function hashVisitorId(visitorId: string): string {
-  return createHash("sha256").update(visitorId).digest("hex");
-}
+
 
 type EventData = {
   domainId:   string;
@@ -30,7 +27,7 @@ export default async function dumpInDB(eventData: EventData) {
       await prisma.pageHidden.create({
         data: {
           domainId:   eventData.domainId,
-          visitorId:  hashVisitorId(eventData.visitorId),
+          visitorId:  eventData.visitorId,
           page:       eventData.page,
           hiddenAt:   eventData.visitedAt,
           hiddenFor:  eventData.timeSpent || 0,
@@ -61,7 +58,7 @@ export default async function dumpInDB(eventData: EventData) {
         timezone:   eventData.timezone  || "unknown",
         exitType:   eventData.exitType  || null,
         timeSpent:  eventData.timeSpent || 0,
-        visitorId:  hashVisitorId(eventData.visitorId),
+        visitorId:  eventData.visitorId,
       },
     });
 

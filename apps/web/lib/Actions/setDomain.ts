@@ -52,9 +52,11 @@ export async function setDomain(domainName: string, expectedVisitors: number, de
       return { error: "This domain is already in use." }
     }
 
+    const threeDigitUid = Math.floor(Math.random() * 900 + 100).toString()
+
     await prisma.domain.create({
       data: {
-        domainName: sanitizedDomain,
+        domainName: `fun${sanitizedDomain}${threeDigitUid}`,
         userId: user.id,
         apikey: crypto.randomUUID(),
         isActive: true,

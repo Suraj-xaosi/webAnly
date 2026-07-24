@@ -29,6 +29,7 @@ export interface DimensionParams {
   timezone?: string;       // optional timezone, e.g., "UTC", "America/New_York"
   dimension: Dimension;
   limit?:    number;       // default 100, max 500
+  domainName?: string; // Optional domain name for filtering
 }
 
 export interface ApiError {
@@ -42,7 +43,7 @@ async function fetchDimension(params: DimensionParams): Promise<DimensionRespons
   const { domainId, from, to, dimension, limit = 100,timezone } = params;
 
   const { data } = await axios.get<DimensionResponse>("/api/analytics/dimension", {
-    params: { domainId, from, to, dimension, limit, timezone },
+    params: { domainId, from, to, dimension, limit, timezone, },
     timeout: 10_000,
   });
 
