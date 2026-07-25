@@ -121,10 +121,10 @@ export function AddDomainForm() {
               autoCorrect="off"
               spellCheck={false}
             />
-          </div>
+          </div> 
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="expectedVisitors">Expected daily visitors</Label>
+            <Label htmlFor="expectedVisitors">Expected visitors in 5min</Label>
             <Input
               id="expectedVisitors"
               type="number"

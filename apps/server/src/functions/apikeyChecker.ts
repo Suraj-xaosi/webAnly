@@ -52,6 +52,7 @@ export async function apikeyChecker(apikey: string) {
   }
 
   if (!domain) {
+    console.log(apikey);
     throw new Error("Invalid API key");
   }
 

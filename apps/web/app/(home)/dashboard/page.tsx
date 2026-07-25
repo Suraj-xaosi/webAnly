@@ -42,6 +42,25 @@ export default function DashboardPage() {
 
   const dimensionMap = { browser, country, device, os, referrer, page };
 
+  const dataErrorMessage = [
+    timeseries,
+    exitPages,
+    browser,
+    country,
+    device,
+    os,
+    referrer,
+    page,
+  ]
+    .find((result) => result.isError && result.error)
+    ?.error
+
+  const errorMessage = dataErrorMessage
+    ? typeof dataErrorMessage === "string"
+      ? dataErrorMessage
+      : dataErrorMessage.message ?? "Unable to load analytics data. Please try again."
+    : null
+
   return (
     <div className="grid gap-6">
 
@@ -66,6 +85,15 @@ export default function DashboardPage() {
         <TimezonePicker />
 
       </div>
+
+      {errorMessage ? (
+        <Card className="border-destructive">
+          <CardContent className="p-6">
+            <p className="text-base font-semibold">Data loading failed</p>
+            <p className="mt-2 text-sm text-muted-foreground">{errorMessage}</p>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <TimeseriesCard
         data={timeseries.data?.data ?? []}

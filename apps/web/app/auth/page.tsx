@@ -75,7 +75,7 @@ export default function LandingPage() {
                    -: not for profesional use :-
                   </CardTitle>
                   <CardDescription>
-                  -: this is just a project not product. it do not have domain varification yet :- 
+                  -: this is just a project not product. it does not have domain varification yet :- 
                   </CardDescription>
                 
               </CardDescription>
