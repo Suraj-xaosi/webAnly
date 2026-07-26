@@ -1,8 +1,8 @@
 // src/modules/spikes/spike.job.ts
 import cron                from "node-cron";
-import spikeCheck          from "./spikeCheck";
-import { createConsumer }  from "../../kafka/kafkaClient";
-import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../config/kafka";
+import spikeCheck          from "./spikeCheck.js";
+import { createConsumer }  from "../../kafka/kafkaClient.js";
+import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../config/kafka.js";
 
 // Track domains with activity in this batch
 //not putting this set . but if we put this set in redis then we can have multiple instances of spike job running and they can share the same set of domains with activity. but for now we will keep it simple and use a local set.

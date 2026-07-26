@@ -1,9 +1,9 @@
 // src/modules/websocket/websocket.consumer.ts
 import { WebSocket }      from "ws";
-import { createConsumer } from "../../kafka/kafkaClient";
-import { domainClients }  from "./websocket.server";
-import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../config/kafka";
-import { checkVisitorNewness } from "./functions/trackVisitor";
+import { createConsumer } from "../../kafka/kafkaClient.js";
+import { domainClients }  from "./websocket.server.js";
+import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../config/kafka.js";
+import { checkVisitorNewness } from "./functions/trackVisitor.js";
 
 const consumer = createConsumer(KAFKA_GROUPS.WEBSOCKET_CONSUMERS);
 

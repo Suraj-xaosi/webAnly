@@ -1,6 +1,6 @@
 // src/modules/collector/collector.routes.ts
 import { Router, Request, Response } from "express";
-import { handleCollectEvent }        from "./collector.service";
+import { handleCollectEvent }        from "./collector.service.js";
 
 export const collectorRouter = Router();
 

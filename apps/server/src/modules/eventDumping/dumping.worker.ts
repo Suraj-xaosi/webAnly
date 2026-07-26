@@ -1,7 +1,7 @@
 // src/modules/eventDumping/dumping.worker.ts
-import { createConsumer, producer } from "../../kafka/kafkaClient";
-import dumpInDB                     from "./functions/dumpInDB";
-import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../config/kafka";
+import { createConsumer, producer } from "../../kafka/kafkaClient.js";
+import dumpInDB                     from "./functions/dumpInDB.js";
+import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../config/kafka.js";
 
 const consumer = createConsumer(KAFKA_GROUPS.ANALYTICS_WORKERS);
 

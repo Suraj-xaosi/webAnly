@@ -6,13 +6,13 @@ import { createServer } from "http";
 import cors             from "cors";
 //import dotenv           from "dotenv";
 
-import { producer }                           from "./kafka/kafkaClient";
-import { collectorRouter }                    from "./modules/collector";
-import { initWebSocketServer }                from "./modules/websocket";
-import { startWebSocketConsumer }             from "./modules/websocket";
-import { startAnalyticsWorker, }              from "./modules/eventDumping";
-import { startSpikeJob }                      from "./modules/spkies";
-import { startNotificationWorker }            from "./modules/notifications";
+import { producer }                           from "./kafka/kafkaClient.js";
+import { collectorRouter }                    from "./modules/collector/index.js"
+import { initWebSocketServer }                from "./modules/websocket/index.js";
+import { startWebSocketConsumer }             from "./modules/websocket/index.js";
+import { startAnalyticsWorker, }              from "./modules/eventDumping/index.js";
+import { startSpikeJob }                      from "./modules/spkies/index.js";
+import { startNotificationWorker }            from "./modules/notifications/index.js";
 
 //dotenv.config();
 

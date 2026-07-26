@@ -2,11 +2,12 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "build": "tsc -b",
     "dev": "tsx --watch -r dotenv/config src/index.ts",
-    "start": "tsx -r dotenv/config src/index.ts"
+    "start": "node -r dotenv/config dist/index.js"
   },
   "keywords": [],
   "author": "",

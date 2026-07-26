@@ -2,7 +2,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { IncomingMessage }            from "http";
 import { Server }                     from "http";
-import { apikeyChecker }              from "../../functions/apikeyChecker";
+import { apikeyChecker }              from "../../functions/apikeyChecker.js";
 
 // shared Map — imported by websocket.consumer.ts
 export const domainClients = new Map<string, Set<WebSocket>>();

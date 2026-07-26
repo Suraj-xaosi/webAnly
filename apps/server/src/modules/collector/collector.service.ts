@@ -1,15 +1,15 @@
 // src/modules/collector/collector.service.ts
-import { producer }               from "../../kafka/kafkaClient";
-import { apikeyChecker }          from "../../functions/apikeyChecker";
-import { KAFKA_TOPICS }           from "../../config/kafka";
-import parseTime                  from "./functions/parseTimeSpent";
-import parseDate                  from "./functions/parseDate";
-import { extractRealIp }          from "./functions/extractIP";
-import countryFromIp              from "./functions/countryFromIp";
+import { producer }               from "../../kafka/kafkaClient.js";
+import { apikeyChecker }          from "../../functions/apikeyChecker.js"
+import { KAFKA_TOPICS }           from "../../config/kafka.js";
+import parseTime                  from "./functions/parseTimeSpent.js";
+import parseDate                  from "./functions/parseDate.js";
+import { extractRealIp }          from "./functions/extractIP.js";
+import countryFromIp              from "./functions/countryFromIp.js";
 import { Request }                from "express";
-import { extractReferrerHostname } from "./functions/extractReferrerHostname";
-import {normalizePath} from "./functions/normalizepath";
-import { isOriginAllowed } from "./functions/checkOrigin";
+import { extractReferrerHostname } from "./functions/extractReferrerHostname.js";
+import {normalizePath} from "./functions/normalizepath.js";
+import { isOriginAllowed } from "./functions/checkOrigin.js";
 import { createHash }  from "crypto";
 
 const VALID_EXIT_TYPES = new Set(["navigation", "pagehide", "hidden"]);

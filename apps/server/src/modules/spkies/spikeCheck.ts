@@ -1,8 +1,8 @@
 // src/modules/spikes/functions/spikeCheck.ts
 import { prisma }        from "@repo/db";
-import { producer }      from "../../kafka/kafkaClient";
-import { KAFKA_TOPICS }  from "../../config/kafka";
-import visitorCount      from "./functions/visitorCount"; // fixed path
+import { producer }      from "../../kafka/kafkaClient.js";
+import { KAFKA_TOPICS }  from "../../config/kafka.js";
+import visitorCount      from "./functions/visitorCount.js"; // fixed path
 
 const GROWTH_FACTOR = 1.10;
 const DECAY_FACTOR  = 0.90;

@@ -1,7 +1,7 @@
 // src/modules/notifications/notification.worker.ts
 import { prisma } from "@repo/db";
-import { createConsumer } from "../../kafka/kafkaClient";
-import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../config/kafka";
+import { createConsumer } from "../../kafka/kafkaClient.js";
+import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../config/kafka.js";
 
 const consumer = createConsumer(KAFKA_GROUPS.NOTIFICATION_WORKERS);
 

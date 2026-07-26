@@ -1,10 +1,9 @@
 {
   "name": "@repo/redis",
   "version": "0.0.0",
-  "main": "src/index.ts",
   "type": "module",
-  "types": "src/index.ts",
-  "dependencies": {
-    "ioredis": "^5.4.1"
-  }
+  "scripts": { "build": "tsc -b" },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "dependencies": { "ioredis": "^5.4.1" }
 }
