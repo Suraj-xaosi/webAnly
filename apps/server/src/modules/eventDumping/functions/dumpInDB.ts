@@ -1,4 +1,4 @@
-// src/modules/eventDumping/functions/dumpInDB.ts
+
 import { prisma }      from "@repo/db";
 
 
@@ -34,7 +34,7 @@ export default async function dumpInDB(eventData: EventData) {
         },
       });
 
-      console.log("✅ Hidden event stored", {
+      console.log("✅ EVENT DUMPING: Hidden event stored", {
         domainId:   eventData.domainId,
         domainName: eventData.domainName,
       });
@@ -62,14 +62,14 @@ export default async function dumpInDB(eventData: EventData) {
       },
     });
 
-    console.log("✅ Event stored", {
+    console.log("✅ EVENT DUMPING: Event stored", {
       domainId:   eventData.domainId,
       domainName: eventData.domainName,
       visitorId:  eventData.visitorId,
     });
 
   } catch (err) {
-    console.error("❌ Failed to store event", err);
+    console.error("❌ EVENT DUMPING WORKER : Failed to store event", err);
   }
 }
 

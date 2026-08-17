@@ -1,4 +1,4 @@
-// web/pages/domainPage.tsx
+
 "use client"
 
 import { AddDomainForm } from "@/components/domain/addDomainForm"

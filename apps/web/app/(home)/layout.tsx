@@ -1,10 +1,10 @@
-// app/(home)/layout.tsx
+
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { SidebarProvider, SidebarInset } from "@workspace/ui/components/sidebar"
-import { AppSidebarWrapper } from "../../components/sidebarWrapper"
-import { HorizontalNavbarWrapper } from "../../components/horizontalNavbarWrapper"
+import { AppSidebarWrapper } from "../../components/wrapper/sidebarWrapper"
+import { HorizontalNavbarWrapper } from "../../components/wrapper/horizontalNavbarWrapper"
 
 export default async function HomeLayout({ children }: { children: React.ReactNode }) {
   const session = await auth.api.getSession({

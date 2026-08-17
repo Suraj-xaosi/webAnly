@@ -1,11 +1,11 @@
-// src/modules/spikes/spike.job.ts
+
 import cron                from "node-cron";
 import spikeCheck          from "./spikeCheck.js";
-import { createConsumer }  from "../../kafka/kafkaClient.js";
-import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../config/kafka.js";
+import { createConsumer }  from "../../shared/functions/kafka/kafkaClient.js";
+import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../shared/config/kafka.js";
 
 // Track domains with activity in this batch
-//not putting this set . but if we put this set in redis then we can have multiple instances of spike job running and they can share the same set of domains with activity. but for now we will keep it simple and use a local set.
+//if we put this set in redis then we can have multiple instances of spike job running and they can share the same set of domains with activity. but for now lets  keep it simple and use a local set.
 const domainActivitySet = new Set<string>();
 let consumerInitialized = false;
 
@@ -30,7 +30,7 @@ export async function startSpikeJob() {
           domainActivitySet.add(domainId);
         }
       } catch (err) {
-        console.error("❌ Failed to parse domain activity message", err);
+        console.error(" SPIKE CHECK WORKER : Failed to parse domain activity message", err);
       }
     },
   });
@@ -42,7 +42,7 @@ export async function startSpikeJob() {
     if (domainActivitySet.size === 0) return;
 
     console.log(
-      `🔍 Running spike check for ${domainActivitySet.size} domain(s)`
+      ` SPIKE CHECK WORKER : Running spike check for ${domainActivitySet.size} domain(s)`
     );
 
     const domains = [...domainActivitySet];
@@ -51,5 +51,5 @@ export async function startSpikeJob() {
     await Promise.all(domains.map((domainId) => spikeCheck(domainId,)));
   });
 
-  console.log("✅ Spike job scheduled (every 5 min)");
+  console.log("SPIKE CHECK WORKER: Spike job scheduled (every 5 min)");
 }

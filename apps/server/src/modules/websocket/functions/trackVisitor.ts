@@ -1,4 +1,4 @@
-// src/modules/websocket/functions/trackVisitor.ts
+
 import { redis } from "@repo/redis";
 import { DateTime } from "luxon";
 
@@ -38,7 +38,7 @@ export interface VisitorNewnessResult {
  *
  * Backed by Redis Sets (SADD returns 1 = new, 0 = already present) with a TTL
  * that expires at the domain's local midnight — applied only if not already set (NX),
- * so we're not resetting the clock on every event.
+ * so  no resetting the clock on every event.
  */
 export async function checkVisitorNewness(
   domainId: string,

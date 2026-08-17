@@ -1,4 +1,4 @@
-// web/components/notifications/NotificationBell.tsx
+
 "use client";
 
 import { Bell } from "lucide-react";

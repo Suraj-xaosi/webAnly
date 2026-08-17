@@ -1,4 +1,4 @@
-// src/config/kafka.ts
+
 // Centralized Kafka topic configuration
 
 export const KAFKA_TOPICS = {

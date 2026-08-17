@@ -1,4 +1,4 @@
-// src/modules/spikes/functions/visitorCount.ts
+
 import { prisma } from "@repo/db";
 
 export default async function visitorCount(domainId: string): Promise<number> {
@@ -17,7 +17,7 @@ export default async function visitorCount(domainId: string): Promise<number> {
     return result.length;
 
   } catch (error) {
-    console.error(`Failed to get visitor count for domain ${domainId}:`, error);
+    console.error(`SPIKE CHECK WORKER : Failed to get visitor count for domain ${domainId}:`, error);
     throw error;
   }
 }

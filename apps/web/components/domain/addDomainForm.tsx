@@ -1,4 +1,4 @@
-// web/components/domains/AddDomainForm.tsx
+
 "use client"
 
 import { useEffect, useMemo, useState, useTransition } from "react"
@@ -7,7 +7,7 @@ import { setDomain } from "@/lib/Actions/setDomain"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
-import { getBrowserTimezone, getTimezoneOptions } from "../timezonePicker"
+import { getBrowserTimezone, getTimezoneOptions } from "../picker/timezonePicker"
 import {
   Select,
   SelectContent,

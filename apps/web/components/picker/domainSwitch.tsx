@@ -1,4 +1,4 @@
-//web/components/domainSwitch.tsx
+
 "use client";
 
 import { useEffect } from "react";

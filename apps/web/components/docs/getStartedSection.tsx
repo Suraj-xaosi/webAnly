@@ -1,4 +1,4 @@
-// web/components/docs/getStartedSection.tsx
+
 "use client"
 
 import { Card, CardContent } from "@workspace/ui/components/card"

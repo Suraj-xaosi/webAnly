@@ -1,4 +1,4 @@
-// app/api/analytics/timeseries/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, Prisma } from "@repo/db";
 import { getCache, setCache } from "@repo/redis";

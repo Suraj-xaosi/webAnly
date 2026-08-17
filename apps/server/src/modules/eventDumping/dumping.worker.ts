@@ -1,7 +1,7 @@
-// src/modules/eventDumping/dumping.worker.ts
-import { createConsumer, producer } from "../../kafka/kafkaClient.js";
+
+import { createConsumer, producer } from "../../shared/functions/kafka/kafkaClient.js";
 import dumpInDB                     from "./functions/dumpInDB.js";
-import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../config/kafka.js";
+import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../shared/config/kafka.js";
 
 const consumer = createConsumer(KAFKA_GROUPS.ANALYTICS_WORKERS);
 
@@ -12,7 +12,7 @@ export async function startAnalyticsWorker() {
     fromBeginning: false,
   });
 
-  console.log("✅ Analytics worker running");
+  console.log(" EVENT DUMPING WORKER: Analytics worker running");
 
   await consumer.run({
     eachMessage: async ({ message }) => {
@@ -24,12 +24,12 @@ export async function startAnalyticsWorker() {
         const parsed = JSON.parse(message.value.toString());
         eventData = parsed.eventData || parsed;
       } catch {
-        console.error("❌ Invalid JSON message");
+        console.error(" EVENT DUMPING WORKER: Invalid JSON message");
         return;
       }
 
       if (!eventData.domainId || !eventData.visitorId || !eventData.page) {
-        console.warn("⚠ Invalid event payload", eventData);
+        console.warn("⚠ EVENT DUMPING WORKER: Invalid event payload", eventData);
         return;
       }
 
@@ -52,7 +52,7 @@ export async function startAnalyticsWorker() {
           ],
         });
       } catch (err) {
-        console.error("❌ Failed to publish domain activity", err);
+        console.error(" EVENT DUMPING WORKER: Failed to publish domain activity", err);
       }
     },
   });

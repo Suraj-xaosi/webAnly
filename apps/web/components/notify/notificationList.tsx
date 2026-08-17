@@ -1,4 +1,4 @@
-// web/components/notifications/NotificationList.tsx
+
 "use client";
 
 import { useNotifications, useMarkAsRead, useMarkAllAsRead } from "@/hooks/useNotifications";

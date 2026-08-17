@@ -1,7 +1,7 @@
-// src/modules/spikes/functions/spikeCheck.ts
+
 import { prisma }        from "@repo/db";
-import { producer }      from "../../kafka/kafkaClient.js";
-import { KAFKA_TOPICS }  from "../../config/kafka.js";
+import { producer }      from "../../shared/functions/kafka/kafkaClient.js";
+import { KAFKA_TOPICS }  from "../../shared/config/kafka.js";
 import visitorCount      from "./functions/visitorCount.js"; // fixed path
 
 const GROWTH_FACTOR = 1.10;
@@ -13,11 +13,11 @@ export default async function spikeCheck(domainId: string) {
     const domain = await prisma.domain.findUnique({ where: { id: domainId } });
 
     if (!domain) {
-      console.log(`❌ Domain not found: ${domainId}`);
+      console.log(` SPIKE CHECK WORKER : ❌ Domain not found: ${domainId}`);
       return;
     }
     if (domain.expectedVisitors === null || domain.expectedVisitors === undefined) {
-      console.log(`⚠ expectedVisitors not set for domain: ${domainId}`);
+      console.log(`SPIKE CHECK WORKER : ⚠ expectedVisitors not set for domain: ${domainId}`);
       return;
     }
 
@@ -47,11 +47,11 @@ export default async function spikeCheck(domainId: string) {
       });
 
       newExpected = Math.max(MIN_EXPECTED, Math.ceil(expected * GROWTH_FACTOR));
-      console.log(`🚨 Spike: ${domainId} | got ${countIn5min} | expected ${expected} → raising to ${newExpected}`);
+      console.log(`SPIKE CHECK WORKER : 🚨 Spike: ${domainId} | got ${countIn5min} | expected ${expected} → raising to ${newExpected}`);
 
     } else if (countIn5min < expected * DECAY_FACTOR) {
       newExpected = Math.max(MIN_EXPECTED, Math.floor(expected * DECAY_FACTOR));
-      console.log(`📉 Quiet: ${domainId} | got ${countIn5min} | expected ${expected} → lowering to ${newExpected}`);
+      console.log(`SPIKE CHECK WORKER :  Quiet: ${domainId} | got ${countIn5min} | expected ${expected} → lowering to ${newExpected}`);
     }
 
     if (newExpected !== expected) {
@@ -61,6 +61,6 @@ export default async function spikeCheck(domainId: string) {
       });
     }
   } catch (error) {
-    console.error(`❌ spikeCheck failed for ${domainId}:`, error);
+    console.error(`SPIKE CHECK WORKER : spikeCheck failed for ${domainId}:`, error);
   }
 }

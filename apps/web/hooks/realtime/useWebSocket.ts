@@ -1,4 +1,4 @@
-// hooks/useWebSocket.ts
+
 import { useEffect, useRef, useState } from "react";
 
 export interface WebSocketMessage {

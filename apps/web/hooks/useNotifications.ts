@@ -16,7 +16,7 @@ export function useNotifications() {
       return result.notifications ?? [];
     },
     staleTime: 1000 * 30, // 30s — should feel closer to live than domains
-    refetchInterval: 1000 * 60, // light polling; swap for WebSocket push later
+    refetchInterval: 1000 * 60, // light polling; 
   });
 }
 

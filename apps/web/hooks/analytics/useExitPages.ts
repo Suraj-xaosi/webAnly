@@ -1,4 +1,4 @@
-// hooks/useExitPages.ts
+
 import { useQuery } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 

@@ -1,4 +1,4 @@
-// web/pages/LiveDashboardPage.tsx
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -6,14 +6,14 @@ import { useAppSelector } from "@/store/hooks"
 import { selectDomainId } from "@/store/slices/dashboardSlice"
 import { useRealtimeTimeseries } from "@/hooks/useRealtimeTimeseries"
 import { useRealtimeDimension } from "@/hooks/useRealtimeDimension"
-import { TimeseriesCard } from "@/components/timeseriesCard"
-import { DimensionCard } from "@/components/dimensionCard"
+import { TimeseriesCard } from "@/components/dashCards/timeseriesCard"
+import { DimensionCard } from "@/components/dashCards/dimensionCard"
 import { isPro } from "../../../lib/Actions/isPro"
 
 import { Card, CardContent } from "@workspace/ui/components/card"
-import DomainSwitch from "@/components/domainSwitch"
+import DomainSwitch from "@/components/picker/domainSwitch"
 import { useApiKey } from "@/hooks/useApikey"
-import type { Dimension } from "@/hooks/useDimension"
+import type { Dimension } from "@/hooks/analytics/useDimension"
 
 const DIMENSIONS: Dimension[] = ["browser", "country", "device", "os", "referrer", "page"]
 

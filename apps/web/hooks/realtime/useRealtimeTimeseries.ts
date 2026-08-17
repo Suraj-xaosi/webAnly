@@ -1,6 +1,6 @@
-// hooks/useRealtimeTimeseries.ts
+
 import { useEffect, useRef, useState } from "react";
-import { useTimeseries, type TimeseriesPoint, type ApiError } from "./useTimeseries";
+import { useTimeseries, type TimeseriesPoint, type ApiError } from "../analytics/useTimeseries";
 import { useWebSocket, type WebSocketMessage } from "./useWebSocket";
 
 export interface RealtimeTimeseriesResult {

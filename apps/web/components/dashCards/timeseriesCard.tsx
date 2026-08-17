@@ -1,7 +1,7 @@
-//web/components/timeseriesCard.tsx
+
 "use client"
 import { AreaChartGradient } from "@workspace/ui/components/main/areaChartGradient";
-import type { TimeseriesPoint, ApiError } from "@/hooks/useTimeseries";
+import type { TimeseriesPoint, ApiError } from "@/hooks/analytics/useTimeseries";
 
 interface TimeseriesCardProps {
   data: TimeseriesPoint[];

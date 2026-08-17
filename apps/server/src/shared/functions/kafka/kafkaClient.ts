@@ -1,4 +1,4 @@
- // src/kafka/kafkaClient.ts
+
 import { Kafka } from "kafkajs";
 
 const kafka = new Kafka({

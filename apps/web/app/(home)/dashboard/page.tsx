@@ -1,23 +1,23 @@
-// web/pages/dashboardPage.tsx
+
 "use client"
 
 import { format } from "date-fns";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectDomainId, selectFrom, selectTo, selectInterval, setDateRange,selectTimezone } from "@/store/slices/dashboardSlice";
-import { useTimeseries } from "@/hooks/useTimeseries";
-import { useDimension } from "@/hooks/useDimension";
-import { TimeseriesCard } from "@/components/timeseriesCard";
-import { DimensionCard } from "@/components/dimensionCard";
+import { useTimeseries } from "@/hooks/analytics/useTimeseries";
+import { useDimension } from "@/hooks/analytics/useDimension";
+import { TimeseriesCard } from "@/components/dashCards/timeseriesCard";
+import { DimensionCard } from "@/components/dashCards/dimensionCard";
 import { DateRangePicker } from "@workspace/ui/components/main/dateRangePicker";
 import {
   Card,
   CardContent,
 } from "@workspace/ui/components/card";
-import DomainSwitch from "@/components/domainSwitch";
-import type { Dimension } from "@/hooks/useDimension";
-import { useExitPages } from "@/hooks/useExitPages";
-import { ExitPageCard } from "@/components/exitPageCard";
-import TimezonePicker from "@/components/timezonePicker";
+import DomainSwitch from "@/components/picker/domainSwitch";
+import type { Dimension } from "@/hooks/analytics/useDimension";
+import { useExitPages } from "@/hooks/analytics/useExitPages";
+import { ExitPageCard } from "@/components/dashCards/exitPageCard";
+import TimezonePicker from "@/components/picker/timezonePicker";
 
 const DIMENSIONS: Dimension[] = ["browser", "country", "device", "os", "referrer", "page"];
 

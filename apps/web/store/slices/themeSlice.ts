@@ -1,4 +1,4 @@
-// store/slices/themeSlice.ts
+
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export type ThemeName =

@@ -1,4 +1,4 @@
-// web/components/docs/codeBlock.tsx
+
 "use client"
 
 import { useState } from "react"

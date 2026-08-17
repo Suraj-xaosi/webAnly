@@ -1,7 +1,7 @@
-// src/modules/notifications/notification.worker.ts
+
 import { prisma } from "@repo/db";
-import { createConsumer } from "../../kafka/kafkaClient.js";
-import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../config/kafka.js";
+import { createConsumer } from "../../shared/functions/kafka/kafkaClient.js";
+import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../shared/config/kafka.js";
 
 const consumer = createConsumer(KAFKA_GROUPS.NOTIFICATION_WORKERS);
 
@@ -12,7 +12,7 @@ export async function startNotificationWorker() {
     fromBeginning: false,
   });
 
-  console.log("✅ Notification worker running");
+  console.log("NOTIFICATION WORKER:  Notification worker running");
 
   await consumer.run({
     eachMessage: async ({ message }) => {
@@ -22,14 +22,14 @@ export async function startNotificationWorker() {
       try {
         parsed = JSON.parse(message.value.toString());
       } catch (err) {
-        console.error("❌ Invalid JSON message", err);
+        console.error("NOTIFICATION WORKER: ❌ Invalid JSON message", err);
         return;
       }
 
       const { domainId, visitorCountIn5min, expectedVisitors, difference, type, spikeDate } = parsed;
 
       if (!domainId) {
-        console.warn("⚠ Notification missing domainId, skipping", parsed);
+        console.warn("NOTIFICATION WORKER: ⚠ Notification missing domainId, skipping", parsed);
         return;
       }
 
@@ -40,7 +40,7 @@ export async function startNotificationWorker() {
         });
 
         if (!domain) {
-          console.warn(`⚠ Domain not found for notification: ${domainId}`);
+          console.warn("NOTIFICATION WORKER: ⚠ Domain not found for notification: ${domainId}");
           return;
         }
 
@@ -69,9 +69,9 @@ export async function startNotificationWorker() {
           },
         });
 
-        console.log(`✅ Notification stored for user ${domain.userId} (domain ${domainId})`);
+        console.log(`NOTIFICATION WORKER: ✅ Notification stored for user ${domain.userId} (domain ${domainId})`);
       } catch (err) {
-        console.error("❌ Failed to process notification", err);
+        console.error("NOTIFICATION WORKER:  Failed to process notification", err);
       }
     },
   });

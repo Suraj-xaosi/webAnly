@@ -1,4 +1,4 @@
-// web/components/domains/DomainScriptsSection.tsx
+
 "use client"
 
 import { useState } from "react"

@@ -1,4 +1,4 @@
-//web/components/dimensionCard.tsx
+
 "use client"
 import { useState } from "react";
 import { ChartBarMixed, type DataKey } from "@workspace/ui/components/main/ChartBarMixed";
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
-import type { Dimension, DimensionPoint, ApiError } from "@/hooks/useDimension";
+import type { Dimension, DimensionPoint, ApiError } from "@/hooks/analytics/useDimension";
 
 export interface DimensionCardProps {
   data: DimensionPoint[];

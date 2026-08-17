@@ -1,4 +1,4 @@
-// web/pages/documentationPage.tsx
+
 "use client"
 
 import { IntroductionSection } from "@/components/docs/introductionSection"

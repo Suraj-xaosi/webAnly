@@ -1,8 +1,8 @@
-// server/src/modules/websocket/websocket.server.ts
+
 import { WebSocketServer, WebSocket } from "ws";
 import { IncomingMessage }            from "http";
 import { Server }                     from "http";
-import { apikeyChecker }              from "../../functions/apikeyChecker.js";
+import { apikeyChecker }              from "../../shared/functions/apikeyChecker.js";
 
 // shared Map — imported by websocket.consumer.ts
 export const domainClients = new Map<string, Set<WebSocket>>();
@@ -16,14 +16,14 @@ export function initWebSocketServer(httpServer: Server) {
     const domainId = url.searchParams.get("domainId");
 
     if (!apikey || !domainId) {
-      ws.close(1008, "apikey and domainId required");
+      ws.close(1008, "WS SERVER: apikey and domainId required");
       return;
     }
 
     const domain = await apikeyChecker(apikey);
 
     if (!domain.isActive || domain.domainId !== domainId) {
-      ws.close(1008, "Unauthorized");
+      ws.close(1008, "WS SERVER: Unauthorized");
       return;
     }
 
@@ -31,11 +31,11 @@ export function initWebSocketServer(httpServer: Server) {
       domainClients.set(domainId, new Set());
     }
     domainClients.get(domainId)!.add(ws);
-    console.log(`WS connected: ${domainId}`);
+    console.log(`WS SERVER: Connected: ${domainId}`);
 
     ws.on("close", () => {
       domainClients.get(domainId)?.delete(ws);
-      console.log(`WS disconnected: ${domainId}`);
+      console.log(`WS SERVER: Disconnected: ${domainId}`);
     });
   });
 }

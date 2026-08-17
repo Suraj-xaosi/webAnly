@@ -1,4 +1,4 @@
-// hooks/useDimension.ts
+
 import { useQuery } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 
@@ -26,7 +26,7 @@ export interface DimensionParams {
   domainId:  string;
   from:      string;       // "YYYY-MM-DD"
   to:        string;       // "YYYY-MM-DD"
-  timezone?: string;       // optional timezone, e.g., "UTC", "America/New_York"
+  timezone?: string;       // optional timezone, e.g., "UTC", 
   dimension: Dimension;
   limit?:    number;       // default 100, max 500
   domainName?: string; // Optional domain name for filtering

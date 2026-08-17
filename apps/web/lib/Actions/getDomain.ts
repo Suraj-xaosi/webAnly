@@ -1,6 +1,6 @@
-//web/lib/Actions/getDomain.ts
+
 "use server"
-import { auth } from "@/lib/auth"; // Your Better Auth server instance
+import { auth } from "@/lib/auth"; //  Better Auth server instance
 import { headers } from "next/headers";
 import {prisma} from "@repo/db";
 

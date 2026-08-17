@@ -1,4 +1,4 @@
-// web/components/exitPageCard.tsx
+
 "use client"
 import { useState } from "react";
 import { ChartBarExit, type ExitDataKey, type ExitPagePoint } from "@workspace/ui/components/main/chartBarExit";
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
-import type { ApiError } from "@/hooks/useExitPages";
+import type { ApiError } from "@/hooks/analytics/useExitPages";
 
 export interface ExitPageCardProps {
   data: ExitPagePoint[];

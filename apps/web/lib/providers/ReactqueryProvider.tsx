@@ -1,8 +1,7 @@
-//web/lib/providers/ReactqueryProvider.tsx
+
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Store } from "lucide-react";
 import { ReactNode, useState } from "react";
 import StoreProvider from "./storeprovider";
 

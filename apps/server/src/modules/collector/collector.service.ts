@@ -1,7 +1,7 @@
-// src/modules/collector/collector.service.ts
-import { producer }               from "../../kafka/kafkaClient.js";
-import { apikeyChecker }          from "../../functions/apikeyChecker.js"
-import { KAFKA_TOPICS }           from "../../config/kafka.js";
+
+import { producer }               from "../../shared/functions/kafka/kafkaClient.js";
+import { apikeyChecker }          from "../../shared/functions/apikeyChecker.js"
+import { KAFKA_TOPICS }           from "../../shared/config/kafka.js";
 import parseTime                  from "./functions/parseTimeSpent.js";
 import parseDate                  from "./functions/parseDate.js";
 import { extractRealIp }          from "./functions/extractIP.js";
@@ -25,8 +25,12 @@ export async function handleCollectEvent(req: Request) {
   const body = req.body || {};
 
   const domain = await apikeyChecker(body.apikey);
-  if (!domain.isActive) return;
-    const allowed = isOriginAllowed(
+  if (!domain.isActive){
+    console.log(`COLLECTOR : this ${domain.domainName} is inactive`);
+    return;
+  };
+
+  const allowed = isOriginAllowed(
     req.headers.origin as string | undefined,
     req.headers.referer as string | undefined,
     domain.domainName
@@ -34,7 +38,7 @@ export async function handleCollectEvent(req: Request) {
 
   if (!allowed) {
     console.warn(`Collector: origin mismatch for domain ${domain.domainName}`);
-     // letting it pass here for now .
+     // letting it pass here for now becaouse I do not have domain verification yet .
   }
   
   const visitorID = extractRealIp(req.ip || "");

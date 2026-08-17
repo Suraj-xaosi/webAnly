@@ -1,4 +1,4 @@
-//web/store/store.ts
+
 import { configureStore } from "@reduxjs/toolkit";
 import dashboardReducer from "./slices/dashboardSlice";
 import themeReducer from "./slices/themeSlice";

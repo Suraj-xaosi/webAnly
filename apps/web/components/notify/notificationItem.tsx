@@ -1,4 +1,4 @@
-// web/components/notifications/NotificationItem.tsx
+
 "use client";
 
 import { AlertTriangle, Info, Receipt, Bell } from "lucide-react";

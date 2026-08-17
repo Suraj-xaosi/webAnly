@@ -1,4 +1,4 @@
-// src/modules/collector/functions/checkOrigin.ts
+
 
 /**
  * Extracts a bare, comparable hostname from an Origin or Referer header value.

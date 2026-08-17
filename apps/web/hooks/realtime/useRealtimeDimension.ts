@@ -1,6 +1,6 @@
 // hooks/useRealtimeDimension.ts
 import { useEffect, useRef, useState } from "react";
-import { useDimension, type Dimension, type DimensionPoint, type ApiError } from "./useDimension";
+import { useDimension, type Dimension, type DimensionPoint, type ApiError } from "../analytics/useDimension";
 import { useWebSocket, type WebSocketMessage } from "./useWebSocket";
 
 export interface RealtimeDimensionResult {
