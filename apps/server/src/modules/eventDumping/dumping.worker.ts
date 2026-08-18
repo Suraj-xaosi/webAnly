@@ -1,5 +1,5 @@
 
-import { createConsumer, producer } from "../../shared/functions/kafka/kafkaClient.js";
+import { createConsumer, producer } from "../../shared/config/kafka/kafkaClient.js";
 import dumpInDB                     from "./functions/dumpInDB.js";
 import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../shared/config/kafka.js";
 

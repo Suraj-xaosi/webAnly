@@ -6,7 +6,7 @@ import { createServer } from "http";
 import cors             from "cors";
 
 
-import { producer }                           from "./shared/functions/kafka/kafkaClient.js";
+import { producer }                           from "./shared/config/kafka/kafkaClient.js";
 import { collectorRouter }                    from "./modules/collector/index.js"
 import { initWebSocketServer }                from "./modules/websocket/index.js";
 import { startWebSocketConsumer }             from "./modules/websocket/index.js";
@@ -40,8 +40,10 @@ async function start() {
     await startWebSocketConsumer();
     await startSpikeJob(); 
 
-    httpServer.listen(4000, () => {
-      console.log(" SERVER START : Server running on port 4000");
+    
+    const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
+    httpServer.listen(PORT, () => {
+      console.log(` SERVER START : Server running on port ${PORT}`);
     });
   } catch (err) {
     console.error(" SERVER START : Failed to start:", err);

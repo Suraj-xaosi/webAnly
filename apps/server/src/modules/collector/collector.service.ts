@@ -1,5 +1,5 @@
 
-import { producer }               from "../../shared/functions/kafka/kafkaClient.js";
+import { producer }               from "../../shared/config/kafka/kafkaClient.js";
 import { apikeyChecker }          from "../../shared/functions/apikeyChecker.js"
 import { KAFKA_TOPICS }           from "../../shared/config/kafka.js";
 import parseTime                  from "./functions/parseTimeSpent.js";

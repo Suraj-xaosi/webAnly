@@ -1,6 +1,6 @@
 
 import { prisma }        from "@repo/db";
-import { producer }      from "../../shared/functions/kafka/kafkaClient.js";
+import { producer }      from "../../shared/config/kafka/kafkaClient.js";
 import { KAFKA_TOPICS }  from "../../shared/config/kafka.js";
 import visitorCount      from "./functions/visitorCount.js"; // fixed path
 

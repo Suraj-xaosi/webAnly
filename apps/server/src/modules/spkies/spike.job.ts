@@ -1,7 +1,7 @@
 
 import cron                from "node-cron";
 import spikeCheck          from "./spikeCheck.js";
-import { createConsumer }  from "../../shared/functions/kafka/kafkaClient.js";
+import { createConsumer }  from "../../shared/config/kafka/kafkaClient.js";
 import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../shared/config/kafka.js";
 
 // Track domains with activity in this batch
