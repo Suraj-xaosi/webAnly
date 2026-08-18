@@ -35,9 +35,10 @@ async function start() {
   try {
     await producer.connect();
 
+    await startWebSocketConsumer();
     await startAnalyticsWorker();
     await startNotificationWorker();
-    await startWebSocketConsumer();
+    
     await startSpikeJob(); 
 
     
