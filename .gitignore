@@ -36,6 +36,6 @@ npm-debug.log*
 *.pem
 
 # GeoIP database
-*.mmdb
+#*.mmdb
 
 packages/db/src/generated/
