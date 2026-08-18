@@ -17,16 +17,6 @@
     console.warn("Collector: data-domain-name does not match current hostname.");
   }
 
-  // ── OPTIONAL PATH NORMALIZATION ─────────────────────────────────────────────
-  // Customer can optionally supply their own regex to clean up dynamic URL
-  // segments (e.g. product IDs) BEFORE the event is sent. This is optional —
-  // if not provided, the raw pathname is sent as-is. The server runs its own
-  // normalization on top regardless, so this is a refinement layer, not a
-  // replacement for it: get it wrong (or skip it) and the server-side function
-  // still catches the common cases.
-  //
-  // Format: data-normalize-pattern="REGEX::REPLACEMENT"
-  // Example: data-normalize-pattern="\/product\/[\w-]+-\d+::/product/:id"
 
   const rawPattern = script.getAttribute("data-normalize-pattern");
   let customNormalizer = null;
@@ -53,8 +43,7 @@
     try {
       return customNormalizer(path);
     } catch (e) {
-      // if the customer's regex throws at runtime for some edge-case input,
-      // never let it break tracking — fall back to the raw path.
+    
       return path;
     }
   }
