@@ -25,18 +25,11 @@ export function useWebSocket(
       return;
     }
 
-    let wsUrl: string =process.env.NEXT_PUBLIC_SERVER_URL||"ws://localhost:4000";
+    let wsUrl: string=process.env.NEXT_PUBLIC_SERVER_URL||"ws://localhost:4000"; ;
 
-    if (wsServerUrl) {
-      wsUrl = `${wsServerUrl}?apikey=${apikey}&domainId=${domainId}`;
-    } else {
-      const protocol =
-        typeof window !== "undefined" && window.location.protocol === "https:"
-          ? "wss:"
-          : "ws:";
-      // Your backend runs on port 4000, not same host as Next.js (3000)
-      wsUrl = `${protocol}//${window.location.hostname}:4000?apikey=${apikey}&domainId=${domainId}`;
-    }
+    
+    wsUrl = `${wsUrl}?apikey=${apikey}&domainId=${domainId}`;
+    
 
     console.log("🔌 Connecting to WebSocket:", wsUrl.split("?")[0]);
 
