@@ -18,6 +18,10 @@ const kafka = new Kafka({
         key: process.env.KAFKA_ACCESS_KEY!,
       }
     : undefined,
+
+ 
+  retry: { retries:3, initialRetryTime: 300, maxRetryTime: 10000 }
+
 });
 
 export const producer = kafka.producer({ allowAutoTopicCreation: false });
