@@ -25,7 +25,7 @@ export function useWebSocket(
       return;
     }
 
-    let wsUrl: string=process.env.NEXT_PUBLIC_SERVER_URL||"ws://localhost:4000"; ;
+    let wsUrl: string=process.env.NEXT_PUBLIC_WSS_URL||"ws://localhost:4000"; ;
 
     
     wsUrl = `${wsUrl}?apikey=${apikey}&domainId=${domainId}`;
