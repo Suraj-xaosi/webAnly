@@ -6,6 +6,7 @@ export const collectorRouter = Router();
 
 collectorRouter.post("/collect", async (req: Request, res: Response) => {
   const body = req.body || {};
+  console.log("COLLECTOR : Received request body:", body);
 
   if (!body.apikey || !body.page) {
     return res.status(400).send("COLLECTOR : Missing required - apikey and page");
