@@ -71,13 +71,6 @@ export default function LandingPage() {
               <CardDescription className="text-lg font-semibold text-muted-foreground">
                 Webanly gives you a live view of visitors, traffic sources, and activity on your site — accurate to the second. Track conversions, spot trends, and act before your next surge.
                 
-                  <CardTitle>
-                   -: not for profesional use :-
-                  </CardTitle>
-                  <CardDescription>
-                  -: this is just a project not product. it does not have domain varification yet :- 
-                  </CardDescription>
-                
               </CardDescription>
             </div>
 

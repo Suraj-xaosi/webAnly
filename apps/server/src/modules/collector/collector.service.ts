@@ -11,6 +11,7 @@ import { extractReferrerHostname } from "./functions/extractReferrerHostname.js"
 import {normalizePath} from "./functions/normalizepath.js";
 import { isOriginAllowed } from "./functions/checkOrigin.js";
 import { createHash }  from "crypto";
+import { checkVisitorNewness } from "./functions/trackVisitor.js";
 
 const VALID_EXIT_TYPES = new Set(["navigation", "pagehide", "hidden"]);
 
@@ -80,9 +81,23 @@ export async function handleCollectEvent(req: Request) {
 
   if(exitType != "hidden") {
     if (domain.ispro){
+      const { isNewVisitor, isNewVisitorFor } = await checkVisitorNewness(
+            eventData.domainId,
+            eventData.visitorId,
+            domain.defaultTimezone,
+            {
+              page: eventData.page,
+              referrer: eventData.referrer,
+              browser: eventData.browser,
+              os: eventData.os,
+              device: eventData.device,
+              country: eventData.country,
+            }
+          );
       let socketEventData = {
          ...eventData,  
-        timezone: domain.defaultTimezone,
+         isNewVisitor,
+         isNewVisitorFor
       };
       await producer.send({
         topic: KAFKA_TOPICS.SOCKET_EVENTS,
