@@ -81,7 +81,7 @@ export async function handleCollectEvent(req: Request) {
 
   if(exitType != "hidden") {
     if (domain.ispro){
-      const { isNewVisitor, isNewVisitorFor } = await checkVisitorNewness(
+      const { isNewVisitor, isNewVisitorToday, isNewVisitorFor } = await checkVisitorNewness(
             eventData.domainId,
             eventData.visitorId,
             domain.defaultTimezone,
@@ -97,7 +97,8 @@ export async function handleCollectEvent(req: Request) {
       let socketEventData = {
          ...eventData,  
          isNewVisitor,
-         isNewVisitorFor
+         isNewVisitorFor,
+         isNewVisitorToday
       };
       await producer.send({
         topic: KAFKA_TOPICS.SOCKET_EVENTS,
