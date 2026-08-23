@@ -1,7 +1,8 @@
-
-import { createConsumer, producer } from "../../shared/config/kafka/kafkaClient.js";
+import { createConsumer }           from "../../shared/config/kafka/kafkaClient.js";
 import dumpInDB                     from "./functions/dumpInDB.js";
 import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../shared/config/kafka.js";
+import { redis }                    from "@repo/redis";
+import { DOMAIN_ACTIVITY_SET_KEY }  from "../../shared/config/rediskeys.js";
 
 const consumer = createConsumer(KAFKA_GROUPS.ANALYTICS_WORKERS);
 
@@ -19,7 +20,6 @@ export async function startAnalyticsWorker() {
       if (!message.value) return;
 
       let eventData: any;
-
       try {
         const parsed = JSON.parse(message.value.toString());
         eventData = parsed.eventData || parsed;
@@ -36,23 +36,11 @@ export async function startAnalyticsWorker() {
       // Store event in database
       await dumpInDB(eventData);
 
-      // Publish domain activity for spike detection  
-       
+      // Mark domain as active for spike detection (replaces old Kafka publish)
       try {
-        await producer.send({
-          topic: KAFKA_TOPICS.DOMAIN_ACTIVITY,
-          messages: [
-            {
-              key: eventData.domainId,
-              value: JSON.stringify({
-                domainId: eventData.domainId,
-                timestamp: new Date().toISOString(),
-              }),
-            },
-          ],
-        });
+        await redis.sadd(DOMAIN_ACTIVITY_SET_KEY, eventData.domainId);
       } catch (err) {
-        console.error(" EVENT DUMPING WORKER: Failed to publish domain activity", err);
+        console.error(" EVENT DUMPING WORKER: Failed to mark domain activity in Redis", err);
       }
     },
   });

@@ -1,55 +1,29 @@
+import cron from "node-cron";
+import spikeCheck from "./spikeCheck.js";
+import { redis } from "@repo/redis";
+import { DOMAIN_ACTIVITY_SET_KEY } from "../../shared/config/rediskeys.js";
 
-import cron                from "node-cron";
-import spikeCheck          from "./spikeCheck.js";
-import { createConsumer }  from "../../shared/config/kafka/kafkaClient.js";
-import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../shared/config/kafka.js";
-
-// Track domains with activity in this batch
-//if we put this set in redis then we can have multiple instances of spike job running and they can share the same set of domains with activity. but for now lets  keep it simple and use a local set.
-const domainActivitySet = new Set<string>();
-let consumerInitialized = false;
+const PROCESSING_KEY = `${DOMAIN_ACTIVITY_SET_KEY}:processing`;
 
 export async function startSpikeJob() {
-  // Start consuming domain activity events
-  const consumer = createConsumer(KAFKA_GROUPS.SPIKE_DETECTORS);
-
-  await consumer.connect();
-  await consumer.subscribe({
-    topic: KAFKA_TOPICS.DOMAIN_ACTIVITY,
-    fromBeginning: false,
-  });
-
-  // Consumer accumulates domains with activity
-  await consumer.run({
-    eachMessage: async ({ message }) => {
-      if (!message.value) return;
-
-      try {
-        const { domainId } = JSON.parse(message.value.toString());
-        if (domainId) {
-          domainActivitySet.add(domainId);
-        }
-      } catch (err) {
-        console.error(" SPIKE CHECK WORKER : Failed to parse domain activity message", err);
-      }
-    },
-  });
-
-  consumerInitialized = true;
-
-  // Process accumulated domains every 5 minutes
   cron.schedule("*/5 * * * *", async () => {
-    if (domainActivitySet.size === 0) return;
+  // Merge any leftover batch (e.g. from a crash mid-processing) with
+  // current activity, atomically, then clear the source.
+  const merged = await redis.sunionstore(PROCESSING_KEY, PROCESSING_KEY, DOMAIN_ACTIVITY_SET_KEY);
+  await redis.del(DOMAIN_ACTIVITY_SET_KEY);
 
-    console.log(
-      ` SPIKE CHECK WORKER : Running spike check for ${domainActivitySet.size} domain(s)`
-    );
+  if (merged === 0) return; // nothing to process
 
-    const domains = [...domainActivitySet];
-    domainActivitySet.clear(); // clear before async work so new events during check go into next batch
+  const domains = await redis.smembers(PROCESSING_KEY);
+  await redis.del(PROCESSING_KEY);
 
-    await Promise.all(domains.map((domainId) => spikeCheck(domainId,)));
-  });
+  if (domains.length === 0) return;
+
+  console.log(
+    ` SPIKE CHECK WORKER : Running spike check for ${domains.length} domain(s)`
+  );
+  await Promise.all(domains.map((domainId) => spikeCheck(domainId)));
+});
 
   console.log("SPIKE CHECK WORKER: Spike job scheduled (every 5 min)");
 }
