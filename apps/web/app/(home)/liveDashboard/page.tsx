@@ -1,7 +1,6 @@
-
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useAppSelector } from "@/store/hooks"
 import { selectDomainId } from "@/store/slices/dashboardSlice"
 import { useRealtimeTimeseries } from "@/hooks/realtime/useRealtimeTimeseries"
@@ -16,6 +15,12 @@ import { useApiKey } from "@/hooks/useApikey"
 import type { Dimension } from "@/hooks/analytics/useDimension"
 
 const DIMENSIONS: Dimension[] = ["browser", "country", "device", "os", "referrer", "page"]
+
+// Returns the calendar date (YYYY-MM-DD) as it currently is in the given
+// IANA timezone. Using en-CA locale gives YYYY-MM-DD formatting directly.
+function getDateInTimezone(timezone: string) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date())
+}
 
 export default function liveDashboardPage() {
   const domainId = useAppSelector(selectDomainId)
@@ -34,7 +39,7 @@ export default function liveDashboardPage() {
       const result = await isPro(domainId)
       if (!ignore) {
         setIsDomainPro(!("error" in result) && Boolean(result.Pro))
-        setTimezone(result.timezone || "UTC")
+        setTimezone(result.timezone ?? "UTC")
       }
     }
 
@@ -45,10 +50,11 @@ export default function liveDashboardPage() {
     }
   }, [domainId])
 
-  const today = () => new Date().toISOString().split("T")[0]!
-  const from = today()
-  const to = today()
-  //const timezone = ""
+  // Recomputed whenever the domain's real timezone loads in, so we never
+  // fetch data using a date derived from the wrong offset (e.g. UTC date
+  // instead of the domain's local date right after local midnight).
+  const from = useMemo(() => getDateInTimezone(timezone), [timezone])
+  const to = from
 
   const { data: apikey, isPending: apikeyLoading } = useApiKey(domainId)
   const enabled = !!apikey && !apikeyLoading
@@ -69,15 +75,19 @@ export default function liveDashboardPage() {
 
   return (
     <div className="grid gap-6">
-    <div className="flex items-center justify-between gap-4">
-            <div className="w-fit">
-              <DomainSwitch />
-            </div>
-            
-        
-    
+      <div className="flex items-center justify-between gap-4">
+        <div className="w-fit">
+          <DomainSwitch />
+        </div>
+
+        {domainId && (
+          <div className="text-sm text-muted-foreground flex items-center gap-2">
+            <span className="font-medium">{timezone}</span>
+            <span>·</span>
+            <span>{from}</span>
           </div>
-      
+        )}
+      </div>
 
       {!domainId ? (
         <Card className="border-dashed">

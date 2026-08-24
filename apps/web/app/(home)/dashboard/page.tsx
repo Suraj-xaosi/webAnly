@@ -1,4 +1,3 @@
-
 "use client"
 
 import { format } from "date-fns";
@@ -76,10 +75,10 @@ export default function DashboardPage() {
                 from:     format(range.from, "yyyy-MM-dd"),
                 to:       format(range.to, "yyyy-MM-dd"),
                 interval,
-                
               }));
             }
           }}
+          timezone={timezone}
         />
 
         <TimezonePicker />

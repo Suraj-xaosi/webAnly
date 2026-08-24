@@ -1,7 +1,6 @@
-// components/DateRangePicker.tsx
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { format, subDays, startOfWeek, startOfMonth, startOfYear,
          endOfMonth, subMonths } from "date-fns"
 import { DateRange } from "react-day-picker"
@@ -11,25 +10,34 @@ import { Button } from "@workspace/ui/components/button"
 import { CalendarIcon, ChevronDown } from "lucide-react"
 import { cn } from "@workspace/ui/lib/utils"
 
-const today = new Date()
+export function getZonedToday(timeZone: string): Date {
+  const now = new Date();
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+  const parts = Object.fromEntries(
+    fmt.formatToParts(now).map((p) => [p.type, p.value])
+  );
+
+  return new Date(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour),
+    Number(parts.minute),
+    Number(parts.second)
+  );
+}
 
 export type Interval = "hour" | "dayname" | "day" | "week" | "month"
 
-const PRESETS = [
-  { label: "Today",        interval: "hour" as Interval,    getRange: () => ({ from: today, to: today }) },
-  { label: "Yesterday",    interval: "hour" as Interval,    getRange: () => { const y = subDays(today, 1); return { from: y, to: y } } },
-  { label: "This Week",    interval: "dayname" as Interval, getRange: () => ({ from: startOfWeek(today), to: today }) },
-  { label: "Last 7 Days",  interval: "day" as Interval,     getRange: () => ({ from: subDays(today, 6), to: today }) },
-  { label: "Last 28 Days", interval: "day" as Interval,     getRange: () => ({ from: subDays(today, 27), to: today }) },
-  { label: "This Month",   interval: "week" as Interval,    getRange: () => ({ from: startOfMonth(today), to: today }) },
-  { label: "Last Month",   interval: "day" as Interval,     getRange: () => ({ from: startOfMonth(subMonths(today, 1)), to: endOfMonth(subMonths(today, 1)) }) },
-  { label: "This Year",    interval: "month" as Interval,   getRange: () => ({ from: startOfYear(today), to: today }) },
-]
-
-const DEFAULT_RANGE: DateRange = {
-  from: subDays(today, 27),
-  to: today,
-}
 const DEFAULT_INTERVAL: Interval = "day" // matches "Last 28 Days" default
 
 interface DateRangePickerProps {
@@ -37,9 +45,28 @@ interface DateRangePickerProps {
   value?: DateRange
   /** Fired when the user clicks "Apply" with the newly chosen range and its resolved interval. */
   onApply?: (range: DateRange, interval: Interval) => void
+  timezone?: string
 }
 
-export function DateRangePicker({ value, onApply }: DateRangePickerProps) {
+export function DateRangePicker({ value, onApply, timezone = "UTC" }: DateRangePickerProps) {
+  const today = useMemo(() => getZonedToday(timezone), [timezone]);
+
+  const PRESETS = useMemo(() => [
+    { label: "Today",        interval: "hour" as Interval,    getRange: () => ({ from: today, to: today }) },
+    { label: "Yesterday",    interval: "hour" as Interval,    getRange: () => { const y = subDays(today, 1); return { from: y, to: y } } },
+    { label: "This Week",    interval: "dayname" as Interval, getRange: () => ({ from: startOfWeek(today), to: today }) },
+    { label: "Last 7 Days",  interval: "day" as Interval,     getRange: () => ({ from: subDays(today, 6), to: today }) },
+    { label: "Last 28 Days", interval: "day" as Interval,     getRange: () => ({ from: subDays(today, 27), to: today }) },
+    { label: "This Month",   interval: "week" as Interval,    getRange: () => ({ from: startOfMonth(today), to: today }) },
+    { label: "Last Month",   interval: "day" as Interval,     getRange: () => ({ from: startOfMonth(subMonths(today, 1)), to: endOfMonth(subMonths(today, 1)) }) },
+    { label: "This Year",    interval: "month" as Interval,   getRange: () => ({ from: startOfYear(today), to: today }) },
+  ], [today]);
+
+  const DEFAULT_RANGE: DateRange = useMemo(
+    () => ({ from: subDays(today, 27), to: today }),
+    [today]
+  );
+
   const [open, setOpen] = useState(false)
   const [internalApplied, setInternalApplied] = useState<DateRange>(value ?? DEFAULT_RANGE)
   const [tmp, setTmp] = useState<DateRange>(value ?? DEFAULT_RANGE)
@@ -100,7 +127,6 @@ export function DateRangePicker({ value, onApply }: DateRangePickerProps) {
 
       <PopoverContent align="start" className="w-auto p-0">
         <div className="flex">
-          {/* ── Presets sidebar ── */}
           <div className="flex flex-col py-3 border-r min-w-[145px]">
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest px-4 pb-2">
               Quick select
@@ -121,7 +147,6 @@ export function DateRangePicker({ value, onApply }: DateRangePickerProps) {
             ))}
           </div>
 
-          {/* ── Calendar + footer ── */}
           <div className="p-4 flex flex-col gap-3">
             <Calendar
               mode="range"
@@ -147,19 +172,10 @@ export function DateRangePicker({ value, onApply }: DateRangePickerProps) {
                 )}
               </p>
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-xs"
-                  onClick={() => setOpen(false)}
-                >
+                <Button size="sm" variant="outline" className="text-xs" onClick={() => setOpen(false)}>
                   Cancel
                 </Button>
-                <Button
-                  size="sm"
-                  className="text-xs"
-                  onClick={handleApply}
-                >
+                <Button size="sm" className="text-xs" onClick={handleApply}>
                   Apply
                 </Button>
               </div>

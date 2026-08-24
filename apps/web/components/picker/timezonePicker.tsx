@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Clock3 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { selectTimezone, setTimezone } from "@/store/slices/dashboardSlice";
+import { selectTimezone, setDateRange, setTimezone } from "@/store/slices/dashboardSlice";
 import {
   Select,
   SelectContent,
@@ -11,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
+import { format, subDays } from "date-fns";
+
 
 const COMMON_TIMEZONES = [
   "UTC",
@@ -57,12 +59,22 @@ export default function TimezonePicker() {
   const timezone = useAppSelector(selectTimezone) ?? "UTC";
   const options = getTimezoneOptions();
 
-  useEffect(() => {
-    const browserTimezone = getBrowserTimezone();
-    if (!timezone || timezone === "UTC") {
-      dispatch(setTimezone(browserTimezone));
+useEffect(() => {
+  const browserTimezone = getBrowserTimezone();
+  if (!timezone || timezone === "UTC") {
+    dispatch(setTimezone(browserTimezone));
+
+    if (browserTimezone !== "UTC") {
+      const zonedTodayStr = new Intl.DateTimeFormat("en-CA", { timeZone: browserTimezone }).format(new Date());
+      const zonedToday = new Date(zonedTodayStr);
+      dispatch(setDateRange({
+        from: format(subDays(zonedToday, 27), "yyyy-MM-dd"),
+        to: zonedTodayStr,
+        interval: "day",
+      }));
     }
-  }, [dispatch, timezone]);
+  }
+}, [dispatch, timezone]);
 
   return (
     <div className="flex items-center gap-2">
