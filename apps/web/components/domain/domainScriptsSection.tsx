@@ -17,7 +17,7 @@ import { cn } from "@workspace/ui/lib/utils"
 const COLLECTOR_SCRIPT_URL =
   process.env.NEXT_PUBLIC_COLLECTOR_SCRIPT_URL || "http://localhost:3000/script.js"
 
-function buildSnippet(domainName: string, apikey: string) {
+function buildNextSnippet(domainName: string, apikey: string) {
   return `<script
   src="${COLLECTOR_SCRIPT_URL}"
   data-domain-name="${domainName}"
@@ -25,9 +25,29 @@ function buildSnippet(domainName: string, apikey: string) {
 </script>`
 }
 
-function ScriptBlock({ domainName, apikey }: { domainName: string; apikey: string }) {
+function buildReactSnippet(domainName: string, apikey: string) {
+  return `const script = document.createElement("script")
+script.src = "${COLLECTOR_SCRIPT_URL}"
+script.setAttribute("data-domain-name", "${domainName}")
+script.setAttribute("data-api-key", "${apikey}")
+script.async = true
+document.head.appendChild(script)`
+}
+
+function ScriptBlock({
+  domainName,
+  apikey,
+  framework,
+}: {
+  domainName: string
+  apikey: string
+  framework: "next" | "react"
+}) {
   const [copied, setCopied] = useState(false)
-  const snippet = buildSnippet(domainName, apikey)
+  const snippet =
+    framework === "next"
+      ? buildNextSnippet(domainName, apikey)
+      : buildReactSnippet(domainName, apikey)
 
   async function handleCopy() {
     await navigator.clipboard.writeText(snippet)
@@ -101,11 +121,33 @@ export function DomainScriptsSection() {
               </span>
             </CardTitle>
             <CardDescription>
-              Paste this snippet into your site's <code>&lt;head&gt;</code> tag.
+              Add the tracking script to your Next.js or React application.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ScriptBlock domainName={domain.domainName} apikey={domain.apikey} />
+          <CardContent className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium">Next.js</p>
+              <p className="text-xs text-muted-foreground">
+                Paste into your site's <code>&lt;head&gt;</code> tag, such as in
+                <code> layout.tsx</code>.
+              </p>
+              <ScriptBlock
+                domainName={domain.domainName}
+                apikey={domain.apikey}
+                framework="next"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium">React</p>
+              <p className="text-xs text-muted-foreground">
+                Paste into <code>main.tsx</code> before your app is rendered.
+              </p>
+              <ScriptBlock
+                domainName={domain.domainName}
+                apikey={domain.apikey}
+                framework="react"
+              />
+            </div>
           </CardContent>
         </Card>
       ))}
