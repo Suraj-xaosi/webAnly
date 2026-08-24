@@ -2,6 +2,8 @@
 
 A privacy-friendly, self-hostable web analytics platform (inspired by Plausible) with real-time dashboards, built as a Turborepo monorepo.
 
+deployed link - https://webanly-dashboard.vercel.app/
+
 ## Features
 
 - **Real-time analytics dashboard** — live visitor counts, pageviews, and event streams via WebSockets
@@ -79,3 +81,8 @@ This starts all apps in the monorepo via Turborepo.
 
 - Domain ownership verification is currently email-based only; DNS TXT record verification (for stronger domain-impersonation protection) is a planned enhancement. Schema fields (`verificationToken`, `verifiedAt`) are already in place for this.
 
+![alt text](<Screenshot 2026-08-22 140408.png>)
+![alt text](<Screenshot 2026-08-21 195432.png>)
+![alt text](<Screenshot 2026-08-21 195415.png>)
+![alt text](<Screenshot 2026-08-21 182703.png>)
+![alt text](<Screenshot 2026-08-21 195333.png>)
