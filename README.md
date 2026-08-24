@@ -81,6 +81,7 @@ This starts all apps in the monorepo via Turborepo.
 
 - Domain ownership verification is currently email-based only; DNS TXT record verification (for stronger domain-impersonation protection) is a planned enhancement. Schema fields (`verificationToken`, `verifiedAt`) are already in place for this.
 
+![alt text](diagram-export-8-24-2026-11_56_16-AM.png)
 ![alt text](<Screenshot 2026-08-22 140408.png>)
 ![alt text](<Screenshot 2026-08-21 195432.png>)
 ![alt text](<Screenshot 2026-08-21 195415.png>)
