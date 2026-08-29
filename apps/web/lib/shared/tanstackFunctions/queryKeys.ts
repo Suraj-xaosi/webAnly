@@ -11,8 +11,9 @@ export const queryKeys = {
       limit?: number,
       timezone?: string
     ) => ["dimension", domainId, from, to, dimension, limit ?? 100, timezone] as const,
-    exitPages: (domainId: string, from: string, to: string, limit?: number) =>
-      ["exit-pages", domainId, from, to, limit ?? 100] as const,
+    
+    exitPages: (domainId: string, from: string, to: string, limit?: number, timezone?: string) =>
+      ["exit-pages", domainId, from, to, limit ?? 100, timezone] as const,
     timeseries: (
       domainId: string,
       from: string,

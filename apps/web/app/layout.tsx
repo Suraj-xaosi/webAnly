@@ -4,6 +4,7 @@ import "@workspace/ui/globals.css"
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import { cn } from "@workspace/ui/lib/utils"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
+import { THEME_NAMES } from "@/store/slices/themeSlice"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
@@ -15,7 +16,7 @@ const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" })
 const THEME_INIT_SCRIPT = `
   try {
     var saved = localStorage.getItem('theme-name');
-    var valid = ['atelier-deco','spring-notebook','mediterranean','studio-desk','golden-hour'];
+    var valid = ${JSON.stringify(THEME_NAMES)};
     if (saved && valid.indexOf(saved) !== -1) {
       document.documentElement.setAttribute('data-theme', saved);
     }
@@ -37,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         "font-sans"
       )}
     >
-      <body>
+      <body suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
 
         <ReactqueryProvider>

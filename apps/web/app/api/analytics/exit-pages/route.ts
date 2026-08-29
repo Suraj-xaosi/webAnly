@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const domainId = searchParams.get("domainId");
     const from     = searchParams.get("from");
     const to       = searchParams.get("to");
-    const limit    = Math.min(Number(searchParams.get("limit") || 100), 500);
+    //const limit    = Math.min(Number(searchParams.get("limit") || 100), 500);
     // Viewer's IANA timezone. Defaults to UTC for callers not sending it yet.
     const timezone = searchParams.get("timezone") || "UTC";
 
@@ -36,7 +36,8 @@ export async function GET(req: NextRequest) {
     // Cache key includes every param that changes the query result, including
     // `limit` — it's part of the SQL LIMIT clause, so two different limits
     // must never share a cache entry.
-    const cacheKey = `exit-pages:${domainId}:${safeFrom}:${safeTo}:${timezone}:${limit}`;
+    //const cacheKey = `exit-pages:${domainId}:${safeFrom}:${safeTo}:${timezone}:${limit}`;
+    const cacheKey = `exit-pages:${domainId}:${safeFrom}:${safeTo}:${timezone}`;
 
     const cached = await getCache<any>(cacheKey);
     if (cached) {
@@ -67,7 +68,7 @@ export async function GET(req: NextRequest) {
         AND "visitedAt"::timestamptz <  ${upperBoundSql}
       GROUP BY 1
       ORDER BY exits DESC
-      LIMIT ${limit}
+      
     `;
 
     const data = rows

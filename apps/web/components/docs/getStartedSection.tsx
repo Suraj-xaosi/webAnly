@@ -1,6 +1,3 @@
-
-"use client"
-
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
 import { Badge } from "@workspace/ui/components/badge"

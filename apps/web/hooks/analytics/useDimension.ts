@@ -49,3 +49,6 @@ export async function prefetchDimension(
     staleTime: 3 * 60 * 1000,
   });
 }
+
+export type { Dimension, DimensionPoint, DimensionResponse, DimensionParams } from "@/lib/shared/types/analytics";
+export type { ApiError } from "@/lib/shared/types/api";

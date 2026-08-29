@@ -3,23 +3,22 @@
 import { Palette, Check } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { selectThemeName, setThemeName, type ThemeName } from "@/store/slices/themeSlice"
+import { selectThemeName, setThemeName, THEME_NAMES, type ThemeName } from "@/store/slices/themeSlice"
 
-const THEMES: { id: ThemeName; label: string }[] = [
-  { id: "atelier-deco",     label: "Atelier Deco" },
-  { id: "spring-notebook",  label: "Spring Notebook" },
-  { id: "mediterranean",    label: "Mediterranean Sketchbook" },
-  { id: "studio-desk",      label: "Studio Desk" },
-  { id: "golden-hour",      label: "Golden Hour" },
-]
+// Record<ThemeName, string> ka matlab: "har ThemeName ke liye ek label hona ZAROORI hai"
+// Agar THEME_NAMES mein naya theme add ho aur yahan label na diya, TypeScript ERROR dega —
+// isse "bhool jaana" structurally IMPOSSIBLE ho jaata hai.
+const THEME_LABELS: Record<ThemeName, string> = {
+  "atelier-deco": "Atelier Deco",
+  "spring-notebook": "Spring Notebook",
+  "mediterranean": "Mediterranean Sketchbook",
+  "studio-desk": "Studio Desk",
+  "golden-hour": "Golden Hour",
+};
 
 export function ThemeSwitcher() {
   const dispatch = useAppDispatch()
@@ -35,10 +34,10 @@ export function ThemeSwitcher() {
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Theme</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {THEMES.map((t) => (
-          <DropdownMenuItem key={t.id} onClick={() => dispatch(setThemeName(t.id))}>
-            <span className="flex-1">{t.label}</span>
-            {themeName === t.id && <Check className="h-3.5 w-3.5" />}
+        {THEME_NAMES.map((id) => (
+          <DropdownMenuItem key={id} onClick={() => dispatch(setThemeName(id))}>
+            <span className="flex-1">{THEME_LABELS[id]}</span>
+            {themeName === id && <Check className="h-3.5 w-3.5" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

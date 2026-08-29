@@ -3,7 +3,7 @@ import { useApiQuery, normalizeApiError } from "@/lib/shared/tanstackFunctions/a
 import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys"; 
 import type { TimeseriesResponse, TimeseriesParams } from "@/lib/shared/types/analytics";
 import type { ApiError } from "@/lib/shared/types/api";
-//export type { Interval, TimeseriesPoint, TimeseriesResponse, TimeseriesParams, ApiError };
+
 
 async function fetchTimeseries(params: TimeseriesParams): Promise<TimeseriesResponse> {
   const { domainId, from, to, interval, timezone } = params;
@@ -50,3 +50,6 @@ export async function prefetchTimeseries(
 export function normalizeAxiosError(error: unknown): ApiError {
   return normalizeApiError(error);
 }
+
+export type { TimeseriesPoint, TimeseriesResponse, TimeseriesParams, Interval } from "@/lib/shared/types/analytics";
+export type { ApiError } from "@/lib/shared/types/api";

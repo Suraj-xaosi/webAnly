@@ -1,8 +1,10 @@
-
+// apps/web/hooks/realtime/useWebSocket.ts
 import { useEffect, useRef, useState } from "react";
-import type { WebSocketMessage } from "@/lib/shared/types";
+import type { WebSocketMessage } from "@/lib/shared/types/realtime";
 
 export type { WebSocketMessage };
+
+const MAX_BACKOFF_MS = 30_000; // 30 second se zyada wait mat karo, chahe kitni baar bhi fail ho
 
 export function useWebSocket(
   domainId: string,
@@ -12,10 +14,13 @@ export function useWebSocket(
 ) {
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
-
-  // Keep latest onMessage in a ref — prevents WS reconnect on every render
   const onMessageRef = useRef(onMessage);
   onMessageRef.current = onMessage;
+
+  // Naye refs — reconnect logic ke liye
+  const reconnectAttemptRef = useRef(0);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const shouldReconnectRef = useRef(true); // cleanup ke waqt false, taaki unmount ke baad reconnect na ho
 
   useEffect(() => {
     if (!domainId || !apikey) {
@@ -23,53 +28,59 @@ export function useWebSocket(
       return;
     }
 
-    let wsUrl: string=process.env.NEXT_PUBLIC_WSS_URL||"ws://localhost:4000"; ;
+    shouldReconnectRef.current = true;
 
-    
-    wsUrl = `${wsUrl}?apikey=${apikey}&domainId=${domainId}`;
-    
+    function connect() {
+      let wsUrl: string = process.env.NEXT_PUBLIC_WSS_URL || "ws://localhost:4000";
+      wsUrl = `${wsUrl}?apikey=${apikey}&domainId=${domainId}`;
 
-    console.log("🔌 Connecting to WebSocket:", wsUrl.split("?")[0]);
-
-    try {
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        console.log("✅ WebSocket connected");
         setIsConnected(true);
+        reconnectAttemptRef.current = 0; // success — backoff reset karo
       };
 
       ws.onmessage = (event) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
-          onMessageRef.current?.(message); // always calls latest callback
+          onMessageRef.current?.(message);
         } catch (err) {
           console.error("Failed to parse WS message:", err);
         }
       };
 
-      ws.onerror = (error) => {
-        console.error("❌ WebSocket error:", error);
+      ws.onerror = () => {
         setIsConnected(false);
       };
 
       ws.onclose = () => {
-        console.log("⚠️ WebSocket disconnected");
         setIsConnected(false);
+
+        // Sirf tab reconnect karo jab component abhi bhi mounted hai
+        if (!shouldReconnectRef.current) return;
+
+        const attempt = reconnectAttemptRef.current;
+        const backoff = Math.min(1000 * 2 ** attempt, MAX_BACKOFF_MS); // 1s, 2s, 4s, 8s... 30s tak cap
+        reconnectAttemptRef.current = attempt + 1;
+
+        reconnectTimeoutRef.current = setTimeout(connect, backoff);
       };
 
       wsRef.current = ws;
-    } catch (err) {
-      console.error("Failed to create WebSocket:", err);
-      setIsConnected(false);
     }
 
+    connect();
+
     return () => {
+      shouldReconnectRef.current = false; // pending reconnect timers ko cancel karne ka signal
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.close();
       }
     };
-  // onMessage intentionally excluded — handled via ref above
   }, [domainId, apikey, wsServerUrl]);
 
   return { isConnected, ws: wsRef.current };

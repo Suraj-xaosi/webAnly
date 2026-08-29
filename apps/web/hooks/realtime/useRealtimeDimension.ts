@@ -41,9 +41,9 @@ export function useRealtimeDimension(
   };
 }
 
-function getDimensionValue(eventData: Record<string, any>, dimension: Dimension): string | null {
+function getDimensionValue(eventData: Record<string, any>, dimension: Dimension): string  {
   const value = eventData[dimension];
-  return value == null ? null : String(value);
+  return value == null ? "Unknown" : String(value);
 }
 
 function mergeWebSocketEvent(
@@ -55,7 +55,7 @@ function mergeWebSocketEvent(
 
   const eventData = message.data as Record<string, any>;
   const dimensionKey = getDimensionValue(eventData, dimension);
-  if (!dimensionKey) return;
+  //if (!dimensionKey) return;
 
   const shouldCountVisitor =
     typeof eventData.isNewVisitorFor?.[dimension] === "boolean"

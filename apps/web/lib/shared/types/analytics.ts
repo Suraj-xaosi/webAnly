@@ -15,6 +15,7 @@ export interface DimensionResponse {
   to: string;
   total: number;
   data: DimensionPoint[];
+  timezone?:string;
 }
 
 export interface DimensionParams {
@@ -39,6 +40,7 @@ export interface ExitPagesResponse {
   from: string;
   to: string;
   total: number;
+  timezone?:string;
   data: ExitPagePoint[];
 }
 
@@ -63,6 +65,7 @@ export interface TimeseriesResponse {
   interval: Interval;
   from: string;
   to: string;
+  timezone?:string;
   data: TimeseriesPoint[];
 }
 

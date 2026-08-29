@@ -52,18 +52,11 @@ const dashboardSlice = createSlice({
     setTimezone(state, action: PayloadAction<string>) {
       state.timezone = action.payload;
     },
-    resetDashboard(state) {
-      const tz = state.timezone || "UTC";
-      state.domainId = "";
-      state.from     = todayInZone(tz);
-      state.to       = todayInZone(tz);
-      state.interval = "hour";
-      // timezone intentionally left as-is — reset shouldn't force UTC either
-    },
+
   },
 });
 
-export const { setDomainId, setDateRange, setTimezone, resetDashboard } = dashboardSlice.actions;
+export const { setDomainId, setDateRange, setTimezone } = dashboardSlice.actions;
 export default dashboardSlice.reducer;
 
 import type { RootState } from "../store";

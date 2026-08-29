@@ -17,11 +17,13 @@ import type { Dimension } from "@/hooks/analytics/useDimension";
 import { useExitPages } from "@/hooks/analytics/useExitPages";
 import { ExitPageCard } from "@/components/dashCards/exitPageCard";
 import TimezonePicker from "@/components/picker/timezonePicker";
+import { useTransition } from "react"; 
 
 const DIMENSIONS: Dimension[] = ["browser", "country", "device", "os", "referrer", "page"];
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
+  const [isPending, startTransition] = useTransition();
   const domainId = useAppSelector(selectDomainId);
   const from = useAppSelector(selectFrom);
   const to = useAppSelector(selectTo);
@@ -71,15 +73,26 @@ export default function DashboardPage() {
           value={{ from: new Date(from), to: new Date(to) }}
           onApply={(range, interval) => {
             if (range.from && range.to) {
-              dispatch(setDateRange({
-                from:     format(range.from, "yyyy-MM-dd"),
-                to:       format(range.to, "yyyy-MM-dd"),
-                interval,
-              }));
+              // 1. Format the dates into stable strings outside the transition
+              const formattedFrom = format(range.from, "yyyy-MM-dd");
+              const formattedTo = format(range.to, "yyyy-MM-dd");
+
+              // 2. Pass those ready-made strings into the transition
+              startTransition(() => {
+                dispatch(setDateRange({ 
+                  from: formattedFrom, 
+                  to: formattedTo, 
+                  interval 
+                }));
+              });
             }
           }}
           timezone={timezone}
         />
+        
+      {isPending && (
+        <p className="text-xs text-muted-foreground">Updating dashboard…</p>
+      )}
 
         <TimezonePicker />
 

@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { Clock3 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectTimezone, setDateRange, setTimezone } from "@/store/slices/dashboardSlice";
@@ -12,6 +11,7 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select";
 import { format, subDays } from "date-fns";
+import { useEffect, useMemo } from "react";
 
 
 const COMMON_TIMEZONES = [
@@ -57,7 +57,7 @@ export function getBrowserTimezone() {
 export default function TimezonePicker() {
   const dispatch = useAppDispatch();
   const timezone = useAppSelector(selectTimezone) ?? "UTC";
-  const options = getTimezoneOptions();
+  const options = useMemo(() => getTimezoneOptions(), []);
 
 useEffect(() => {
   const browserTimezone = getBrowserTimezone();

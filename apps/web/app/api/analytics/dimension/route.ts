@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     const from      = searchParams.get("from");
     const to        = searchParams.get("to");
     const dimension = searchParams.get("dimension");
-    const limit     = Math.min(Number(searchParams.get("limit") || 100), 500);
+    //const limit     = Math.min(Number(searchParams.get("limit") || 100), 500);
     const timezone  = searchParams.get("timezone") || "UTC";
 
     if (!domainId || !dimension) {
@@ -51,7 +51,8 @@ export async function GET(req: NextRequest) {
     const safeFrom = from as string;
     const safeTo = to as string;
 
-    const cacheKey = `dimension:${domainId}:${dimension}:${safeFrom}:${safeTo}:${timezone}:${limit}`;
+    //const cacheKey = `dimension:${domainId}:${dimension}:${safeFrom}:${safeTo}:${timezone}:${limit}`;
+    const cacheKey = `dimension:${domainId}:${dimension}:${safeFrom}:${safeTo}:${timezone}`;
 
     const cached = await getCache<any>(cacheKey);
     if (cached) {
@@ -79,7 +80,7 @@ export async function GET(req: NextRequest) {
         AND ${colId} IS NOT NULL
       GROUP BY 1
       ORDER BY views DESC
-      LIMIT ${limit}
+      
     `;
 
     const data = rows.map((row) => ({
