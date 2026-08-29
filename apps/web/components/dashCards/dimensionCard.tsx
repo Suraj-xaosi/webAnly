@@ -1,6 +1,6 @@
 
 "use client"
-import { useState } from "react";
+import { memo, useState } from "react";
 import { ChartBarMixed, type DataKey } from "@workspace/ui/components/main/ChartBarMixed";
 import {
   Card,
@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select";
 import type { Dimension, DimensionPoint, ApiError } from "@/hooks/analytics/useDimension";
+import { Badge } from "@workspace/ui/components/badge";
 
 export interface DimensionCardProps {
   data: DimensionPoint[];
@@ -32,14 +33,14 @@ const METRIC_OPTIONS: { value: DataKey; label: string }[] = [
   { value: "viewsPerVisitor", label: "Views per Visitor" },
 ];
 
-export function DimensionCard({ data, isLoading, isError, error, dimension }: DimensionCardProps) {
+export const DimensionCard = memo(function DimensionCard({ data, isLoading, isError, error, dimension,isLive }: DimensionCardProps) {
   const [selectedMetric, setSelectedMetric] = useState<DataKey>("visitors");
 
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error: {error?.message}</div>;
 
   return (
-    <Card>
+    <Card className="relative">
       <CardHeader className="flex items-center justify-between gap-2">
         <CardTitle className="capitalize">{dimension} Data</CardTitle>
         <Select value={selectedMetric} onValueChange={(v) => setSelectedMetric(v as DataKey)}>
@@ -55,7 +56,16 @@ export function DimensionCard({ data, isLoading, isError, error, dimension }: Di
           </SelectContent>
         </Select>
       </CardHeader>
+      {isLive && (
+              <Badge
+                variant="secondary"
+                className="absolute right-4 top-4 z-10 gap-1.5 animate-pulse"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Live
+              </Badge>
+            )}
       <ChartBarMixed data={data} dataKey={selectedMetric} />
     </Card>
   );
-}
+});

@@ -1,10 +1,8 @@
-
 "use client"
 
-import { useState, useTransition } from "react"
-import { useQueryClient } from "@tanstack/react-query"
+import { useState } from "react"
 import { useDomain } from "@/hooks/useDomain"
-import { deleteDomain } from "@/lib/Actions/deleteDomain"
+import { useDeleteDomain } from "@/hooks/useDeleteDomain"
 import { Button } from "@workspace/ui/components/button"
 import {
   Card,
@@ -31,29 +29,27 @@ function maskKey(key: string) {
   return `${key.slice(0, 4)}${"•".repeat(key.length - 8)}${key.slice(-4)}`
 }
 
-function ApiKeyRow({ domainId, domainName, apikey }: { domainId: string; domainName: string; apikey: string }) {
-  const queryClient = useQueryClient()
+function ApiKeyRow({
+  domainId,
+  domainName,
+  apikey,
+}: {
+  domainId: string
+  domainName: string
+  apikey: string
+}) {
   const [revealed, setRevealed] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [isPending, startTransition] = useTransition()
-  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const deleteMutation = useDeleteDomain()
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(apikey)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
-
-  function handleDelete() {
-    setDeleteError(null)
-    startTransition(async () => {
-      const result = await deleteDomain(domainId)
-      if (result.error) {
-        setDeleteError(result.error)
-        return
-      }
-      queryClient.invalidateQueries({ queryKey: ["domain"] })
-    })
+    try {
+      await navigator.clipboard.writeText(apikey)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      setCopied(false)
+    }
   }
 
   return (
@@ -93,8 +89,8 @@ function ApiKeyRow({ domainId, domainName, apikey }: { domainId: string; domainN
         </div>
 
         <div className="flex items-center justify-between border-t pt-3">
-          {deleteError && (
-            <p className="text-sm text-destructive">{deleteError}</p>
+          {deleteMutation.error && (
+            <p className="text-sm text-destructive">{deleteMutation.error.message}</p>
           )}
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -102,9 +98,9 @@ function ApiKeyRow({ domainId, domainName, apikey }: { domainId: string; domainN
                 size="sm"
                 variant="destructive"
                 className="ml-auto gap-1.5"
-                disabled={isPending}
+                disabled={deleteMutation.isPending}
               >
-                {isPending ? (
+                {deleteMutation.isPending ? (
                   <Loader2Icon className="size-3.5 animate-spin" />
                 ) : (
                   <Trash2Icon className="size-3.5" />
@@ -123,7 +119,7 @@ function ApiKeyRow({ domainId, domainName, apikey }: { domainId: string; domainN
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={handleDelete}
+                  onClick={() => deleteMutation.mutate(domainId)}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
                   Delete

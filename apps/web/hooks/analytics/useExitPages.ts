@@ -1,33 +1,10 @@
+﻿import axios from "axios";
+import { useApiQuery, normalizeApiError } from "@/lib/shared/tanstackFunctions/api";
+import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys"; 
+import type { ExitPagesResponse, ExitPagesParams} from "@/lib/shared/types/analytics";
+import type { ApiError } from "@/lib/shared/types/api";
 
-import { useQuery } from "@tanstack/react-query";
-import axios, { AxiosError } from "axios";
 
-export interface ExitPagePoint {
-  name:     string;
-  views:    number;
-  exits:    number;
-  exitRate: number; // percentage, 0-100
-}
-
-export interface ExitPagesResponse {
-  from:  string;
-  to:    string;
-  total: number;
-  data:  ExitPagePoint[];
-}
-
-export interface ExitPagesParams {
-  domainId: string;
-  from:     string;
-  to:       string;
-  limit?:   number;
-  timezone?: string;
-}
-
-export interface ApiError {
-  message: string;
-  status?: number;
-}
 
 async function fetchExitPages(params: ExitPagesParams): Promise<ExitPagesResponse> {
   const { domainId, from, to, limit = 100, timezone } = params;
@@ -41,29 +18,17 @@ async function fetchExitPages(params: ExitPagesParams): Promise<ExitPagesRespons
 }
 
 export function normalizeExitPagesError(error: unknown): ApiError {
-  if (axios.isAxiosError(error)) {
-    const axiosErr = error as AxiosError<{ error?: string }>;
-    return {
-      message: axiosErr.response?.data?.error ?? axiosErr.message,
-      status:  axiosErr.response?.status,
-    };
-  }
-  return { message: "An unexpected error occurred" };
+  return normalizeApiError(error);
 }
 
 export function useExitPages(params: ExitPagesParams) {
   const { domainId, from, to, limit = 100 } = params;
 
-  return useQuery<ExitPagesResponse, ApiError>({
-    queryKey: ["exit-pages", domainId, from, to, limit],
+  return useApiQuery<ExitPagesResponse, ApiError>({
+    queryKey: queryKeys.analytics.exitPages(domainId, from, to, limit),
     queryFn: () => fetchExitPages(params),
     enabled: Boolean(domainId && from && to),
-    placeholderData: (prev) => prev,
     staleTime: 3 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    retry: (failureCount, error) => {
-      if (error.status && error.status >= 400 && error.status < 500) return false;
-      return failureCount < 1;
-    },
   });
 }

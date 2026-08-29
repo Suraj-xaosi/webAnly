@@ -1,13 +1,15 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   getNotifications,
   markNotificationRead,
   markAllNotificationsRead,
 } from "@/lib/Actions/getNotifications";
+import { useApiMutation, useApiQuery } from "@/lib/shared/tanstackFunctions/api";
+import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys";
 
 export function useNotifications() {
-  return useQuery({
-    queryKey: ["notifications"],
+  return useApiQuery({
+    queryKey: queryKeys.notifications(),
     queryFn: async () => {
       const result = await getNotifications();
       if (result.error) {
@@ -15,21 +17,21 @@ export function useNotifications() {
       }
       return result.notifications ?? [];
     },
-    staleTime: 1000 * 30, // 30s — should feel closer to live than domains
-    refetchInterval: 1000 * 60, // light polling; 
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 60,
   });
 }
 
 export function useMarkAsRead() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useApiMutation({
     mutationFn: (id: string) => markNotificationRead(id),
     onMutate: async (id: string) => {
-      await queryClient.cancelQueries({ queryKey: ["notifications"] });
-      const previous = queryClient.getQueryData<any[]>(["notifications"]);
+      await queryClient.cancelQueries({ queryKey: queryKeys.notifications() });
+      const previous = queryClient.getQueryData<any[]>(queryKeys.notifications());
 
-      queryClient.setQueryData<any[]>(["notifications"], (old) =>
+      queryClient.setQueryData<any[]>(queryKeys.notifications(), (old) =>
         old?.map((n) => (n.id === id ? { ...n, read: true } : n))
       );
 
@@ -37,11 +39,11 @@ export function useMarkAsRead() {
     },
     onError: (_err, _id, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(["notifications"], context.previous);
+        queryClient.setQueryData(queryKeys.notifications(), context.previous);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications() });
     },
   });
 }
@@ -49,13 +51,13 @@ export function useMarkAsRead() {
 export function useMarkAllAsRead() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useApiMutation({
     mutationFn: () => markAllNotificationsRead(),
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["notifications"] });
-      const previous = queryClient.getQueryData<any[]>(["notifications"]);
+      await queryClient.cancelQueries({ queryKey: queryKeys.notifications() });
+      const previous = queryClient.getQueryData<any[]>(queryKeys.notifications());
 
-      queryClient.setQueryData<any[]>(["notifications"], (old) =>
+      queryClient.setQueryData<any[]>(queryKeys.notifications(), (old) =>
         old?.map((n) => ({ ...n, read: true }))
       );
 
@@ -63,11 +65,11 @@ export function useMarkAllAsRead() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(["notifications"], context.previous);
+        queryClient.setQueryData(queryKeys.notifications(), context.previous);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications() });
     },
   });
 }

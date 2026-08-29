@@ -1,17 +1,17 @@
-
-import { useQuery } from "@tanstack/react-query";
-import { getApikey } from "@/lib/Actions/getApikey";
+﻿import { getApikey } from "@/lib/Actions/getApikey";
+import { useApiQuery } from "@/lib/shared/tanstackFunctions/api";
+import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys";
 
 export function useApiKey(domainId: string) {
-  return useQuery({
-    queryKey: ["apikey", domainId],
+  return useApiQuery({
+    queryKey: queryKeys.apikey(domainId),
     queryFn: async () => {
       const result = await getApikey(domainId);
       if (result.error) throw new Error(result.error);
       return result.apikey;
     },
     enabled: !!domainId,
-    staleTime: Infinity,   
-    gcTime: 0,            
+    staleTime: Infinity,
+    gcTime: 0,
   });
 }

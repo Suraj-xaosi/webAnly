@@ -1,7 +1,12 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, Prisma } from "@repo/db";
 import { getCache, setCache } from "@repo/redis";
+import {
+  CACHE_TTL_TODAY,
+  CACHE_TTL_PAST,
+  todayInTimeZone,
+  validateDateParams,
+} from "@/lib/shared/functions/TimeFunctions";
 
 const VALID_INTERVALS = ["hour", "dayname", "day", "week", "month"] as const;
 type Interval = (typeof VALID_INTERVALS)[number];
@@ -21,23 +26,6 @@ const DAY_NAMES = [
   "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
 ];
 
-const CACHE_TTL_TODAY = 30;        // seconds
-const CACHE_TTL_PAST  = 600;       // 10 minutes
-
-function isValidTimeZone(tz: string): boolean {
-  try {
-    Intl.DateTimeFormat(undefined, { timeZone: tz });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// Returns "YYYY-MM-DD" for "now" as seen in the given IANA timezone.
-function todayInTimeZone(timezone: string): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date());
-}
-
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -53,9 +41,9 @@ export async function GET(req: NextRequest) {
 
     const timezone = searchParams.get("timezone") || "UTC";
 
-    if (!domainId || !from || !to) {
+    if (!domainId) {
       return NextResponse.json(
-        { error: "domainId, from, and to are required" },
+        { error: "domainId is required" },
         { status: 400 }
       );
     }
@@ -67,25 +55,24 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    if (!isValidTimeZone(timezone)) {
-      return NextResponse.json(
-        { error: "Invalid timezone. Use an IANA name like 'Asia/Kolkata'." },
-        { status: 400 }
-      );
-    }
+    const validationError = validateDateParams(from, to, timezone);
+    if (validationError) return validationError;
+
+    const safeFrom = from as string;
+    const safeTo = to as string;
 
     // Cache key uses the *effective* interval (post from===to override), since
     // that's what actually determines the query and the shape of `data`.
-    const cacheKey = `timeseries:${domainId}:${interval}:${from}:${to}:${timezone}`;
+    const cacheKey = `timeseries:${domainId}:${interval}:${safeFrom}:${safeTo}:${timezone}`;
 
     const cached = await getCache<any>(cacheKey);
     if (cached) {
       return NextResponse.json(cached);
     }
 
-    const lowerBoundSql = Prisma.sql`(${from}::date::timestamp AT TIME ZONE ${timezone})`;
+    const lowerBoundSql = Prisma.sql`(${safeFrom}::date::timestamp AT TIME ZONE ${timezone})`;
 
-    const upperBoundSql =  Prisma.sql`((${to}::date + INTERVAL '1 day')::timestamp AT TIME ZONE ${timezone})`;
+    const upperBoundSql =  Prisma.sql`((${safeTo}::date + INTERVAL '1 day')::timestamp AT TIME ZONE ${timezone})`;
 
     let data: { date: string; views: number; visitors: number }[];
 
@@ -159,12 +146,12 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const responseBody = { interval, from, to, timezone, data };
+    const responseBody = { interval, from: safeFrom, to: safeTo, timezone, data };
 
     // Same "to is today" freshness rule as the dimension route: today's bucket
     // is still accumulating events, so keep the TTL short; past ranges are
     // immutable history and can be cached much longer.
-    const isToToday = to === todayInTimeZone(timezone);
+    const isToToday = safeTo === todayInTimeZone(timezone);
     const ttl = isToToday ? CACHE_TTL_TODAY : CACHE_TTL_PAST;
 
     await setCache(cacheKey, responseBody, ttl);

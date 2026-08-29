@@ -1,9 +1,7 @@
-
 "use server"
 
-import { auth } from "@/lib/auth"
 import { prisma } from "@repo/db"
-import { headers } from "next/headers"
+import { requireSession } from "./requireSession"
 
 const DOMAIN_PATTERN = /^(?=.{1,253}$)(?!-)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i
 
@@ -13,13 +11,8 @@ function isValidDomain(value: string) {
 
 export async function setDomain(domainName: string, expectedVisitors: number, defaultTimezone: string) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-
-    if (!session) {
-      return { error: "You must be logged in to add a domain." }
-    }
+    const { session, error } = await requireSession("You must be logged in to see your api key.")
+    if (error) return { error }
 
     const sanitizedDomain = domainName?.trim().toLowerCase() ?? ""
     if (!sanitizedDomain || !isValidDomain(sanitizedDomain)) {
@@ -29,7 +22,7 @@ export async function setDomain(domainName: string, expectedVisitors: number, de
     const safeExpectedVisitors = Number.isFinite(expectedVisitors) && expectedVisitors > 0 ? Math.floor(expectedVisitors) : 100
     const safeTimezone = defaultTimezone?.trim() || "UTC"
 
-    const email = session.user.email
+    const email = session?.user.email
 
     const user = await prisma.user.findUnique({
       where: { email },

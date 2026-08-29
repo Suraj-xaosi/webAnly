@@ -1,10 +1,8 @@
 
 import { useEffect, useRef, useState } from "react";
+import type { WebSocketMessage } from "@/lib/shared/types";
 
-export interface WebSocketMessage {
-  type: string;
-  data?: Record<string, any>;
-}
+export type { WebSocketMessage };
 
 export function useWebSocket(
   domainId: string,

@@ -1,9 +1,7 @@
-
 "use server"
 
-import { auth } from "@/lib/auth"
 import { prisma } from "@repo/db"
-import { headers } from "next/headers"
+import { requireSession } from "./requireSession"
 
 export async function isPro(domainId: string) {
   try {
@@ -11,18 +9,13 @@ export async function isPro(domainId: string) {
       return { error: "Domain ID cannot be empty." }
     }
 
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-
-    if (!session) {
-      return { error: "You must be logged in to see your api key." }
-    }
+    const { session, error } = await requireSession("You must be logged in to see your api key.")
+    if (error) return { error }
 
     const domain = await prisma.domain.findFirst({
       where: {
         id: domainId,
-        userId: session.user.id,
+        userId: session?.user.id,
       },
       select: {
         pro: true,

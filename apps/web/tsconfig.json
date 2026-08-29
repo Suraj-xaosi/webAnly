@@ -19,6 +19,6 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-, "../../packages/ui/src/components/main/dateRangePicker.tsx"  ],
+, "../../packages/ui/src/components/main/dateRangePicker.tsx", "lib/shared/functions/analytics"  ],
   "exclude": ["node_modules"]
 }

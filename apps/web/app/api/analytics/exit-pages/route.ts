@@ -2,25 +2,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, Prisma } from "@repo/db";
 import { getCache, setCache } from "@repo/redis";
-
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-const CACHE_TTL_TODAY = 30;        // seconds
-const CACHE_TTL_PAST  = 600;       // 10 minutes
-
-function isValidTimeZone(tz: string): boolean {
-  try {
-    Intl.DateTimeFormat(undefined, { timeZone: tz });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// Returns "YYYY-MM-DD" for "now" as seen in the given IANA timezone.
-function todayInTimeZone(timezone: string): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date());
-}
+import {
+  CACHE_TTL_TODAY,
+  CACHE_TTL_PAST,
+  todayInTimeZone,
+  validateDateParams,
+} from "@/lib/shared/functions/TimeFunctions";
 
 export async function GET(req: NextRequest) {
   try {
@@ -33,40 +20,23 @@ export async function GET(req: NextRequest) {
     // Viewer's IANA timezone. Defaults to UTC for callers not sending it yet.
     const timezone = searchParams.get("timezone") || "UTC";
 
-    if (!domainId || !from || !to) {
+    if (!domainId) {
       return NextResponse.json(
-        { error: "domainId, from, and to are required" },
+        { error: "domainId is required" },
         { status: 400 }
       );
     }
 
-    if (!isValidTimeZone(timezone)) {
-      return NextResponse.json(
-        { error: "Invalid timezone. Use an IANA name like 'Asia/Kolkata'." },
-        { status: 400 }
-      );
-    }
+    const validationError = validateDateParams(from, to, timezone);
+    if (validationError) return validationError;
 
-    if (!DATE_RE.test(from) || !DATE_RE.test(to)) {
-      return NextResponse.json(
-        { error: "Invalid date format. Use YYYY-MM-DD." },
-        { status: 400 }
-      );
-    }
-
-    const fromCheck = new Date(`${from}T00:00:00.000Z`);
-    const toCheck = new Date(`${to}T00:00:00.000Z`);
-    if (isNaN(fromCheck.getTime()) || isNaN(toCheck.getTime()) || fromCheck > toCheck) {
-      return NextResponse.json(
-        { error: "'from' must be before or equal to 'to'" },
-        { status: 400 }
-      );
-    }
+    const safeFrom = from as string;
+    const safeTo = to as string;
 
     // Cache key includes every param that changes the query result, including
     // `limit` — it's part of the SQL LIMIT clause, so two different limits
     // must never share a cache entry.
-    const cacheKey = `exit-pages:${domainId}:${from}:${to}:${timezone}:${limit}`;
+    const cacheKey = `exit-pages:${domainId}:${safeFrom}:${safeTo}:${timezone}:${limit}`;
 
     const cached = await getCache<any>(cacheKey);
     if (cached) {
@@ -75,8 +45,8 @@ export async function GET(req: NextRequest) {
 
     // Same boundary fix as the other two routes — midnight of `from`/`to`
     // computed in the viewer's timezone, not hardcoded UTC.
-    const lowerBoundSql = Prisma.sql`(${from}::date::timestamp AT TIME ZONE ${timezone})`;
-    const upperBoundSql = Prisma.sql`((${to}::date + INTERVAL '1 day')::timestamp AT TIME ZONE ${timezone})`;
+    const lowerBoundSql = Prisma.sql`(${safeFrom}::date::timestamp AT TIME ZONE ${timezone})`;
+    const upperBoundSql = Prisma.sql`((${safeTo}::date + INTERVAL '1 day')::timestamp AT TIME ZONE ${timezone})`;
 
     type Row = { name: string; views: number; exits: number };
 
@@ -108,9 +78,9 @@ export async function GET(req: NextRequest) {
         exitRate: row.views > 0 ? +((row.exits / row.views) * 100).toFixed(1) : 0,
       }));
 
-    const responseBody = { from, to, timezone, total: data.length, data };
+    const responseBody = { from: safeFrom, to: safeTo, timezone, total: data.length, data };
 
-    const isToToday = to === todayInTimeZone(timezone);
+    const isToToday = safeTo === todayInTimeZone(timezone);
     const ttl = isToToday ? CACHE_TTL_TODAY : CACHE_TTL_PAST;
 
     await setCache(cacheKey, responseBody, ttl);

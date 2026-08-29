@@ -1,4 +1,3 @@
-
 import ReactqueryProvider from "@/lib/providers/ReactqueryProvider"
 import { Geist, Geist_Mono, Cinzel, Space_Grotesk, Fraunces } from "next/font/google"
 import "@workspace/ui/globals.css"
@@ -9,11 +8,19 @@ import { TooltipProvider } from "@workspace/ui/components/tooltip"
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
 
-// Per-theme heading fonts — all loaded upfront, selected at runtime via
-// --font-heading in globals.css based on the active [data-theme="..."].
 const cinzel = Cinzel({ subsets: ["latin"], variable: "--font-cinzel" })
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" })
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" })
+
+const THEME_INIT_SCRIPT = `
+  try {
+    var saved = localStorage.getItem('theme-name');
+    var valid = ['atelier-deco','spring-notebook','mediterranean','studio-desk','golden-hour'];
+    if (saved && valid.indexOf(saved) !== -1) {
+      document.documentElement.setAttribute('data-theme', saved);
+    }
+  } catch (e) {}
+`
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -30,9 +37,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         "font-sans"
       )}
     >
-
       <body>
-       
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+
         <ReactqueryProvider>
           <ThemeProvider>
             <TooltipProvider>

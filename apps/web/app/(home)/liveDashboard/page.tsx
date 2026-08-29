@@ -5,6 +5,7 @@ import { useAppSelector } from "@/store/hooks"
 import { selectDomainId } from "@/store/slices/dashboardSlice"
 import { useRealtimeTimeseries } from "@/hooks/realtime/useRealtimeTimeseries"
 import { useRealtimeDimension } from "@/hooks/realtime/useRealtimeDimension"
+import { RealtimeProvider } from "@/components/wrapper/RealtimeProvider"
 import { TimeseriesCard } from "@/components/dashCards/timeseriesCard"
 import { DimensionCard } from "@/components/dashCards/dimensionCard"
 import { isPro } from "../../../lib/Actions/isPro"
@@ -16,8 +17,6 @@ import type { Dimension } from "@/hooks/analytics/useDimension"
 
 const DIMENSIONS: Dimension[] = ["browser", "country", "device", "os", "referrer", "page"]
 
-// Returns the calendar date (YYYY-MM-DD) as it currently is in the given
-// IANA timezone. Using en-CA locale gives YYYY-MM-DD formatting directly.
 function getDateInTimezone(timezone: string) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date())
 }
@@ -50,24 +49,11 @@ export default function liveDashboardPage() {
     }
   }, [domainId])
 
-  // Recomputed whenever the domain's real timezone loads in, so we never
-  // fetch data using a date derived from the wrong offset (e.g. UTC date
-  // instead of the domain's local date right after local midnight).
   const from = useMemo(() => getDateInTimezone(timezone), [timezone])
   const to = from
 
   const { data: apikey, isPending: apikeyLoading } = useApiKey(domainId)
   const enabled = !!apikey && !apikeyLoading
-
-  const timeseries = useRealtimeTimeseries(domainId, from, to, apikey ?? "", enabled, timezone)
-
-  const browser = useRealtimeDimension("browser", domainId, from, to, apikey ?? "", enabled, timezone)
-  const country = useRealtimeDimension("country", domainId, from, to, apikey ?? "", enabled, timezone)
-  const device = useRealtimeDimension("device", domainId, from, to, apikey ?? "", enabled, timezone)
-  const os = useRealtimeDimension("os", domainId, from, to, apikey ?? "", enabled, timezone)
-  const referrer = useRealtimeDimension("referrer", domainId, from, to, apikey ?? "", enabled, timezone)
-  const page = useRealtimeDimension("page", domainId, from, to, apikey ?? "", enabled, timezone)
-  const dimensionMap = { browser, country, device, os, referrer, page }
 
   if (isDomainPro === false) {
     return <Card><CardContent className="p-6 text-muted-foreground">You don't have pro access for this domain.</CardContent></Card>
@@ -102,31 +88,78 @@ export default function liveDashboardPage() {
           </CardContent>
         </Card>
       ) : (
-        <>
-          <TimeseriesCard
-            data={timeseries.data}
-            isLoading={timeseries.isLoading}
-            isError={timeseries.isError}
-            error={timeseries.error}
+        <RealtimeProvider domainId={domainId} apikey={apikey ?? ""}>
+          <LiveDashboardContent
+            domainId={domainId}
+            from={from}
+            to={to}
+            timezone={timezone}
+            apikey={apikey ?? ""}
+            enabled={enabled}
           />
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {DIMENSIONS.map((dimension) => {
-              const result = dimensionMap[dimension];
-              return (
-                <DimensionCard
-                  key={dimension}
-                  dimension={dimension}
-                  data={result.data}
-                  isLoading={result.isLoading}
-                  isError={result.isError}
-                  error={result.error}
-                />
-              );
-            })}
-          </div>
-        </>
+        </RealtimeProvider>
       )}
     </div>
   );
+}
+
+// Ye alag component isliye hai — RealtimeContext sirf apne JSX-children ko milta hai,
+// aur useRealtime* hooks ko Provider ke "andar" render hona zaroori hai taaki
+// unhe wahi single shared connection mile.
+function LiveDashboardContent({
+  domainId,
+  from,
+  to,
+  timezone,
+  apikey,
+  enabled,
+}: {
+  domainId: string
+  from: string
+  to: string
+  timezone: string
+  apikey: string
+  enabled: boolean
+}) {
+  const timeseries = useRealtimeTimeseries(domainId, from, to, apikey, enabled, timezone)
+
+  const browser = useRealtimeDimension("browser", domainId, from, to, apikey, enabled, timezone)
+  const country = useRealtimeDimension("country", domainId, from, to, apikey, enabled, timezone)
+  const device = useRealtimeDimension("device", domainId, from, to, apikey, enabled, timezone)
+  const os = useRealtimeDimension("os", domainId, from, to, apikey, enabled, timezone)
+  const referrer = useRealtimeDimension("referrer", domainId, from, to, apikey, enabled, timezone)
+  const page = useRealtimeDimension("page", domainId, from, to, apikey, enabled, timezone)
+  const dimensionMap = useMemo(
+    () => ({ browser, country, device, os, referrer, page }),
+    [browser, country, device, os, referrer, page]
+  )
+
+  return (
+    <>
+      <TimeseriesCard
+        data={timeseries.data}
+        isLoading={timeseries.isLoading}
+        isError={timeseries.isError}
+        error={timeseries.error}
+        isLive={timeseries.isLive}
+      />
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {DIMENSIONS.map((dimension) => {
+          const result = dimensionMap[dimension];
+          return (
+            <DimensionCard
+              key={dimension}
+              dimension={dimension}
+              data={result.data}
+              isLoading={result.isLoading}
+              isError={result.isError}
+              error={result.error}
+              isLive={result.isLive}
+            />
+          );
+        })}
+      </div>
+    </>
+  )
 }

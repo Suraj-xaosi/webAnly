@@ -1,7 +1,12 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, Prisma } from "@repo/db";
 import { getCache, setCache } from "@repo/redis";
+import {
+  CACHE_TTL_TODAY,
+  CACHE_TTL_PAST,
+  todayInTimeZone,
+  validateDateParams,
+} from "@/lib/shared/functions/TimeFunctions";
 
 const DIMENSION_COL_MAP: Record<string, string> = {
   page:     "page",
@@ -11,26 +16,6 @@ const DIMENSION_COL_MAP: Record<string, string> = {
   os:       "os",
   referrer: "referrer",
 };
-
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-const CACHE_TTL_TODAY = 30;        // seconds
-const CACHE_TTL_PAST  = 600;       // 10 minutes
-
-function isValidTimeZone(tz: string): boolean {
-  try {
-    Intl.DateTimeFormat(undefined, { timeZone: tz });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// Returns "YYYY-MM-DD" for "now" as seen in the given IANA timezone.
-function todayInTimeZone(timezone: string): string {
-  // en-CA locale formats as YYYY-MM-DD, which matches DATE_RE directly
-  return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date());
-}
 
 export async function GET(req: NextRequest) {
   try {
@@ -43,9 +28,9 @@ export async function GET(req: NextRequest) {
     const limit     = Math.min(Number(searchParams.get("limit") || 100), 500);
     const timezone  = searchParams.get("timezone") || "UTC";
 
-    if (!domainId || !from || !to || !dimension) {
+    if (!domainId || !dimension) {
       return NextResponse.json(
-        { error: "domainId, from, to, and dimension are required" },
+        { error: "domainId and dimension are required" },
         { status: 400 }
       );
     }
@@ -58,39 +43,23 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    if (!isValidTimeZone(timezone)) {
-      return NextResponse.json(
-        { error: "Invalid timezone. Use an IANA name like 'Asia/Kolkata'." },
-        { status: 400 }
-      );
-    }
+    const validationError = validateDateParams(from, to, timezone);
+    if (validationError) return validationError;
 
-    if (!DATE_RE.test(from) || !DATE_RE.test(to)) {
-      return NextResponse.json(
-        { error: "Invalid date format. Use YYYY-MM-DD." },
-        { status: 400 }
-      );
-    }
+    // TypeScript ko yakeen dilane ke liye ki from/to yahan se aage null nahi hain
+    // (validateDateParams already check kar chuka hai, lekin TS ko pata nahi)
+    const safeFrom = from as string;
+    const safeTo = to as string;
 
-    const fromCheck = new Date(`${from}T00:00:00.000Z`);
-    const toCheck = new Date(`${to}T00:00:00.000Z`);
-    if (isNaN(fromCheck.getTime()) || isNaN(toCheck.getTime()) || fromCheck > toCheck) {
-      return NextResponse.json(
-        { error: "'from' must be before or equal to 'to'" },
-        { status: 400 }
-      );
-    }
-
-    // Cache key includes every param that changes the query result.
-    const cacheKey = `dimension:${domainId}:${dimension}:${from}:${to}:${timezone}:${limit}`;
+    const cacheKey = `dimension:${domainId}:${dimension}:${safeFrom}:${safeTo}:${timezone}:${limit}`;
 
     const cached = await getCache<any>(cacheKey);
     if (cached) {
       return NextResponse.json(cached);
     }
 
-    const lowerBoundSql = Prisma.sql`(${from}::date::timestamp AT TIME ZONE ${timezone})`;
-    const upperBoundSql = Prisma.sql`((${to}::date + INTERVAL '1 day')::timestamp AT TIME ZONE ${timezone})`;
+    const lowerBoundSql = Prisma.sql`(${safeFrom}::date::timestamp AT TIME ZONE ${timezone})`;
+    const upperBoundSql = Prisma.sql`((${safeTo}::date + INTERVAL '1 day')::timestamp AT TIME ZONE ${timezone})`;
 
     type Row = { name: string | null; views: number; visitors: number; avgDwell: number | null };
 
@@ -121,12 +90,9 @@ export async function GET(req: NextRequest) {
       viewsPerVisitor: row.visitors > 0 ? +(row.views / row.visitors).toFixed(2) : 0,
     }));
 
-    const responseBody = { dimension, from, to, timezone, total: data.length, data };
+    const responseBody = { dimension, from: safeFrom, to: safeTo, timezone, total: data.length, data };
 
-    // "to" being today (in the viewer's own timezone) means the day is still
-    // accumulating events — short TTL. A past "to" date is immutable history,
-    // so it's safe to cache much longer.
-    const isToToday = to === todayInTimeZone(timezone);
+    const isToToday = safeTo === todayInTimeZone(timezone);
     const ttl = isToToday ? CACHE_TTL_TODAY : CACHE_TTL_PAST;
 
     await setCache(cacheKey, responseBody, ttl);

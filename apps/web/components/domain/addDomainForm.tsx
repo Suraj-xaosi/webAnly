@@ -1,9 +1,8 @@
 
 "use client"
 
-import { useEffect, useMemo, useState, useTransition } from "react"
-import { useQueryClient } from "@tanstack/react-query"
-import { setDomain } from "@/lib/Actions/setDomain"
+import { useEffect, useMemo, useState } from "react"
+import { useAddDomain } from "@/hooks/useAddDomain"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
@@ -41,8 +40,7 @@ function isValidDomain(value: string) {
 }
 
 export function AddDomainForm() {
-  const queryClient = useQueryClient()
-  const [isPending, startTransition] = useTransition()
+  const addDomainMutation = useAddDomain()
   const [domainName, setDomainName] = useState("")
   const [expectedVisitors, setExpectedVisitors] = useState("100")
   const [defaultTimezone, setDefaultTimezone] = useState("UTC")
@@ -57,7 +55,7 @@ export function AddDomainForm() {
     }
   }, [defaultTimezone, options])
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
     setSuccess(false)
@@ -78,20 +76,24 @@ export function AddDomainForm() {
 
     const safeTimezone = options.includes(defaultTimezone) ? defaultTimezone : "UTC"
 
-    startTransition(async () => {
-      const result = await setDomain(sanitizedDomain, visitorCount, safeTimezone)
-
-      if (result.error) {
-        setError(result.error)
-        return
+    addDomainMutation.mutate(
+      {
+        domainName: sanitizedDomain,
+        expectedVisitors: visitorCount,
+        defaultTimezone: safeTimezone,
+      },
+      {
+        onSuccess: () => {
+          setSuccess(true)
+          setDomainName("")
+          setExpectedVisitors("100")
+          setDefaultTimezone(safeTimezone)
+        },
+        onError: (mutationError) => {
+          setError(mutationError.message)
+        },
       }
-
-      setSuccess(true)
-      setDomainName("")
-      setExpectedVisitors("100")
-      setDefaultTimezone(safeTimezone)
-      await queryClient.invalidateQueries({ queryKey: ["domain"] })
-    })
+    )
   }
 
   return (
@@ -114,7 +116,7 @@ export function AddDomainForm() {
               placeholder="example.com"
               value={domainName}
               onChange={(e) => setDomainName(sanitizeDomainInput(e.target.value))}
-              disabled={isPending}
+              disabled={addDomainMutation.isPending}
               required
               autoCapitalize="none"
               autoComplete="off"
@@ -140,7 +142,7 @@ export function AddDomainForm() {
                   e.preventDefault()
                 }
               }}
-              disabled={isPending}
+              disabled={addDomainMutation.isPending}
             />
           </div>
 
@@ -170,9 +172,9 @@ export function AddDomainForm() {
             </p>
           )}
 
-          <Button type="submit" disabled={isPending} className="w-fit gap-2">
-            {isPending && <Loader2Icon className="size-4 animate-spin" />}
-            {isPending ? "Adding..." : "Add domain"}
+          <Button type="submit" disabled={addDomainMutation.isPending} className="w-fit gap-2">
+            {addDomainMutation.isPending && <Loader2Icon className="size-4 animate-spin" />}
+            {addDomainMutation.isPending ? "Adding..." : "Add domain"}
           </Button>
         </form>
       </CardContent>

@@ -1,43 +1,15 @@
-
-import { useQuery } from "@tanstack/react-query";
-import axios, { AxiosError } from "axios";
-
-export type Interval = "hour" | "dayname" | "day" | "week" | "month";
-
-export interface TimeseriesPoint {
-  date: string;
-  views: number;
-  visitors: number;
-}
-
-export interface TimeseriesResponse {
-  interval: Interval;
-  from: string;
-  to: string;
-  data: TimeseriesPoint[];
-}
-
-export interface TimeseriesParams {
-  domainId: string;
-  from: string;       // "YYYY-MM-DD"
-  to: string;         // "YYYY-MM-DD"
-  interval?: Interval;
-  timezone?: string;
-  
-}
-
-
-export interface ApiError {
-  message: string;
-  status?: number;
-}
+﻿import axios from "axios";
+import { useApiQuery, normalizeApiError } from "@/lib/shared/tanstackFunctions/api";
+import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys"; 
+import type { TimeseriesResponse, TimeseriesParams } from "@/lib/shared/types/analytics";
+import type { ApiError } from "@/lib/shared/types/api";
+//export type { Interval, TimeseriesPoint, TimeseriesResponse, TimeseriesParams, ApiError };
 
 async function fetchTimeseries(params: TimeseriesParams): Promise<TimeseriesResponse> {
   const { domainId, from, to, interval, timezone } = params;
 
   const { data } = await axios.get<TimeseriesResponse>("/api/analytics/timeseries", {
-    params: { domainId, from, to, interval, timezone, },
-    // Abort if server takes more than 10s
+    params: { domainId, from, to, interval, timezone },
     timeout: 10_000,
   });
 
@@ -47,54 +19,34 @@ async function fetchTimeseries(params: TimeseriesParams): Promise<TimeseriesResp
 export function useTimeseries(params: TimeseriesParams) {
   const { domainId, from, to, interval = "hour", timezone } = params;
 
-  return useQuery<TimeseriesResponse, ApiError>({
-    
-    queryKey: ["timeseries", domainId, from, to, interval, timezone],
-
+  return useApiQuery<TimeseriesResponse, ApiError>({
+    queryKey: queryKeys.analytics.timeseries(domainId, from, to, interval, timezone),
     queryFn: () => fetchTimeseries(params),
-
-    
     enabled: Boolean(domainId && from && to),
-
-    
-    placeholderData: (prev) => prev,
-
-    
     staleTime: 2 * 60 * 1000,
-    gcTime:    5 * 60 * 1000,
-
-    
-    retry: (failureCount, error) => {
-      if (error.status && error.status >= 400 && error.status < 500) return false;
-      return failureCount < 1;
-    },
-
-    
+    gcTime: 5 * 60 * 1000,
     throwOnError: false,
     select: (data) => data,
   });
 }
 
-// Utility — call outside React (prefetch, server components, etc.)
 export async function prefetchTimeseries(
   queryClient: import("@tanstack/react-query").QueryClient,
   params: TimeseriesParams
 ) {
   await queryClient.prefetchQuery({
-    queryKey: ["timeseries", params.domainId, params.from, params.to, params.interval ?? "hour"],
-    queryFn:  () => fetchTimeseries(params),
+    queryKey: queryKeys.analytics.timeseries(
+      params.domainId,
+      params.from,
+      params.to,
+      params.interval ?? "hour",
+      params.timezone
+    ),
+    queryFn: () => fetchTimeseries(params),
     staleTime: 2 * 60 * 1000,
   });
 }
 
-// Global Axios error normalizer — register once in your app root
 export function normalizeAxiosError(error: unknown): ApiError {
-  if (axios.isAxiosError(error)) {
-    const axiosErr = error as AxiosError<{ error?: string }>;
-    return {
-      message: axiosErr.response?.data?.error ?? axiosErr.message,
-      status:  axiosErr.response?.status,
-    };
-  }
-  return { message: "An unexpected error occurred" };
+  return normalizeApiError(error);
 }

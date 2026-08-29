@@ -47,7 +47,7 @@ function isTrackableValue(value: unknown): value is string {
 
 export interface VisitorNewnessResult {
   isNewVisitor: boolean; // domain-wide, once per LOCAL HOUR
-  isNewVisitorToday: boolean; // domain-wide, once per LOCAL DAY (the original isNewVisitor behavior)
+  isNewVisitorToday: boolean; // domain-wide, once per LOCAL DAY
   isNewVisitorFor: Partial<Record<TrackedDimension, boolean>>;
 }
 

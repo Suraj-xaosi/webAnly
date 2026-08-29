@@ -1,25 +1,18 @@
-
 "use server"
-import { auth } from "@/lib/auth"; //  Better Auth server instance
-import { headers } from "next/headers";
+
 import {prisma} from "@repo/db";
+import { requireSession } from "./requireSession";
 
 export async function getDomain() {
 
     try {
 
-        const session = await auth.api.getSession({
-            headers: await headers() // Pass headers to extract the session cookie
-        });
-
-        if (!session) {
-         // User is not logged in
-            return { error: "You must be logged in to see your domain." };
-        }
+        const { session, error } = await requireSession("You must be logged in to see your api key.")
+        if (error) return { error }
 
 
 
-        const email = session.user.email;
+        const email = session?.user.email;
 
         // 2. Fetch user along with sites
         const user = await prisma.user.findUnique({

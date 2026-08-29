@@ -1,20 +1,15 @@
 "use server"
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+
 import { prisma } from "@repo/db";
+import { requireSession } from "./requireSession";
 
 export async function getNotifications() {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session) {
-      return { error: "You must be logged in to see notifications." };
-    }
+    const { session, error } = await requireSession("You must be logged in to see your api key.")
+    if (error) return { error }
 
     const notifications = await prisma.notification.findMany({
-      where: { userId: session.user.id },
+      where: { userId: session?.user.id },
       orderBy: { date: "desc" },
       take: 30,
     });
@@ -28,17 +23,12 @@ export async function getNotifications() {
 
 export async function markNotificationRead(id: string) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session) {
-      return { error: "You must be logged in." };
-    }
+    const { session, error } = await requireSession("You must be logged in to see your api key.")
+    if (error) return { error }
 
     // scoped to userId so you can't mark someone else's notification read by guessing an id
     await prisma.notification.updateMany({
-      where: { id, userId: session.user.id },
+      where: { id, userId: session?.user.id },
       data: { read: true },
     });
 
@@ -51,16 +41,11 @@ export async function markNotificationRead(id: string) {
 
 export async function markAllNotificationsRead() {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session) {
-      return { error: "You must be logged in." };
-    }
+    const { session, error } = await requireSession("You must be logged in to see your api key.")
+    if (error) return { error }
 
     await prisma.notification.updateMany({
-      where: { userId: session.user.id, read: false },
+      where: { userId: session?.user.id, read: false },
       data: { read: true },
     });
 
