@@ -42,7 +42,7 @@ export default async function dumpInDB(eventData: EventData) {
       return;
     }
 
-    // exitType is "navigation" or "pagehide" — original behavior, untouched
+   
     await prisma.pageVisit.create({
       data: {
         domainId:   eventData.domainId,
@@ -69,7 +69,7 @@ export default async function dumpInDB(eventData: EventData) {
     });
 
   } catch (err) {
-    console.error("❌ EVENT DUMPING WORKER : Failed to store event", err);
+    console.error(" EVENT DUMPING WORKER : Failed to store event", err);
   }
 }
 

@@ -7,12 +7,11 @@ const PROCESSING_KEY = `${DOMAIN_ACTIVITY_SET_KEY}:processing`;
 
 export async function startSpikeJob() {
   cron.schedule("*/5 * * * *", async () => {
-  // Merge any leftover batch (e.g. from a crash mid-processing) with
-  // current activity, atomically, then clear the source.
+
   const merged = await redis.sunionstore(PROCESSING_KEY, PROCESSING_KEY, DOMAIN_ACTIVITY_SET_KEY);
   await redis.del(DOMAIN_ACTIVITY_SET_KEY);
 
-  if (merged === 0) return; // nothing to process
+  if (merged === 0) return; 
 
   const domains = await redis.smembers(PROCESSING_KEY);
   await redis.del(PROCESSING_KEY);

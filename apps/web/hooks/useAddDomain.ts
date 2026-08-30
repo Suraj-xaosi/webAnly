@@ -18,8 +18,7 @@ export function useAddDomain() {
       await queryClient.cancelQueries({ queryKey: domainKey });
       const previous = queryClient.getQueryData<any[]>(domainKey);
 
-      // Temporary optimistic entry — "optimistic-" prefix se pehchan
-      // lete hain taaki baad mein filter kar sakein agar zaroorat pade
+     
       const optimisticDomain = {
         id: `optimistic-${Date.now()}`,
         domainName: vars.domainName,
@@ -43,8 +42,7 @@ export function useAddDomain() {
     },
 
     onSettled: () => {
-      // Yahan REAL invalidate zaroori hai — kyunki optimistic entry ka
-      // apikey "generating..." tha, asli data yahi se aayega
+      
       queryClient.invalidateQueries({ queryKey: queryKeys.domain() });
     },
   });

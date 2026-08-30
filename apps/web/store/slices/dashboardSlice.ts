@@ -1,8 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-// Timezone-safe "today" — never toISOString() (always UTC), and never a bare
-// new Date() + local format (depends on whatever TZ this module happens to
-// evaluate in, server or browser). en-CA locale formats straight to YYYY-MM-DD.
+
 function todayInZone(timeZone: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date());
 }
@@ -17,10 +15,7 @@ export interface DashboardState {
   timezone?: string;
 }
 
-// NOTE: this module may be evaluated server-side during SSR, where Intl
-// reflects the server's timezone, not the visitor's. "UTC" here is a
-// deliberate, safe placeholder — TimezonePicker corrects both timezone
-// and from/to together, once, after the real browser timezone is known.
+
 const initialState: DashboardState = {
   domainId: "",
   from:     todayInZone("UTC"),
@@ -43,10 +38,6 @@ const dashboardSlice = createSlice({
       state.from     = action.payload.from;
       state.to       = action.payload.to;
       state.interval = action.payload.interval;
-      // Only touch timezone if this call explicitly provides one.
-      // Previously this defaulted to "UTC" whenever omitted, which
-      // silently reset the user's real timezone on every date-range
-      // Apply (DateRangePicker's onApply never sends one).
       state.timezone = action.payload.timezone ?? state.timezone;
     },
     setTimezone(state, action: PayloadAction<string>) {

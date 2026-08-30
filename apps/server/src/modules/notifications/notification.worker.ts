@@ -69,7 +69,7 @@ export async function startNotificationWorker() {
           },
         });
 
-        console.log(`NOTIFICATION WORKER: ✅ Notification stored for user ${domain.userId} (domain ${domainId})`);
+        console.log(`NOTIFICATION WORKER: Notification stored for user ${domain.userId} (domain ${domainId})`);
       } catch (err) {
         console.error("NOTIFICATION WORKER:  Failed to process notification", err);
       }

@@ -9,9 +9,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { selectThemeName, setThemeName, THEME_NAMES, type ThemeName } from "@/store/slices/themeSlice"
 
-// Record<ThemeName, string> ka matlab: "har ThemeName ke liye ek label hona ZAROORI hai"
-// Agar THEME_NAMES mein naya theme add ho aur yahan label na diya, TypeScript ERROR dega —
-// isse "bhool jaana" structurally IMPOSSIBLE ho jaata hai.
+
 const THEME_LABELS: Record<ThemeName, string> = {
   "atelier-deco": "Atelier Deco",
   "spring-notebook": "Spring Notebook",

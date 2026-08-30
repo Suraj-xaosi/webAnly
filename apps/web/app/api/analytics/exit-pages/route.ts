@@ -17,7 +17,8 @@ export async function GET(req: NextRequest) {
     const from     = searchParams.get("from");
     const to       = searchParams.get("to");
     //const limit    = Math.min(Number(searchParams.get("limit") || 100), 500);
-    // Viewer's IANA timezone. Defaults to UTC for callers not sending it yet.
+
+    
     const timezone = searchParams.get("timezone") || "UTC";
 
     if (!domainId) {
@@ -33,10 +34,7 @@ export async function GET(req: NextRequest) {
     const safeFrom = from as string;
     const safeTo = to as string;
 
-    // Cache key includes every param that changes the query result, including
-    // `limit` — it's part of the SQL LIMIT clause, so two different limits
-    // must never share a cache entry.
-    //const cacheKey = `exit-pages:${domainId}:${safeFrom}:${safeTo}:${timezone}:${limit}`;
+;
     const cacheKey = `exit-pages:${domainId}:${safeFrom}:${safeTo}:${timezone}`;
 
     const cached = await getCache<any>(cacheKey);
@@ -44,18 +42,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(cached);
     }
 
-    // Same boundary fix as the other two routes — midnight of `from`/`to`
-    // computed in the viewer's timezone, not hardcoded UTC.
     const lowerBoundSql = Prisma.sql`(${safeFrom}::date::timestamp AT TIME ZONE ${timezone})`;
     const upperBoundSql = Prisma.sql`((${safeTo}::date + INTERVAL '1 day')::timestamp AT TIME ZONE ${timezone})`;
 
     type Row = { name: string; views: number; exits: number };
 
-    // views = total pageviews for that page in range, regardless of exitType.
-    // exits = subset of those views where exitType = 'pagehide' (a confirmed
-    // real exit — tab/browser closed, or navigated away from the site entirely).
-    // "navigation" (SPA route change on the same site) and "hidden" (ambiguous,
-    // could return) are intentionally excluded from the exits count.
+
     const rows = await prisma.$queryRaw<Row[]>`
       SELECT
         "page"                                                    AS name,

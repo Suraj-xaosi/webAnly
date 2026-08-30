@@ -2,7 +2,7 @@
 import { prisma }        from "@repo/db";
 import { producer }      from "../../shared/config/kafka/kafkaClient.js";
 import { KAFKA_TOPICS }  from "../../shared/config/kafka.js";
-import visitorCount      from "./functions/visitorCount.js"; // fixed path
+import visitorCount      from "./functions/visitorCount.js"; 
 
 const GROWTH_FACTOR = 1.10;
 const DECAY_FACTOR  = 0.90;
@@ -13,7 +13,7 @@ export default async function spikeCheck(domainId: string) {
     const domain = await prisma.domain.findUnique({ where: { id: domainId } });
 
     if (!domain) {
-      console.log(` SPIKE CHECK WORKER : ❌ Domain not found: ${domainId}`);
+      console.log(` SPIKE CHECK WORKER :  Domain not found: ${domainId}`);
       return;
     }
     if (domain.expectedVisitors === null || domain.expectedVisitors === undefined) {
@@ -47,7 +47,7 @@ export default async function spikeCheck(domainId: string) {
       });
 
       newExpected = Math.max(MIN_EXPECTED, Math.ceil(expected * GROWTH_FACTOR));
-      console.log(`SPIKE CHECK WORKER : 🚨 Spike: ${domainId} | got ${countIn5min} | expected ${expected} → raising to ${newExpected}`);
+      console.log(`SPIKE CHECK WORKER :  Spike: ${domainId} | got ${countIn5min} | expected ${expected} → raising to ${newExpected}`);
 
     } else if (countIn5min < expected * DECAY_FACTOR) {
       newExpected = Math.max(MIN_EXPECTED, Math.floor(expected * DECAY_FACTOR));

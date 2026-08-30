@@ -4,7 +4,7 @@ import type { WebSocketMessage } from "@/lib/shared/types/realtime";
 
 export type { WebSocketMessage };
 
-const MAX_BACKOFF_MS = 30_000; // 30 second se zyada wait mat karo, chahe kitni baar bhi fail ho
+const MAX_BACKOFF_MS = 30_000; // 30 second 
 
 export function useWebSocket(
   domainId: string,

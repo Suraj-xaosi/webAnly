@@ -61,8 +61,7 @@ export async function GET(req: NextRequest) {
     const safeFrom = from as string;
     const safeTo = to as string;
 
-    // Cache key uses the *effective* interval (post from===to override), since
-    // that's what actually determines the query and the shape of `data`.
+
     const cacheKey = `timeseries:${domainId}:${interval}:${safeFrom}:${safeTo}:${timezone}`;
 
     const cached = await getCache<any>(cacheKey);
@@ -148,9 +147,7 @@ export async function GET(req: NextRequest) {
 
     const responseBody = { interval, from: safeFrom, to: safeTo, timezone, data };
 
-    // Same "to is today" freshness rule as the dimension route: today's bucket
-    // is still accumulating events, so keep the TTL short; past ranges are
-    // immutable history and can be cached much longer.
+
     const isToToday = safeTo === todayInTimeZone(timezone);
     const ttl = isToToday ? CACHE_TTL_TODAY : CACHE_TTL_PAST;
 

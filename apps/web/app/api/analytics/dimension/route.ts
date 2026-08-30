@@ -46,8 +46,7 @@ export async function GET(req: NextRequest) {
     const validationError = validateDateParams(from, to, timezone);
     if (validationError) return validationError;
 
-    // TypeScript ko yakeen dilane ke liye ki from/to yahan se aage null nahi hain
-    // (validateDateParams already check kar chuka hai, lekin TS ko pata nahi)
+    
     const safeFrom = from as string;
     const safeTo = to as string;
 

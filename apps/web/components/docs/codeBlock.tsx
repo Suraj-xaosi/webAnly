@@ -1,3 +1,4 @@
+"use client"
 import { useState } from "react"
 import { CheckIcon, CopyIcon } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"

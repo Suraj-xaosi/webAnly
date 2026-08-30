@@ -1,4 +1,3 @@
-//apps/packages/redis/src/index.ts
 import { redis } from "./client.js";
 
 export { redis } ;

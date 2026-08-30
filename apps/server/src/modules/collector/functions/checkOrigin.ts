@@ -1,9 +1,4 @@
 
-
-/**
- * Extracts a bare, comparable hostname from an Origin or Referer header value.
- * "https://www.webanly.com:443/foo?x=1" -> "webanly.com"
- */
 function extractHostname(headerValue: string | undefined): string | null {
   if (!headerValue) return null;
 
@@ -24,11 +19,7 @@ function extractHostname(headerValue: string | undefined): string | null {
   }
 }
 
-/**
- * Compares the request's Origin/Referer against the stored domainName.
- * storedDomain is expected to be a bare hostname like "webanly.com" or
- * "shop.webanly.in" — whatever the customer registered.
- */
+
 export function isOriginAllowed(
   originHeader: string | undefined,
   refererHeader: string | undefined,

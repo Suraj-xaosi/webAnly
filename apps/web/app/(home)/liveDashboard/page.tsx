@@ -104,9 +104,6 @@ export default function liveDashboardPage() {
   );
 }
 
-// Ye alag component isliye hai — RealtimeContext sirf apne JSX-children ko milta hai,
-// aur useRealtime* hooks ko Provider ke "andar" render hona zaroori hai taaki
-// unhe wahi single shared connection mile.
 function LiveDashboardContent({
   domainId,
   from,

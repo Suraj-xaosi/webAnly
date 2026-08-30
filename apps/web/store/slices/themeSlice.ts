@@ -1,7 +1,7 @@
 // apps/web/store/slices/themeSlice.ts
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-// Single source of truth — sirf yahan naya theme add/remove hoga
+// Single source of truth 
 export const THEME_NAMES = [
   "atelier-deco",
   "spring-notebook",

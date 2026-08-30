@@ -14,13 +14,11 @@ export function isValidTimeZone(tz: string): boolean {
   }
 }
 
-// Returns "YYYY-MM-DD" for "now" as seen in the given IANA timezone.
 export function todayInTimeZone(timezone: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date());
 }
 
-// Validates from/to date strings + timezone together.
-// Returns a NextResponse (400 error) if invalid, or null if everything's valid.
+
 export function validateDateParams(
   from: string | null,
   to: string | null,
@@ -47,5 +45,5 @@ export function validateDateParams(
     return NextResponse.json({ error: "'from' must be before or equal to 'to'" }, { status: 400 });
   }
 
-  return null; // sab valid hai
+  return null; 
 }

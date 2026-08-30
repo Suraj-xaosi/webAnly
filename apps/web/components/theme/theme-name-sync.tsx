@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { selectThemeName, setThemeName, THEME_NAMES, type ThemeName } from "@/store/slices/themeSlice"
 
 const STORAGE_KEY = "theme-name"
-// VALID_THEMES local array hata diya — ab THEME_NAMES directly use karo
+
 
 export function ThemeNameSync() {
   const themeName = useAppSelector(selectThemeName)
@@ -16,7 +16,7 @@ export function ThemeNameSync() {
     if (saved && THEME_NAMES.includes(saved as ThemeName) && saved !== themeName) {
       dispatch(setThemeName(saved))
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [])
 
   useEffect(() => {

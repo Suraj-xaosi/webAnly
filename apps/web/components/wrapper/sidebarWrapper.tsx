@@ -20,7 +20,7 @@ export function AppSidebarWrapper(props: React.ComponentProps<typeof AppSidebarB
     router.push("/auth")
   }
 
-  // Always render the same structure on server + first client paint
+
   if (!mounted || isPending || !session?.user) {
     return null
   }

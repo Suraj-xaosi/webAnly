@@ -36,7 +36,7 @@ export async function startAnalyticsWorker() {
       // Store event in database
       await dumpInDB(eventData);
 
-      // Mark domain as active for spike detection (replaces old Kafka publish)
+      // Mark domain as active for spike detection 
       try {
         await redis.sadd(DOMAIN_ACTIVITY_SET_KEY, eventData.domainId);
       } catch (err) {

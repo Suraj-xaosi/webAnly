@@ -6,9 +6,7 @@ import type { RealtimeTimeseriesResult, WebSocketMessage } from "@/lib/shared/ty
 import type { TimeseriesResponse} from "@/lib/shared/types/analytics"
 
 
-// Internal shape: same as TimeseriesPoint, plus a numeric hour for sorting.
-// hour24 never leaves this hook — the returned `data` is structurally still
-// TimeseriesPoint[], consumers don't see or need this field.
+
 export function useRealtimeTimeseries(
   domainId: string,
   from: string,
