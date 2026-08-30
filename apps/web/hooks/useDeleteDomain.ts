@@ -14,9 +14,9 @@ export function useDeleteDomain() {
 
   return useApiMutation({
     mutationFn: async (domainId: string) => {
-      const result = await deleteDomain(domainId)
-      if (result.error) throw new Error(result.error)
-      return result
+        const result = await deleteDomain(domainId)
+        if (!result.success) throw new Error(result.error)
+        return result.data
     },
 
     onMutate: async (domainId: string) => {

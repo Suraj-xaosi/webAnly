@@ -2,56 +2,56 @@
 
 import { prisma } from "@repo/db";
 import { requireSession } from "./requireSession";
+import { actionErr, actionOk } from "@/lib/shared/types/actionResult"
 
 export async function getNotifications() {
   try {
-    const { session, error } = await requireSession("You must be logged in to see your api key.")
-    if (error) return { error }
+    const sessionResult = await requireSession("You must be logged in to see your notifications.")
+    if (!sessionResult.success) return actionErr(sessionResult.error)
 
     const notifications = await prisma.notification.findMany({
-      where: { userId: session?.user.id },
+      where: { userId: sessionResult.data.user.id },
       orderBy: { date: "desc" },
       take: 30,
     });
 
-    return { notifications };
+    return actionOk(notifications)
   } catch (err: any) {
     console.error("getNotifications ERROR:", err);
-    return { error: "Something went wrong while getting notifications." };
+    return actionErr("Something went wrong while getting notifications.")
   }
 }
 
 export async function markNotificationRead(id: string) {
   try {
-    const { session, error } = await requireSession("You must be logged in to see your api key.")
-    if (error) return { error }
+    const sessionResult = await requireSession("You must be logged in to update notifications.")
+    if (!sessionResult.success) return actionErr(sessionResult.error)
 
-    // scoped to userId so you can't mark someone else's notification read by guessing an id
     await prisma.notification.updateMany({
-      where: { id, userId: session?.user.id },
+      where: { id, userId: sessionResult.data.user.id },
       data: { read: true },
     });
 
-    return { success: true };
+    return actionOk(true)
   } catch (err: any) {
     console.error("markNotificationRead ERROR:", err);
-    return { error: "Something went wrong while updating the notification." };
+    return actionErr("Something went wrong while updating the notification.")
   }
 }
 
 export async function markAllNotificationsRead() {
   try {
-    const { session, error } = await requireSession("You must be logged in to see your api key.")
-    if (error) return { error }
+    const sessionResult = await requireSession("You must be logged in to update notifications.")
+    if (!sessionResult.success) return actionErr(sessionResult.error)
 
     await prisma.notification.updateMany({
-      where: { userId: session?.user.id, read: false },
+      where: { userId: sessionResult.data.user.id, read: false },
       data: { read: true },
     });
 
-    return { success: true };
+    return actionOk(true)
   } catch (err: any) {
     console.error("markAllNotificationsRead ERROR:", err);
-    return { error: "Something went wrong while updating notifications." };
+    return actionErr("Something went wrong while updating notifications.")
   }
 }

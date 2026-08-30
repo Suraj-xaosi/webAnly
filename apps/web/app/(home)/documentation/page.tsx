@@ -1,6 +1,3 @@
-
-"use client"
-
 import { IntroductionSection } from "@/components/docs/introductionSection"
 import { GetStartedSection } from "@/components/docs/getStartedSection"
 

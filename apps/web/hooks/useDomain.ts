@@ -7,10 +7,8 @@ export function useDomain() {
     queryKey: queryKeys.domain(),
     queryFn: async () => {
       const result = await getDomain();
-      if (result.error) {
-        throw new Error(result.error);
-      }
-      return result.domains;
+      if (!result.success) throw new Error(result.error);
+      return result.data;
     },
     staleTime: 1000 * 60 * 5,
   });

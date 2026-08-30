@@ -2,34 +2,29 @@
 
 import { prisma } from "@repo/db"
 import { requireSession } from "./requireSession"
+import { actionErr, actionOk } from "@/lib/shared/types/actionResult"
 
 export async function isPro(domainId: string) {
   try {
     if (!domainId || domainId.trim().length === 0) {
-      return { error: "Domain ID cannot be empty." }
+      return actionErr("Domain ID cannot be empty.")
     }
 
-    const { session, error } = await requireSession("You must be logged in to see your api key.")
-    if (error) return { error }
+    const sessionResult = await requireSession("You must be logged in to see your api key.")
+    if (!sessionResult.success) return actionErr(sessionResult.error)
 
     const domain = await prisma.domain.findFirst({
-      where: {
-        id: domainId,
-        userId: session?.user.id,
-      },
-      select: {
-        pro: true,
-        defaultTimezone: true,
-      },
+      where: { id: domainId, userId: sessionResult.data.user.id },
+      select: { pro: true, defaultTimezone: true },
     })
 
     if (!domain) {
-      return { error: "Domain not found." }
+      return actionErr("Domain not found.")
     }
 
-    return { Pro: domain.pro, timezone: domain.defaultTimezone }
+    return actionOk({ pro: domain.pro, timezone: domain.defaultTimezone })
   } catch (err) {
     console.error("isPro error:", err)
-    return { error: "Something went wrong while getting the isPro." }
+    return actionErr("Something went wrong while getting the isPro.")
   }
 }

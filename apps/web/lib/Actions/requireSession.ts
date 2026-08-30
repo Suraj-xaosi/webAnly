@@ -1,11 +1,16 @@
 "use server"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
+import { actionErr, actionOk, type ActionResult } from "@/lib/shared/types/actionResult"
 
-export async function requireSession(errorMessage = "You must be logged in.") {
+type Session = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>
+
+export async function requireSession(
+  errorMessage = "You must be logged in."
+): Promise<ActionResult<Session>> {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session) {
-    return { session: null, error: errorMessage } as const
+    return actionErr(errorMessage)
   }
-  return { session, error: null } as const
+  return actionOk(session)
 }

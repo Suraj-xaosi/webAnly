@@ -7,18 +7,10 @@ export function useAddDomain() {
   const queryClient = useQueryClient();
 
   return useApiMutation({
-    mutationFn: async (vars: {
-      domainName: string
-      expectedVisitors: number
-      defaultTimezone: string
-    }) => {
-      const result = await setDomain(
-        vars.domainName,
-        vars.expectedVisitors,
-        vars.defaultTimezone
-      );
-      if (result.error) throw new Error(result.error);
-      return result;
+    mutationFn: async (vars: { domainName: string; expectedVisitors: number; defaultTimezone: string }) => {
+      const result = await setDomain(vars.domainName, vars.expectedVisitors, vars.defaultTimezone);
+      if (!result.success) throw new Error(result.error);
+      return result.data;
     },
 
     onMutate: async (vars) => {

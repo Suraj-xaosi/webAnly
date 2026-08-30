@@ -2,36 +2,29 @@
 
 import { prisma } from "@repo/db";
 import { requireSession } from "./requireSession";
+import { actionErr, actionOk } from "@/lib/shared/types/actionResult"
 
 export async function getApikey(domainId: string) {
   try {
     if (!domainId || domainId.trim().length === 0) {
-      return { error: "Domain ID cannot be empty." };
+      return actionErr("Domain ID cannot be empty.")
     }
 
-    const { session, error } = await requireSession("You must be logged in to see your api key.")
-    if (error) return { error }
+    const sessionResult = await requireSession("You must be logged in to see your api key.")
+    if (!sessionResult.success) return actionErr(sessionResult.error)
 
-    // Single query — find domain that belongs to this user
     const domain = await prisma.domain.findFirst({
-      where: {
-        id: domainId,
-        userId: session?.user.id,   // ownership check in the query itself
-      },
-      select: {
-        apikey: true,              // only pull what you need
-      },
+      where: { id: domainId, userId: sessionResult.data.user.id },
+      select: { apikey: true },
     });
 
     if (!domain) {
-      // either doesn't exist or belongs to someone else — same error intentionally
-      return { error: "Domain not found." };
+      return actionErr("Domain not found.")
     }
 
-    return { apikey: domain.apikey };
-
+    return actionOk(domain.apikey)
   } catch (err) {
     console.error("getApikey error:", err);
-    return { error: "Something went wrong while getting the api key." };
+    return actionErr("Something went wrong while getting the api key.")
   }
 }

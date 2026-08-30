@@ -37,9 +37,10 @@ export default function liveDashboardPage() {
 
       const result = await isPro(domainId)
       if (!ignore) {
-        setIsDomainPro(!("error" in result) && Boolean(result.Pro))
-        setTimezone(result.timezone ?? "UTC")
+        setIsDomainPro(result.success ? result.data.pro : false)
+        setTimezone(result.success ? result.data.timezone : "UTC")
       }
+      
     }
 
     void loadAccess()

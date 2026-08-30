@@ -7,8 +7,8 @@ export function useApiKey(domainId: string) {
     queryKey: queryKeys.apikey(domainId),
     queryFn: async () => {
       const result = await getApikey(domainId);
-      if (result.error) throw new Error(result.error);
-      return result.apikey;
+      if (!result.success) throw new Error(result.error);
+      return result.data;
     },
     enabled: !!domainId,
     staleTime: Infinity,

@@ -1,6 +1,4 @@
 
-"use client"
-
 import { AddDomainForm } from "@/components/domain/addDomainForm"
 import { DomainApiKeySection } from "@/components/domain/domainApikeySection"
 import { DomainScriptsSection } from "@/components/domain/domainScriptsSection"
