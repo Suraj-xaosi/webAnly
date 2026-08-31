@@ -9,7 +9,7 @@ export function BasicPopover() {
       </PopoverTrigger>
       <PopoverContent className="w-80">
         <p className="text-sm text-muted-foreground">
-          Your content here.
+           content here.
         </p>
       </PopoverContent>
     </Popover>

@@ -1,4 +1,3 @@
-// packages/ui/src/components/main/ChartBarExit.tsx
 "use client"
 
 import { useState } from "react"
