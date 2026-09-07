@@ -13,6 +13,8 @@ import { startWebSocketConsumer }             from "./modules/websocket/index.js
 import { startAnalyticsWorker, }              from "./modules/eventDumping/index.js";
 import { startSpikeJob }                      from "./modules/spkies/index.js";
 import { startNotificationWorker }            from "./modules/notifications/index.js";
+import { startDomainLifecycleJob } from "./modules/domainLifeCycle/index.js";
+
 
 
 
@@ -40,7 +42,7 @@ async function start() {
     await startNotificationWorker();
     
     await startSpikeJob(); 
-
+    await startDomainLifecycleJob();
     
     const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
     httpServer.listen(PORT, () => {

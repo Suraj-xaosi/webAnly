@@ -1,12 +1,11 @@
-
 import { prisma } from "@repo/db";
 import { getCache, setCache } from "@repo/redis";
 
 interface DomainInfo {
   domainId: string;
   domainName: string;
-  isActive: boolean;
-  ispro: boolean;
+  state: "ACTIVE" | "DEACTIVATED";
+  type: "FREE" | "PAID";
   defaultTimezone: string;
 }
 
@@ -24,7 +23,7 @@ export async function apikeyChecker(apikey: string) {
   try {
     const cached = await getCache<DomainInfo>(cacheKey);
     if (cached) {
-      if (!cached.isActive) {
+      if (cached.state !== "ACTIVE") {
         throw new Error("Domain is inactive");
       }
 
@@ -41,8 +40,8 @@ export async function apikeyChecker(apikey: string) {
       select: {
         id: true,
         domainName: true,
-        isActive: true,
-        pro: true,
+        state: true,
+        type: true,
         defaultTimezone: true,
       },
     });
@@ -56,15 +55,15 @@ export async function apikeyChecker(apikey: string) {
     throw new Error("Invalid API key");
   }
 
-  if (!domain.isActive) {
+  if (domain.state !== "ACTIVE") {
     throw new Error("Domain is inactive");
   }
 
   const result: DomainInfo = {
     domainId: domain.id,
     domainName: domain.domainName,
-    isActive: domain.isActive,
-    ispro: domain.pro,
+    state: domain.state,
+    type: domain.type,
     defaultTimezone: domain.defaultTimezone,
   };
 

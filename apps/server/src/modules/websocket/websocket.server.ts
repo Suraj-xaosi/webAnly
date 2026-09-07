@@ -22,7 +22,7 @@ export function initWebSocketServer(httpServer: Server) {
 
     const domain = await apikeyChecker(apikey);
 
-    if (!domain.isActive || domain.domainId !== domainId) {
+    if (domain.state !== "ACTIVE" || domain.domainId !== domainId) {
       ws.close(1008, "WS SERVER: Unauthorized");
       return;
     }

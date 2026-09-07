@@ -1,4 +1,3 @@
-
 import { producer }               from "../../shared/config/kafka/kafkaClient.js";
 import { apikeyChecker }          from "../../shared/functions/apikeyChecker.js"
 import { KAFKA_TOPICS }           from "../../shared/config/kafka.js";
@@ -26,7 +25,7 @@ export async function handleCollectEvent(req: Request) {
   const body = req.body || {};
 
   const domain = await apikeyChecker(body.apikey);
-  if (!domain.isActive){
+  if (domain.state !== "ACTIVE") {
     console.log(`COLLECTOR : this ${domain.domainName} is inactive`);
     return;
   };
@@ -39,7 +38,7 @@ export async function handleCollectEvent(req: Request) {
 
   if (!allowed) {
     console.warn(`Collector: origin mismatch for domain ${domain.domainName}`);
-     // letting it pass here for now becaouse I do not have domain verification yet .
+     // letting it pass here for now becaouse I do not have domain verification yet . this is to do list 
   }
   
   const visitorID = extractRealIp(req.ip || "");
@@ -80,30 +79,30 @@ export async function handleCollectEvent(req: Request) {
   
 
   if(exitType != "hidden") {
-    if (domain.ispro){
-      const { isNewVisitor, isNewVisitorToday, isNewVisitorFor } = await checkVisitorNewness(
-            eventData.domainId,
-            eventData.visitorId,
-            domain.defaultTimezone,
-            {
-              page: eventData.page,
-              referrer: eventData.referrer,
-              browser: eventData.browser,
-              os: eventData.os,
-              device: eventData.device,
-              country: eventData.country,
-            }
-          );
-      let socketEventData = {
-         ...eventData,  
-         isNewVisitor,
-         isNewVisitorFor,
-         isNewVisitorToday
-      };
-      await producer.send({
-        topic: KAFKA_TOPICS.SOCKET_EVENTS,
-        messages: [{ key: domain.domainId, value: JSON.stringify(socketEventData) }],
-      });
-    }
+    // FREE and PAID domains get identical features while ACTIVE, so both
+    // get live/socket events for now — no more pro-only gate here. it will be changed in future.
+    const { isNewVisitor, isNewVisitorToday, isNewVisitorFor } = await checkVisitorNewness(
+          eventData.domainId,
+          eventData.visitorId,
+          domain.defaultTimezone,
+          {
+            page: eventData.page,
+            referrer: eventData.referrer,
+            browser: eventData.browser,
+            os: eventData.os,
+            device: eventData.device,
+            country: eventData.country,
+          }
+        );
+    let socketEventData = {
+       ...eventData,  
+       isNewVisitor,
+       isNewVisitorFor,
+       isNewVisitorToday
+    };
+    await producer.send({
+      topic: KAFKA_TOPICS.SOCKET_EVENTS,
+      messages: [{ key: domain.domainId, value: JSON.stringify(socketEventData) }],
+    });
   }
 }
