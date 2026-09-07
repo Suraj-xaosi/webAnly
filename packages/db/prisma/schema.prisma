@@ -1,13 +1,16 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
   moduleFormat = "esm"
 }
-//npx turbo run db:migrate -- --name my-migration-name
 
 datasource db {
   provider = "postgresql"
 }
+
+// ─────────────────────────────────────────
+// AUTH MODELS
+// ─────────────────────────────────────────
 
 model User {
   id            String    @id @default(uuid())
@@ -17,10 +20,12 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
   sessions      Session[]
   accounts      Account[]
   domains       Domain[]
   notifications Notification[]
+  payments      Payment[]
 
   @@map("user")
 }
@@ -72,70 +77,175 @@ model Verification {
   @@map("verification")
 }
 
-model Domain {
-  id                  String   @id @default(uuid())
-  userId              String
-  domainName          String   @unique
-  apikey              String   @unique
-  isActive            Boolean  @default(true)
-  createdAt           DateTime @default(now())
-  expectedVisitors    Int      @default(7)
-  pro                 Boolean  @default(true)
-  defaultTimezone     String   @default("UTC")
+// ─────────────────────────────────────────
+// PRICING CONFIG
+// ─────────────────────────────────────────
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  pageVisits PageVisit[]
-  pageHiddens PageHidden[]
-  @@index([userId])
+// Single row table — only one PricingConfig ever exists (id = "default")
+// paidDomainPrice: INR paise (4000 = ₹40)
+// Change price here → affects all future payments automatically
+// Never hard delete this row
+
+model PricingConfig {
+  id              String   @id @default("default")
+  paidDomainPrice Int      // INR paise — 4000 = ₹40
+  updatedAt       DateTime @updatedAt
+
+  @@map("pricing_config")
 }
+
+// ─────────────────────────────────────────
+// DOMAIN MODELS
+// ─────────────────────────────────────────
+
+// DomainType:
+//   FREE  → active for 10 days from createdAt, all features included
+//           on expiry: DEACTIVATED, must pay to reactivate (no free second chance)
+//   PAID  → active for 30 days from payment date
+//           Extend: adds 30 days on top of current endsAt (only when ACTIVE)
+//           Reactivate: fresh 30 days from payment date (when DEACTIVATED)
+
+// DomainState:
+//   ACTIVE      → event collection ON, dashboard ON
+//   DEACTIVATED → event collection OFF, dashboard OFF
+//                 triggered by: expiry cron job
+//                 reversed by: payment (reactivate or extend)
+
+// Soft delete via deletedAt — never hard delete (analytics data must be preserved)
+
+enum DomainType {
+  FREE
+  PAID
+}
+
+enum DomainState {
+  ACTIVE
+  DEACTIVATED
+}
+
+model Domain {
+  id               String      @id @default(uuid())
+  userId           String
+  domainName       String      @unique
+  apikey           String      @unique
+  type             DomainType  @default(FREE)
+  state            DomainState @default(ACTIVE)
+  endsAt           DateTime    // FREE: createdAt + 10 days | PAID: paymentDate + 30 days
+  deletedAt        DateTime?   // soft delete
+  defaultTimezone  String      @default("UTC")
+  expectedVisitors Int         @default(7)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pageVisits  PageVisit[]
+  pageHiddens PageHidden[]
+  payments    Payment[]
+
+  @@index([userId])
+  @@index([userId, state])
+  @@index([state, endsAt])   // cron job: find expired domains
+  @@map("domain")
+}
+
+// ─────────────────────────────────────────
+// PAYMENT MODELS
+// ─────────────────────────────────────────
+
+// PaymentPurpose:
+//   REACTIVATE → domain was DEACTIVATED (expired FREE or expired PAID)
+//                result: type → PAID, fresh endsAt = paymentDate + 30 days
+//   EXTEND     → domain is currently ACTIVE + PAID
+//                result: endsAt = current endsAt + 30 days
+
+// amount: snapshot of price at time of payment (so price changes don't affect history)
+// razorpaySignature: required for webhook verification — never skip
+// failureReason: filled when status = FAILED
+
+enum PaymentPurpose {
+  REACTIVATE
+  EXTEND
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model Payment {
+  id                String         @id @default(uuid())
+  userId            String
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  domainId          String
+  domain            Domain         @relation(fields: [domainId], references: [id])
+  purpose           PaymentPurpose
+  amount            Int            // INR paise (snapshot at time of payment)
+  razorpayOrderId   String         @unique
+  razorpayPaymentId String?        @unique  // filled after SUCCESS
+  razorpaySignature String?                 // filled after webhook verification
+  status            PaymentStatus  @default(PENDING)
+  failureReason     String?                 // filled when FAILED
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([domainId])
+  @@map("payment")
+}
+
+// ─────────────────────────────────────────
+// ANALYTICS MODELS
+// ─────────────────────────────────────────
 
 model PageVisit {
   id         String   @id @default(uuid())
   domainName String
   domainId   String
-
-  visitorId  String   
-  visitedAt DateTime
-  timezone  String?
-
-  page      String
-  pageTitle String?
-  referrer  String?
-
-  country   String?
-  browser   String?
-  device    String?
-  os        String?
-
-  exitType  String?
-
-  timeSpent Int
+  visitorId  String
+  visitedAt  DateTime
+  timezone   String?
+  page       String
+  pageTitle  String?
+  referrer   String?
+  country    String?
+  browser    String?
+  device     String?
+  os         String?
+  exitType   String?
+  timeSpent  Int
 
   domain Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
 
   @@index([domainId, visitedAt])
   @@index([domainId, visitorId])
   @@index([domainId, page])
+  @@map("page_visit")
 }
 
 model PageHidden {
-  id         String   @id @default(uuid())
-  domainId   String
-  visitorId  String
+  id        String   @id @default(uuid())
+  domainId  String
+  visitorId String
+  page      String
+  hiddenAt  DateTime
+  hiddenFor Int
 
-  page       String        // which page they were hiding on
-  hiddenAt   DateTime      // when tab went hidden
-  hiddenFor  Int           // duration in seconds (computed on visible/exit)
-
-  domain     Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  domain Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
 
   @@index([domainId, hiddenAt])
   @@index([domainId, page])
+  @@map("page_hidden")
 }
+
+// ─────────────────────────────────────────
+// NOTIFICATION MODELS
+// ─────────────────────────────────────────
 
 enum NotificationType {
   SPIKE_ALERT
-  WEEKLY_REPORT
+  DOMAIN_EXPIRING  // sent X days before endsAt as a warning
+  DOMAIN_EXPIRED   // sent when cron deactivates the domain
   BILLING
   SYSTEM
 }
@@ -144,13 +254,10 @@ model Notification {
   id        String           @id @default(uuid())
   userId    String
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   type      NotificationType
   title     String
   message   String
   data      Json?
-  date      DateTime         @default(now())
-
   read      Boolean          @default(false)
   createdAt DateTime         @default(now())
 
