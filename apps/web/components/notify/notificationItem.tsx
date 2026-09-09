@@ -1,14 +1,14 @@
-
 "use client";
 
-import { AlertTriangle, Info, Receipt, Bell } from "lucide-react";
+import { AlertTriangle, Clock3, Ban, Receipt, Bell } from "lucide-react";
 import type { KeyboardEvent } from "react";
 import { cn } from "@workspace/ui/lib/utils";
 import { Card, CardContent, CardDescription, CardTitle } from "@workspace/ui/components/card";
 
 const ICONS: Record<string, React.ElementType> = {
   SPIKE_ALERT: AlertTriangle,
-  WEEKLY_REPORT: Info,
+  DOMAIN_EXPIRING: Clock3,
+  DOMAIN_EXPIRED: Ban,
   BILLING: Receipt,
   SYSTEM: Bell,
 };

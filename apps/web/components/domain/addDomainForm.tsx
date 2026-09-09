@@ -1,8 +1,7 @@
-
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { useAddDomain } from "@/hooks/useAddDomain"
+import { useAddDomain } from "@/hooks/domainCrud/useAddDomain"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
@@ -127,6 +126,9 @@ export function AddDomainForm() {
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="expectedVisitors">Expected visitors in 5min</Label>
+            <p className="text-xs text-muted-foreground">
+              Used as the baseline for spike alerts — set this close to your real traffic.
+            </p>
             <Input
               id="expectedVisitors"
               type="number"

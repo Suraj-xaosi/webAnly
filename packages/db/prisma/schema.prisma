@@ -82,13 +82,12 @@ model Verification {
 // ─────────────────────────────────────────
 
 // Single row table — only one PricingConfig ever exists (id = "default")
-// paidDomainPrice: INR paise (4000 = ₹40)
 // Change price here → affects all future payments automatically
 // Never hard delete this row
 
 model PricingConfig {
   id              String   @id @default("default")
-  paidDomainPrice Int      // INR paise — 4000 = ₹40
+  paidDomainPrice Int      @default(2000)// INR paise — 2000 = ₹20
   updatedAt       DateTime @updatedAt
 
   @@map("pricing_config")
@@ -108,10 +107,9 @@ model PricingConfig {
 // DomainState:
 //   ACTIVE      → event collection ON, dashboard ON
 //   DEACTIVATED → event collection OFF, dashboard OFF
-//                 triggered by: expiry cron job
 //                 reversed by: payment (reactivate or extend)
 
-// Soft delete via deletedAt — never hard delete (analytics data must be preserved)
+// Soft delete via deletedAt — never hard delete 
 
 enum DomainType {
   FREE
@@ -122,6 +120,7 @@ enum DomainState {
   ACTIVE
   DEACTIVATED
 }
+
 
 model Domain {
   id               String      @id @default(uuid())

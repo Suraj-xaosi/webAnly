@@ -1,8 +1,8 @@
-
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 // If your Prisma file is located elsewhere, you can change the path
 import {prisma} from "@repo/db";
+import { env } from "./env/server";
 
 
 export const auth = betterAuth({
@@ -10,8 +10,8 @@ export const auth = betterAuth({
     emailAndPassword: { enabled: true },
     socialProviders: {
         github: {
-            clientId: process.env.GITHUB_CLIENT_ID as string,
-            clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+            clientId: env.GITHUB_CLIENT_ID,
+            clientSecret: env.GITHUB_CLIENT_SECRET,
         },
     },
 });

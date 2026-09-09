@@ -6,6 +6,8 @@ import { actionErr, actionOk } from "@/lib/shared/types/actionResult"
 
 const DOMAIN_PATTERN = /^(?=.{1,253}$)(?!-)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i
 
+const FREE_TRIAL_DAYS = 10
+
 function isValidDomain(value: string) {
   return DOMAIN_PATTERN.test(value)
 }
@@ -44,12 +46,18 @@ export async function setDomain(domainName: string, expectedVisitors: number, de
 
     const threeDigitUid = Math.floor(Math.random() * 900 + 100).toString()
 
+    // New domains start as FREE + ACTIVE for a 10-day trial window.
+    // type/state have schema defaults, but set explicitly here for clarity.
+    const endsAt = new Date(Date.now() + FREE_TRIAL_DAYS * 24 * 60 * 60 * 1000)
+
     const domain = await prisma.domain.create({
       data: {
         domainName: `fun${sanitizedDomain}${threeDigitUid}`,
         userId: user.id,
         apikey: crypto.randomUUID(),
-        isActive: true,
+        type: "FREE",
+        state: "ACTIVE",
+        endsAt,
         expectedVisitors: safeExpectedVisitors,
         defaultTimezone: safeTimezone,
       },

@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useDomain } from "@/hooks/useDomain";
+import { useDomain } from "@/hooks/domainCrud/useDomain";
 import { DomainSwitcher } from "@workspace/ui/components/domain-switcher";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setDomainId, selectDomainId } from "@/store/slices/dashboardSlice";

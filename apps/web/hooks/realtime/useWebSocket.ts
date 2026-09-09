@@ -1,6 +1,7 @@
 // apps/web/hooks/realtime/useWebSocket.ts
 import { useEffect, useRef, useState } from "react";
 import type { WebSocketMessage } from "@/lib/shared/types/realtime";
+import { publicEnv } from "@/lib/env/client";
 
 export type { WebSocketMessage };
 
@@ -31,7 +32,7 @@ export function useWebSocket(
     shouldReconnectRef.current = true;
 
     function connect() {
-      let wsUrl: string = process.env.NEXT_PUBLIC_WSS_URL || "ws://localhost:4000";
+      let wsUrl: string = wsServerUrl || publicEnv.NEXT_PUBLIC_WSS_URL || "ws://localhost:4000";
       wsUrl = `${wsUrl}?apikey=${apikey}&domainId=${domainId}`;
 
       const ws = new WebSocket(wsUrl);

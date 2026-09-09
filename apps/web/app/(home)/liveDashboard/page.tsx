@@ -8,7 +8,7 @@ import { useRealtimeDimension } from "@/hooks/realtime/useRealtimeDimension"
 import { RealtimeProvider } from "@/components/wrapper/RealtimeProvider"
 import { TimeseriesCard } from "@/components/dashCards/timeseriesCard"
 import { DimensionCard } from "@/components/dashCards/dimensionCard"
-import { isPro } from "../../../lib/Actions/isPro"
+import { isActiveDomain } from "../../../lib/Actions/isActiveDomain"
 
 import { Card, CardContent } from "@workspace/ui/components/card"
 import DomainSwitch from "@/components/picker/domainSwitch"
@@ -23,7 +23,7 @@ function getDateInTimezone(timezone: string) {
 
 export default function liveDashboardPage() {
   const domainId = useAppSelector(selectDomainId)
-  const [isDomainPro, setIsDomainPro] = useState<boolean | null>(null)
+  const [isDomainActive, setIsDomainActive] = useState<boolean | null>(null)
   const [timezone, setTimezone] = useState<string>("UTC")
 
   useEffect(() => {
@@ -31,16 +31,15 @@ export default function liveDashboardPage() {
 
     async function loadAccess() {
       if (!domainId) {
-        setIsDomainPro(null)
+        setIsDomainActive(null)
         return
       }
 
-      const result = await isPro(domainId)
+      const result = await isActiveDomain(domainId)
       if (!ignore) {
-        setIsDomainPro(result.success ? result.data.pro : false)
+        setIsDomainActive(result.success ? result.data.active : false)
         setTimezone(result.success ? result.data.timezone : "UTC")
       }
-      
     }
 
     void loadAccess()
@@ -56,8 +55,8 @@ export default function liveDashboardPage() {
   const { data: apikey, isPending: apikeyLoading } = useApiKey(domainId)
   const enabled = !!apikey && !apikeyLoading
 
-  if (isDomainPro === false) {
-    return <Card><CardContent className="p-6 text-muted-foreground">You don't have pro access for this domain.</CardContent></Card>
+  if (isDomainActive === false) {
+    return <Card><CardContent className="p-6 text-muted-foreground">This domain is currently deactivated.</CardContent></Card>
   }
 
   return (

@@ -1,8 +1,7 @@
-
 "use client"
 
 import { useState } from "react"
-import { useDomain } from "@/hooks/useDomain"
+import { useDomain } from "@/hooks/domainCrud/useDomain"
 import { Button } from "@workspace/ui/components/button"
 import {
   Card,
@@ -13,9 +12,10 @@ import {
 } from "@workspace/ui/components/card"
 import { CopyIcon, CheckIcon, GlobeIcon } from "lucide-react"
 import { cn } from "@workspace/ui/lib/utils"
+import { publicEnv } from "@/lib/env/client"
 
 const COLLECTOR_SCRIPT_URL =
-  process.env.NEXT_PUBLIC_COLLECTOR_SCRIPT_URL || "http://localhost:3000/script.js"
+  publicEnv.NEXT_PUBLIC_COLLECTOR_SCRIPT_URL || "http://localhost:3000/script.js"
 
 function buildNextSnippet(domainName: string, apikey: string) {
   return `<script
@@ -103,54 +103,57 @@ export function DomainScriptsSection() {
 
   return (
     <div className="flex flex-col gap-4">
-      {domains.map((domain) => (
-        <Card key={domain.id}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <GlobeIcon className="size-4" />
-              {domain.domainName}
-              <span
-                className={cn(
-                  "ml-auto text-xs px-2 py-0.5 rounded-full",
-                  domain.isActive
-                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                    : "bg-muted text-muted-foreground"
-                )}
-              >
-                {domain.isActive ? "Active" : "Inactive"}
-              </span>
-            </CardTitle>
-            <CardDescription>
-              Add the tracking script to your Next.js or React application.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <p className="text-sm font-medium">Next.js</p>
-              <p className="text-xs text-muted-foreground">
-                Paste into your site's <code>&lt;head&gt;</code> tag, such as in
-                <code> layout.tsx</code>.
-              </p>
-              <ScriptBlock
-                domainName={domain.domainName}
-                apikey={domain.apikey}
-                framework="next"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <p className="text-sm font-medium">React</p>
-              <p className="text-xs text-muted-foreground">
-                Paste into <code>main.tsx</code> before your app is rendered.
-              </p>
-              <ScriptBlock
-                domainName={domain.domainName}
-                apikey={domain.apikey}
-                framework="react"
-              />
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+      {domains.map((domain) => {
+        const isActive = domain.state === "ACTIVE"
+        return (
+          <Card key={domain.id}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <GlobeIcon className="size-4" />
+                {domain.domainName}
+                <span
+                  className={cn(
+                    "ml-auto text-xs px-2 py-0.5 rounded-full",
+                    isActive
+                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {isActive ? "Active" : "Inactive"}
+                </span>
+              </CardTitle>
+              <CardDescription>
+                Add the tracking script to your Next.js or React application.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium">Next.js</p>
+                <p className="text-xs text-muted-foreground">
+                  Paste into your site's <code>&lt;head&gt;</code> tag, such as in
+                  <code> layout.tsx</code>.
+                </p>
+                <ScriptBlock
+                  domainName={domain.domainName}
+                  apikey={domain.apikey}
+                  framework="next"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium">React</p>
+                <p className="text-xs text-muted-foreground">
+                  Paste into <code>main.tsx</code> before your app is rendered.
+                </p>
+                <ScriptBlock
+                  domainName={domain.domainName}
+                  apikey={domain.apikey}
+                  framework="react"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )
+      })}
     </div>
   )
 }
