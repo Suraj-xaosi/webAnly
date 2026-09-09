@@ -130,7 +130,7 @@ model Domain {
   type             DomainType  @default(FREE)
   state            DomainState @default(ACTIVE)
   endsAt           DateTime    // FREE: createdAt + 10 days | PAID: paymentDate + 30 days
-  deletedAt        DateTime?   // soft delete
+  deletedAt        DateTime?   
   defaultTimezone  String      @default("UTC")
   expectedVisitors Int         @default(7)
   createdAt        DateTime    @default(now())
@@ -177,7 +177,7 @@ model Payment {
   userId            String
   user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   domainId          String
-  domain            Domain         @relation(fields: [domainId], references: [id])
+  domain            Domain         @relation(fields: [domainId], references: [id],onDelete: Cascade)
   purpose           PaymentPurpose
   amount            Int            // INR paise (snapshot at time of payment)
   razorpayOrderId   String         @unique

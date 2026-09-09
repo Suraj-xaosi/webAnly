@@ -23,6 +23,17 @@ export async function deleteDomain(id: string) {
       return actionErr("Domain not found.")
     }
 
+    const pendingPayment = await prisma.payment.findFirst({
+      where: { domainId: domain.id, status: "PENDING" },
+      select: { id: true },
+    })
+
+    if (pendingPayment) {
+      return actionErr(
+        "A payment for this domain is still processing. Please wait a few minutes before deleting."
+      )
+    }
+
     await prisma.domain.delete({ where: { id } });
 
     try {
