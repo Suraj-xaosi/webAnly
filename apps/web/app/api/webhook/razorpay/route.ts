@@ -66,7 +66,15 @@ export async function POST(req: NextRequest) {
         const domain = await tx.domain.findUnique({ where: { id: payment.domainId } })
         if (!domain) return
 
-        if (payment.purpose === "REACTIVATE") {
+        // IMPORTANT: we deliberately do NOT branch on payment.purpose here.
+        // purpose was decided at order-creation time, but a domain's real
+        // state can change in the gap between "order created" and "webhook
+        // arrives" — e.g. the domain lifecycle cron could deactivate it
+        // while the user was sitting on the checkout screen. Branching on
+        // stale intent could leave a paid domain stuck DEACTIVATED. Instead
+        // we always re-check the domain's CURRENT state at the moment the
+        // payment actually settles, and decide the mutation from that.
+        if (domain.state === "DEACTIVATED") {
           await tx.domain.update({
             where: { id: domain.id },
             data: {
@@ -76,8 +84,8 @@ export async function POST(req: NextRequest) {
             },
           })
         } else {
-          // EXTEND — always adds 30 days on top of current endsAt, regardless
-          // of whether the domain was FREE or PAID before this payment.
+          // Currently ACTIVE (FREE or PAID) → extend, adding 30 days on top
+          // of whatever endsAt currently is.
           await tx.domain.update({
             where: { id: domain.id },
             data: {
