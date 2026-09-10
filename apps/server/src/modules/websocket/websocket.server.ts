@@ -1,10 +1,9 @@
-
 import { WebSocketServer, WebSocket } from "ws";
 import { IncomingMessage }            from "http";
 import { Server }                     from "http";
 import { apikeyChecker }              from "../../shared/functions/apikeyChecker.js";
+import { onDomainConnect, onDomainDisconnect } from "./functions/domainLifecycle.js";
 
-// shared Map — imported by websocket.consumer.ts
 export const domainClients = new Map<string, Set<WebSocket>>();
 
 export function initWebSocketServer(httpServer: Server) {
@@ -27,15 +26,32 @@ export function initWebSocketServer(httpServer: Server) {
       return;
     }
 
+    const isFirstClientForDomain =
+      !domainClients.has(domainId) || domainClients.get(domainId)!.size === 0;
+
     if (!domainClients.has(domainId)) {
       domainClients.set(domainId, new Set());
     }
     domainClients.get(domainId)!.add(ws);
     console.log(`WS SERVER: Connected: ${domainId}`);
 
+    if (isFirstClientForDomain) {
+      // Runs in background — doesn't block the handshake. Events for this
+      // domain get null newness flags until seeding finishes (see
+      // websocket.consumer.ts + domainLifecycle.isDomainReady).
+      onDomainConnect(domainId, domain.defaultTimezone).catch((err) => {
+        console.error(`WS SERVER: onDomainConnect failed for ${domainId}`, err);
+      });
+    }
+
     ws.on("close", () => {
-      domainClients.get(domainId)?.delete(ws);
+      const clients = domainClients.get(domainId);
+      clients?.delete(ws);
       console.log(`WS SERVER: Disconnected: ${domainId}`);
+
+      if (!clients || clients.size === 0) {
+        onDomainDisconnect(domainId, () => (domainClients.get(domainId)?.size ?? 0) > 0);
+      }
     });
   });
 }

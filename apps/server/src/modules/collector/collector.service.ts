@@ -1,5 +1,5 @@
 import { producer }               from "../../shared/config/kafka/kafkaClient.js";
-import { apikeyChecker }          from "../../shared/functions/apikeyChecker.js"
+import { DomainInfo, apikeyChecker }          from "../../shared/functions/apikeyChecker.js"
 import { KAFKA_TOPICS }           from "../../shared/config/kafka.js";
 import parseTime                  from "./functions/parseTimeSpent.js";
 import parseDate                  from "./functions/parseDate.js";
@@ -10,7 +10,8 @@ import { extractReferrerHostname } from "./functions/extractReferrerHostname.js"
 import {normalizePath} from "./functions/normalizepath.js";
 import { isOriginAllowed } from "./functions/checkOrigin.js";
 import { createHash }  from "crypto";
-import { checkVisitorNewness } from "./functions/trackVisitor.js";
+
+
 
 const VALID_EXIT_TYPES = new Set(["navigation", "pagehide", "hidden"]);
 
@@ -24,7 +25,13 @@ function hashVisitorId(visitorId: string): string {
 export async function handleCollectEvent(req: Request) {
   const body = req.body || {};
 
-  const domain = await apikeyChecker(body.apikey);
+  let domain: DomainInfo;
+  try {
+    domain = await apikeyChecker(body.apikey);
+  } catch (err) {
+    console.warn(`COLLECTOR: apikey check failed`, err);
+    return;
+  }
   if (domain.state !== "ACTIVE") {
     console.log(`COLLECTOR : this ${domain.domainName} is inactive`);
     return;
@@ -46,7 +53,7 @@ export async function handleCollectEvent(req: Request) {
   const timeSpent = parseTime(body.timeSpent);
   const exitType  = parseExitType(body.exitType);
   const referrer  = extractReferrerHostname(body.referrer);
- const page = normalizePath(body.page);
+  const page = normalizePath(body.page);
   let country = "unknown";
   try {
     country = visitorID ? await countryFromIp(visitorID) : "unknown";
@@ -79,26 +86,10 @@ export async function handleCollectEvent(req: Request) {
   
 
   if(exitType != "hidden") {
-    // FREE and PAID domains get identical features while ACTIVE, so both
-    // get live/socket events for now — no more pro-only gate here. it will be changed in future.
-    const { isNewVisitor, isNewVisitorToday, isNewVisitorFor } = await checkVisitorNewness(
-          eventData.domainId,
-          eventData.visitorId,
-          domain.defaultTimezone,
-          {
-            page: eventData.page,
-            referrer: eventData.referrer,
-            browser: eventData.browser,
-            os: eventData.os,
-            device: eventData.device,
-            country: eventData.country,
-          }
-        );
-    let socketEventData = {
-       ...eventData,  
-       isNewVisitor,
-       isNewVisitorFor,
-       isNewVisitorToday
+  
+    const socketEventData = {
+      ...eventData,
+      defaultTimezone: domain.defaultTimezone,
     };
     await producer.send({
       topic: KAFKA_TOPICS.SOCKET_EVENTS,

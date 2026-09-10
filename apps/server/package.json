@@ -31,6 +31,7 @@
     "dotenv": "^16.0.3",
     "express": "^4.19.0",
     "kafkajs": "^2.2.4",
+    "lru-cache": "^11.5.2",
     "luxon": "^3.7.2",
     "maxmind": "^5.0.6",
     "node-cron": "^3.0.3",
