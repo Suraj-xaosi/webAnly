@@ -33,7 +33,7 @@ export function NotificationItem({
     type: string;
     title: string;
     message: string;
-    date: string | Date;
+    createdAt: string | Date;
     read: boolean;
   };
   onRead: (id: string) => void;
@@ -68,7 +68,7 @@ export function NotificationItem({
           {notification.message}
         </CardDescription>
         <CardDescription className="text-xs text-muted-foreground">
-          {timeAgo(notification.date)}
+          {timeAgo(notification.createdAt)}
         </CardDescription>
       </CardContent>
       {!notification.read && (

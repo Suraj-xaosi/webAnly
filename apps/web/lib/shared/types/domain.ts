@@ -22,9 +22,11 @@ export interface Domain {
 // Notification types
 export interface Notification {
   id: string;
+  type: string;
+  title: string;
   message: string;
   read: boolean;
-  createdAt: string;
+  createdAt: string;   
 }
 
 // Session/User types (extend as needed)

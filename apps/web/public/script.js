@@ -9,12 +9,10 @@
     return;
   }
 
+   
   if (!domainName) {
     console.warn("Collector: missing data-domain-name on script tag.");
     return;
-  }
-  if (domainName !== window.location.hostname) {
-    console.warn("Collector: data-domain-name does not match current hostname.");
   }
 
 
