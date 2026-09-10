@@ -1,6 +1,6 @@
 # Webanly
 
-A self-hosted, privacy-friendly web analytics platform with real-time dashboards — built as a TypeScript monorepo.
+A privacy-friendly web analytics platform with real-time dashboards — built as a TypeScript monorepo.
 
 **Live demo:** https://webanly-dashboard.vercel.app/
 **Video demo:** https://youtu.be/3s94YRIDrpw
