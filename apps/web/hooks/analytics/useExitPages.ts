@@ -1,5 +1,4 @@
-﻿import axios from "axios";
-import { useApiQuery, normalizeApiError } from "@/lib/shared/tanstackFunctions/api";
+﻿import { fetchApiData, useApiQuery, normalizeApiError } from "@/lib/shared/tanstackFunctions/api";
 import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys"; 
 import type { ExitPagesResponse, ExitPagesParams} from "@/lib/shared/types/analytics";
 import type { ApiError } from "@/lib/shared/types/api";
@@ -9,12 +8,9 @@ import type { ApiError } from "@/lib/shared/types/api";
 async function fetchExitPages(params: ExitPagesParams): Promise<ExitPagesResponse> {
   const { domainId, from, to, limit = 100, timezone } = params;
 
-  const { data } = await axios.get<ExitPagesResponse>("/api/analytics/exit-pages", {
-    params: { domainId, from, to, limit, timezone },
-    timeout: 10_000,
+  return fetchApiData<ExitPagesResponse>("/api/analytics/exit-pages", {
+    domainId, from, to, limit, timezone,
   });
-
-  return data;
 }
 
 export function normalizeExitPagesError(error: unknown): ApiError {

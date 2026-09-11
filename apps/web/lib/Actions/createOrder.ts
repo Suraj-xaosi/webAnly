@@ -6,6 +6,7 @@ import { getPricing } from "./getPricing"
 import { razorpay } from "@/lib/razorPay"
 import { env } from "@/lib/env/server"
 import { actionErr, actionOk } from "@/lib/shared/types/actionResult"
+import { findOwnedDomain } from "./findOwnedDomain"
 
 // If a PENDING payment for this domain already exists and is younger than
 // this, we reuse it instead of creating a second payable order. This is
@@ -23,9 +24,10 @@ export async function createOrder(domainId: string) {
     const sessionResult = await requireSession("You must be logged in to buy or extend a domain.")
     if (!sessionResult.success) return actionErr(sessionResult.error)
 
-    const domain = await prisma.domain.findFirst({
-      where: { id: domainId, userId: sessionResult.data.user.id },
-      select: { id: true, state: true, endsAt: true },
+    const domain = await findOwnedDomain(domainId, sessionResult.data.user.id, {
+      id: true,
+      state: true,
+      endsAt: true,
     })
 
     if (!domain) {

@@ -17,18 +17,25 @@ import type { Dimension } from "@/hooks/analytics/useDimension";
 import { useExitPages } from "@/hooks/analytics/useExitPages";
 import { ExitPageCard } from "@/components/dashCards/exitPageCard";
 import TimezonePicker from "@/components/picker/timezonePicker";
-import { useTransition } from "react"; 
+import { DimensionDrilldownPopup } from "@/components/dashCards/dimensionDrilldownPopup";
+import { closeDrilldown, selectActiveDrilldown } from "@/store/slices/drilldownSlice";
+import { useEffect, useTransition } from "react";
 
 const DIMENSIONS: Dimension[] = ["browser", "country", "device", "os", "referrer", "page"];
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
   const [isPending, startTransition] = useTransition();
+  const activeDrilldown = useAppSelector(selectActiveDrilldown);
   const domainId = useAppSelector(selectDomainId);
   const from = useAppSelector(selectFrom);
   const to = useAppSelector(selectTo);
   const interval = useAppSelector(selectInterval);
   const timezone = useAppSelector(selectTimezone);
+
+  useEffect(() => {
+    dispatch(closeDrilldown());
+  }, [dispatch, domainId]);
 
   const timeseries = useTimeseries({ domainId, from, to, interval, timezone });
 
@@ -136,6 +143,7 @@ export default function DashboardPage() {
           );
         })}
       </div>
+          {activeDrilldown && !activeDrilldown.liveMode && <DimensionDrilldownPopup />}
     </div>
   );
 }

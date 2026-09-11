@@ -1,5 +1,4 @@
-﻿import axios from "axios";
-import { useApiQuery, normalizeApiError } from "@/lib/shared/tanstackFunctions/api";
+﻿import { fetchApiData, useApiQuery, normalizeApiError } from "@/lib/shared/tanstackFunctions/api";
 import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys"
 import {Dimension, DimensionPoint, DimensionResponse, DimensionParams} from "@/lib/shared/types/analytics"; 
 import type { ApiError } from "@/lib/shared/types/api";
@@ -8,12 +7,9 @@ import type { ApiError } from "@/lib/shared/types/api";
 async function fetchDimension(params: DimensionParams): Promise<DimensionResponse> {
   const { domainId, from, to, dimension, limit = 100, timezone } = params;
 
-  const { data } = await axios.get<DimensionResponse>("/api/analytics/dimension", {
-    params: { domainId, from, to, dimension, limit, timezone },
-    timeout: 10_000,
+  return fetchApiData<DimensionResponse>("/api/analytics/dimension", {
+    domainId, from, to, dimension, limit, timezone,
   });
-
-  return data;
 }
 
 export function normalizeDimensionError(error: unknown): ApiError {

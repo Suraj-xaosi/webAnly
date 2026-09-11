@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@repo/db";
+import { prisma, Prisma } from "@repo/db";
 import {
   validateDateParams,
 } from "@/lib/shared/functions/TimeFunctions";
-import { DAY_NAMES, MONTH_NAMES, TRUNC_FOR, VALID_INTERVALS, type Interval } from "@/lib/shared/functions/analyticsConstants";
+import { DAY_NAMES, DIMENSION_COL_MAP, MONTH_NAMES, TRUNC_FOR, VALID_INTERVALS, type Interval } from "@/lib/shared/functions/analyticsConstants";
 import { analyticsErrorResponse, getAnalyticsDateBounds, readCachedResponse, writeCachedResponse } from "@/lib/shared/functions/analyticsRouteUtils";
 
 export async function GET(req: NextRequest) {
@@ -11,19 +11,27 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
 
     const domainId = searchParams.get("domainId");
-    const from     = searchParams.get("from");    // e.g. "2024-05-01"
-    const to       = searchParams.get("to");      // e.g. "2024-05-07" or "live"
+    const from = searchParams.get("from");
+    const to = searchParams.get("to");
+    const dimension = searchParams.get("dimension");
+    const value = searchParams.get("value");
     let interval = (searchParams.get("interval") || "hour") as Interval;
     if (from === to) {
       interval = "hour";
     }
-    // Viewer's IANA timezone, e.g. "Asia/Kolkata". Defaults to UTC so existing
-
     const timezone = searchParams.get("timezone") || "UTC";
 
-    if (!domainId) {
+    if (!domainId || !dimension || !value) {
       return NextResponse.json(
-        { error: "domainId is required" },
+        { error: "domainId, dimension and value are required" },
+        { status: 400 }
+      );
+    }
+
+    const col = DIMENSION_COL_MAP[dimension];
+    if (!col) {
+      return NextResponse.json(
+        { error: `Invalid dimension. Allowed: ${Object.keys(DIMENSION_COL_MAP).join(", ")}` },
         { status: 400 }
       );
     }
@@ -41,30 +49,30 @@ export async function GET(req: NextRequest) {
     const safeFrom = from as string;
     const safeTo = to as string;
 
-
-    const cacheKey = `timeseries:${domainId}:${interval}:${safeFrom}:${safeTo}:${timezone}`;
+    const cacheKey = `dimension-timeseries:${domainId}:${dimension}:${value}:${interval}:${safeFrom}:${safeTo}:${timezone}`;
 
     const cachedResponse = await readCachedResponse(cacheKey);
     if (cachedResponse) return cachedResponse;
 
     const { lowerBoundSql, upperBoundSql } = getAnalyticsDateBounds(safeFrom, safeTo, timezone);
+    const colId = Prisma.raw(`"${col}"`);
 
     let data: { date: string; views: number; visitors: number }[];
 
     if (interval === "week") {
-
       type WeekRow = { week_num: number; views: number; visitors: number };
 
       const rows = await prisma.$queryRaw<WeekRow[]>`
         SELECT
           ((EXTRACT(DAY FROM ("visitedAt"::timestamptz AT TIME ZONE ${timezone}))::int - 1) / 7) + 1 AS week_num,
-          COUNT(*)::int                                                   AS views,
-          COUNT(DISTINCT "visitorId")::int                                AS visitors
+          COUNT(*)::int AS views,
+          COUNT(DISTINCT "visitorId")::int AS visitors
         FROM "PageVisit"
         WHERE
           "domainId" = ${domainId}
+          AND ${colId} = ${value}
           AND "visitedAt"::timestamptz >= ${lowerBoundSql}
-          AND "visitedAt"::timestamptz <  ${upperBoundSql}
+          AND "visitedAt"::timestamptz < ${upperBoundSql}
         GROUP BY 1
         ORDER BY 1 ASC
       `;
@@ -76,19 +84,19 @@ export async function GET(req: NextRequest) {
       }));
     } else {
       type Row = { bucket: Date; views: number; visitors: number };
-
       const trunc = TRUNC_FOR[interval];
 
       const rows = await prisma.$queryRaw<Row[]>`
         SELECT
           date_trunc(${trunc}, "visitedAt"::timestamptz AT TIME ZONE ${timezone}) AS bucket,
-          COUNT(*)::int                                  AS views,
-          COUNT(DISTINCT "visitorId")::int                AS visitors
+          COUNT(*)::int AS views,
+          COUNT(DISTINCT "visitorId")::int AS visitors
         FROM "PageVisit"
         WHERE
           "domainId" = ${domainId}
+          AND ${colId} = ${value}
           AND "visitedAt"::timestamptz >= ${lowerBoundSql}
-          AND "visitedAt"::timestamptz <  ${upperBoundSql}
+          AND "visitedAt"::timestamptz < ${upperBoundSql}
         GROUP BY 1
         ORDER BY 1 ASC
       `;
@@ -107,8 +115,7 @@ export async function GET(req: NextRequest) {
             date = DAY_NAMES[row.bucket.getUTCDay()]!;
             break;
           case "day": {
-            const isoDate = row.bucket.toISOString().split("T")[0] ?? "";
-            date = isoDate;
+            date = row.bucket.toISOString().split("T")[0] ?? "";
             break;
           }
           case "month":
@@ -121,13 +128,12 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const responseBody = { interval, from: safeFrom, to: safeTo, timezone, data };
-
+    const responseBody = { dimension, value, interval, from: safeFrom, to: safeTo, timezone, data };
 
     await writeCachedResponse(cacheKey, responseBody, safeTo, timezone);
 
     return NextResponse.json(responseBody);
   } catch (err) {
-    return analyticsErrorResponse("timeseries", err);
+    return analyticsErrorResponse("dimension-timeseries", err);
   }
 }

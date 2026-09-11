@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTimeseries } from "../analytics/useTimeseries";
 import { useRealtimeContext } from "@/components/wrapper/RealtimeProvider";
 import { useRealtimeMerge } from "./useRealtimeMerge";
+import { getHourBucketLabel, mergeHourlyPoint } from "./timeseriesUtils";
 import type { RealtimeTimeseriesResult, WebSocketMessage } from "@/lib/shared/types/realtime";
 import type { TimeseriesResponse} from "@/lib/shared/types/analytics"
 
@@ -37,29 +38,6 @@ export function useRealtimeTimeseries(
   };
 }
 
-// Converts a UTC timestamp into the given IANA timezone's local hour, and
-// builds the same label format the API produces: "2pm", "12am", etc.
-// (hour12, no leading zero, lowercase period, no space — matches the
-// route.ts logic: `${hour12}${period}` from getUTCHours() after AT TIME ZONE.)
-function getBucketKey(dateStr: string, timezone: string): { label: string } {
-  const date = new Date(dateStr);
-
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: timezone,
-    hourCycle: "h23",
-    hour: "numeric",
-  }).formatToParts(date);
-
-  const hourPart = parts.find((p) => p.type === "hour");
-  const hour24 = hourPart ? parseInt(hourPart.value, 10) : date.getUTCHours();
-
-  const period = hour24 >= 12 ? "pm" : "am";
-  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
-  const label = `${hour12}${period}`;
-
-  return { label };
-}
-
 function mergeWebSocketEvent(
   previous: TimeseriesResponse | undefined,
   message: WebSocketMessage,
@@ -69,41 +47,14 @@ function mergeWebSocketEvent(
 
   const eventData = message.data;
   const eventTimestamp = eventData.visitedAt || eventData.timestamp || new Date().toISOString();
-  const { label } = getBucketKey(eventTimestamp, timezone);
+  const label = getHourBucketLabel(eventTimestamp, timezone);
 
   const isNewVisitor = Boolean(eventData.isNewVisitor);
-
-  const data = previous?.data ?? [];
-    const existingIdx = data.findIndex((point) => point.date === label);
-    const newData = [...data];
-
-    if (existingIdx !== -1) {
-      const existing = newData[existingIdx]!;
-      newData[existingIdx] = {
-        ...existing,
-        views: existing.views + 1,
-        visitors: existing.visitors + (isNewVisitor ? 1 : 0),
-      };
-    } else {
-      newData.push({
-        date: label,
-        views: 1,
-        visitors: isNewVisitor ? 1 : 0,
-      });
-    }
 
     return {
       interval: previous?.interval ?? "hour",
       from: previous?.from ?? "",
       to: previous?.to ?? "",
-      data: newData.sort((a, b) => parseHourLabel(a.date) - parseHourLabel(b.date)),
+      data: mergeHourlyPoint(previous?.data ?? [], label, isNewVisitor, true),
     };
-}
-
-function parseHourLabel(label: string): number {
-  const period = label.slice(-2);
-  const hour12 = parseInt(label, 10);
-
-  if (period === "am") return hour12 === 12 ? 0 : hour12;
-  return hour12 === 12 ? 12 : hour12 + 12;
 }

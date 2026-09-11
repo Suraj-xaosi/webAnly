@@ -1,5 +1,4 @@
-﻿import axios from "axios";
-import { useApiQuery, normalizeApiError } from "@/lib/shared/tanstackFunctions/api";
+﻿import { fetchApiData, useApiQuery, normalizeApiError } from "@/lib/shared/tanstackFunctions/api";
 import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys"; 
 import type { TimeseriesResponse, TimeseriesParams } from "@/lib/shared/types/analytics";
 import type { ApiError } from "@/lib/shared/types/api";
@@ -8,12 +7,9 @@ import type { ApiError } from "@/lib/shared/types/api";
 async function fetchTimeseries(params: TimeseriesParams): Promise<TimeseriesResponse> {
   const { domainId, from, to, interval, timezone } = params;
 
-  const { data } = await axios.get<TimeseriesResponse>("/api/analytics/timeseries", {
-    params: { domainId, from, to, interval, timezone },
-    timeout: 10_000,
+  return fetchApiData<TimeseriesResponse>("/api/analytics/timeseries", {
+    domainId, from, to, interval, timezone,
   });
-
-  return data;
 }
 
 export function useTimeseries(params: TimeseriesParams) {

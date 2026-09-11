@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Bar, BarChart, XAxis, YAxis } from "recharts"
 
 import { Button } from "@workspace/ui/components/button"
@@ -24,6 +24,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@workspace/ui/components/chart"
+import { sortData, type SortDirection } from "./sortData"
 
 export interface ExitPagePoint {
   name: string
@@ -55,17 +56,12 @@ type SortKey = keyof ExitPagePoint
 export function ChartBarExit({ data, dataKey }: ChartBarExitProps) {
   const [open, setOpen] = useState(false)
   const [sortKey, setSortKey] = useState<SortKey>(dataKey)
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
+  const [sortDir, setSortDir] = useState<SortDirection>("desc")
 
-  const visible = data.slice(0, TOP_N)
+  const visible = useMemo(() => sortData(data, dataKey, "desc").slice(0, TOP_N), [data, dataKey])
   const hasMore = data.length > TOP_N
 
-  const sorted = [...data].sort((a, b) => {
-    const av = a[sortKey]
-    const bv = b[sortKey]
-    const cmp = typeof av === "string" ? av.localeCompare(bv as string) : (av as number) - (bv as number)
-    return sortDir === "asc" ? cmp : -cmp
-  })
+  const sorted = useMemo(() => sortData(data, sortKey, sortDir), [data, sortKey, sortDir])
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) {

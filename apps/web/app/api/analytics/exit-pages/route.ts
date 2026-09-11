@@ -1,13 +1,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, Prisma } from "@repo/db";
-import { getCache, setCache } from "@repo/redis";
+import { prisma } from "@repo/db";
 import {
-  CACHE_TTL_TODAY,
-  CACHE_TTL_PAST,
-  todayInTimeZone,
   validateDateParams,
 } from "@/lib/shared/functions/TimeFunctions";
+import { analyticsErrorResponse, getAnalyticsDateBounds, readCachedResponse, writeCachedResponse } from "@/lib/shared/functions/analyticsRouteUtils";
 
 export async function GET(req: NextRequest) {
   try {
@@ -37,13 +34,10 @@ export async function GET(req: NextRequest) {
 ;
     const cacheKey = `exit-pages:${domainId}:${safeFrom}:${safeTo}:${timezone}`;
 
-    const cached = await getCache<any>(cacheKey);
-    if (cached) {
-      return NextResponse.json(cached);
-    }
+    const cachedResponse = await readCachedResponse(cacheKey);
+    if (cachedResponse) return cachedResponse;
 
-    const lowerBoundSql = Prisma.sql`(${safeFrom}::date::timestamp AT TIME ZONE ${timezone})`;
-    const upperBoundSql = Prisma.sql`((${safeTo}::date + INTERVAL '1 day')::timestamp AT TIME ZONE ${timezone})`;
+    const { lowerBoundSql, upperBoundSql } = getAnalyticsDateBounds(safeFrom, safeTo, timezone);
 
     type Row = { name: string; views: number; exits: number };
 
@@ -73,14 +67,10 @@ export async function GET(req: NextRequest) {
 
     const responseBody = { from: safeFrom, to: safeTo, timezone, total: data.length, data };
 
-    const isToToday = safeTo === todayInTimeZone(timezone);
-    const ttl = isToToday ? CACHE_TTL_TODAY : CACHE_TTL_PAST;
-
-    await setCache(cacheKey, responseBody, ttl);
+    await writeCachedResponse(cacheKey, responseBody, safeTo, timezone);
 
     return NextResponse.json(responseBody);
   } catch (err) {
-    console.error("[exit-pages] error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return analyticsErrorResponse("exit-pages", err);
   }
 }

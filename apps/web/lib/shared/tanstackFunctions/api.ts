@@ -10,6 +10,15 @@ import type { ApiError } from "@/lib/shared/types/api";
 
 export type { ApiError };
 
+export async function fetchApiData<T>(url: string, params: Record<string, unknown>): Promise<T> {
+  const { data } = await axios.get<T>(url, {
+    params,
+    timeout: 10_000,
+  });
+
+  return data;
+}
+
 export function normalizeApiError(error: unknown): ApiError {
   if (axios.isAxiosError(error)) {
     const axiosErr = error as AxiosError<{ error?: string }>;

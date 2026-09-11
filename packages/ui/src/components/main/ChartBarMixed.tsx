@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Bar, BarChart, XAxis, YAxis } from "recharts"
 import { CardContent } from "@workspace/ui/components/card"
 import { Button } from "@workspace/ui/components/button"
@@ -24,6 +24,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@workspace/ui/components/chart"
+import { sortData, type SortDirection } from "./sortData"
 
 export type DataKey = "visitors" | "views" | "avgDwell" | "viewsPerVisitor"
 
@@ -39,6 +40,7 @@ interface BarChartProps {
   data: DimensionPoint[]
   dataKey: DataKey
   title?: string // optional dialog title (e.g. "Country Data")
+  onSelectItem?: (name: string) => void
 }
 
 const TOP_N = 10
@@ -62,20 +64,15 @@ function formatDwell(seconds: number): string {
 
 type SortKey = keyof Omit<DimensionPoint, "name"> | "name"
 
-export function ChartBarMixed({ data, dataKey, title = "Details" }: BarChartProps) {
+export function ChartBarMixed({ data, dataKey, title = "Details",onSelectItem  }: BarChartProps) {
   const [open, setOpen] = useState(false)
   const [sortKey, setSortKey] = useState<SortKey>(dataKey)
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
+  const [sortDir, setSortDir] = useState<SortDirection>("desc")
 
-  const visible = data.slice(0, TOP_N)
+  const visible = useMemo(() => sortData(data, dataKey, "desc").slice(0, TOP_N), [data, dataKey])
   const hasMore = data.length > TOP_N
 
-  const sorted = [...data].sort((a, b) => {
-    const av = a[sortKey]
-    const bv = b[sortKey]
-    const cmp = typeof av === "string" ? av.localeCompare(bv as string) : (av as number) - (bv as number)
-    return sortDir === "asc" ? cmp : -cmp
-  })
+  const sorted = useMemo(() => sortData(data, sortKey, sortDir), [data, sortKey, sortDir])
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) {
@@ -107,7 +104,19 @@ export function ChartBarMixed({ data, dataKey, title = "Details" }: BarChartProp
           />
           <XAxis dataKey={dataKey} type="number" hide />
           <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-          <Bar dataKey={dataKey} fill={`var(--color-${dataKey})`} radius={5} />
+          
+          <Bar
+            dataKey={dataKey}
+            fill={`var(--color-${dataKey})`}
+            radius={5}
+            cursor={onSelectItem ? "pointer" : undefined}
+            onClick={
+              onSelectItem
+                ? (barData: any) => onSelectItem(barData?.name ?? barData?.payload?.name)
+                : undefined
+            }
+          />
+
         </BarChart>
       </ChartContainer>
 
@@ -151,7 +160,18 @@ export function ChartBarMixed({ data, dataKey, title = "Details" }: BarChartProp
               </TableHeader>
               <TableBody>
                 {sorted.map((row) => (
-                  <TableRow key={row.name}>
+                  <TableRow
+                    key={row.name}
+                    className={onSelectItem ? "cursor-pointer" : undefined}
+                    onClick={
+                      onSelectItem
+                        ? () => {
+                            onSelectItem(row.name);
+                            setOpen(false); 
+                          }
+                        : undefined
+                    }
+                  >
                     <TableCell className="font-medium">{row.name}</TableCell>
                     <TableCell className="text-right">{row.visitors}</TableCell>
                     <TableCell className="text-right">{row.views}</TableCell>

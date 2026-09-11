@@ -3,6 +3,7 @@
 import { prisma } from "@repo/db";
 import { deleteCache } from "@repo/redis";
 import { requireSession } from "./requireSession";
+import { findOwnedDomain } from "./findOwnedDomain";
 import { actionErr, actionOk } from "@/lib/shared/types/actionResult"
 
 export async function deleteDomain(id: string) {
@@ -14,10 +15,7 @@ export async function deleteDomain(id: string) {
       return actionErr("Domain ID cannot be empty.")
     }
 
-    const domain = await prisma.domain.findFirst({
-      where: { id, userId: sessionResult.data.user.id },
-      select: { id: true, apikey: true }
-    });
+    const domain = await findOwnedDomain(id, sessionResult.data.user.id, { id: true, apikey: true });
 
     if (!domain) {
       return actionErr("Domain not found.")

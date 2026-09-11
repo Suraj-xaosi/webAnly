@@ -2,12 +2,14 @@
 import { configureStore } from "@reduxjs/toolkit";
 import dashboardReducer from "./slices/dashboardSlice";
 import themeReducer from "./slices/themeSlice";
+import drilldownReducer from "./slices/drilldownSlice";
 
 export const createStore = () => {
   return configureStore({
     reducer: {
       dashboard: dashboardReducer,
       theme: themeReducer,
+      drilldown: drilldownReducer,
     },
   });
 };

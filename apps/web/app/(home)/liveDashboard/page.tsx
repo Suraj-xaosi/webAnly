@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { useAppSelector } from "@/store/hooks"
+import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { selectDomainId } from "@/store/slices/dashboardSlice"
+import { closeDrilldown, selectActiveDrilldown } from "@/store/slices/drilldownSlice";
 import { useRealtimeTimeseries } from "@/hooks/realtime/useRealtimeTimeseries"
 import { useRealtimeDimension } from "@/hooks/realtime/useRealtimeDimension"
 import { RealtimeProvider } from "@/components/wrapper/RealtimeProvider"
@@ -14,6 +15,7 @@ import { Card, CardContent } from "@workspace/ui/components/card"
 import DomainSwitch from "@/components/picker/domainSwitch"
 import { useApiKey } from "@/hooks/useApikey"
 import type { Dimension } from "@/hooks/analytics/useDimension"
+import { DimensionDrilldownPopup } from "@/components/dashCards/dimensionDrilldownPopup";
 
 const DIMENSIONS: Dimension[] = ["browser", "country", "device", "os", "referrer", "page"]
 
@@ -21,10 +23,15 @@ function getDateInTimezone(timezone: string) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date())
 }
 
-export default function liveDashboardPage() {
+export default function LiveDashboardPage() {
+  const dispatch = useAppDispatch()
   const domainId = useAppSelector(selectDomainId)
   const [isDomainActive, setIsDomainActive] = useState<boolean | null>(null)
   const [timezone, setTimezone] = useState<string>("UTC")
+
+  useEffect(() => {
+    dispatch(closeDrilldown())
+  }, [dispatch, domainId])
 
   useEffect(() => {
     let ignore = false
@@ -127,11 +134,12 @@ function LiveDashboardContent({
   const os = useRealtimeDimension("os", domainId, from, to, apikey, enabled, timezone)
   const referrer = useRealtimeDimension("referrer", domainId, from, to, apikey, enabled, timezone)
   const page = useRealtimeDimension("page", domainId, from, to, apikey, enabled, timezone)
-  
+
   const dimensionMap = useMemo(
     () => ({ browser, country, city, device, os, referrer, page }),
     [browser, country, city, device, os, referrer, page]
   )
+  const activeDrilldown = useAppSelector(selectActiveDrilldown)
 
   return (
     <>
@@ -159,6 +167,8 @@ function LiveDashboardContent({
           );
         })}
       </div>
+
+      {activeDrilldown?.liveMode && <DimensionDrilldownPopup />}
     </>
   )
 }

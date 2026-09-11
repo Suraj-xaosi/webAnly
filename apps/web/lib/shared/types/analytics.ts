@@ -76,3 +76,24 @@ export interface TimeseriesParams {
   interval?: Interval;
   timezone?: string;
 }
+
+// Dimension Drilldown Timeseries (NEW — for popup)
+export interface DimensionTimeseriesParams {
+  domainId: string;
+  from: string;
+  to: string;
+  interval?: Interval;
+  timezone?: string;
+  dimension: Dimension;
+  value: string;
+}
+
+export interface DimensionTimeseriesResponse {
+  dimension: Dimension;
+  value: string;
+  interval: Interval;
+  from: string;
+  to: string;
+  timezone?: string;
+  data: TimeseriesPoint[];
+}

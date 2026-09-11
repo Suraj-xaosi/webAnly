@@ -1,6 +1,6 @@
 "use server"
 
-import { prisma } from "@repo/db"
+import { findOwnedDomain } from "./findOwnedDomain"
 import { requireSession } from "./requireSession"
 import { actionErr, actionOk } from "@/lib/shared/types/actionResult"
 
@@ -13,9 +13,9 @@ export async function isActiveDomain(domainId: string) {
     const sessionResult = await requireSession("You must be logged in to see your domain access.")
     if (!sessionResult.success) return actionErr(sessionResult.error)
 
-    const domain = await prisma.domain.findFirst({
-      where: { id: domainId, userId: sessionResult.data.user.id },
-      select: { state: true, defaultTimezone: true },
+    const domain = await findOwnedDomain(domainId, sessionResult.data.user.id, {
+      state: true,
+      defaultTimezone: true,
     })
 
     if (!domain) {

@@ -1,7 +1,7 @@
 "use server"
 
-import { prisma } from "@repo/db";
 import { requireSession } from "./requireSession";
+import { findOwnedDomain } from "./findOwnedDomain";
 import { actionErr, actionOk } from "@/lib/shared/types/actionResult"
 
 export async function getApikey(domainId: string) {
@@ -13,10 +13,7 @@ export async function getApikey(domainId: string) {
     const sessionResult = await requireSession("You must be logged in to see your api key.")
     if (!sessionResult.success) return actionErr(sessionResult.error)
 
-    const domain = await prisma.domain.findFirst({
-      where: { id: domainId, userId: sessionResult.data.user.id },
-      select: { apikey: true },
-    });
+    const domain = await findOwnedDomain(domainId, sessionResult.data.user.id, { apikey: true });
 
     if (!domain) {
       return actionErr("Domain not found.")

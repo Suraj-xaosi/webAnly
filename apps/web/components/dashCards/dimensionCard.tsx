@@ -16,6 +16,8 @@ import {
 } from "@workspace/ui/components/select";
 import type { Dimension, DimensionPoint, ApiError } from "@/hooks/analytics/useDimension";
 import { Badge } from "@workspace/ui/components/badge";
+import { useAppDispatch } from "@/store/hooks";
+import { openDrilldown } from "@/store/slices/drilldownSlice";
 
 export interface DimensionCardProps {
   data: DimensionPoint[];
@@ -33,7 +35,8 @@ const METRIC_OPTIONS: { value: DataKey; label: string }[] = [
   { value: "viewsPerVisitor", label: "Views per Visitor" },
 ];
 
-export const DimensionCard = memo(function DimensionCard({ data, isLoading, isError, error, dimension,isLive }: DimensionCardProps) {
+export const DimensionCard = memo(function DimensionCard({ data, isLoading, isError, error, dimension, isLive }: DimensionCardProps) {
+  const dispatch = useAppDispatch();
   const [selectedMetric, setSelectedMetric] = useState<DataKey>("visitors");
 
   if (isLoading) return <div>Loading...</div>;
@@ -56,7 +59,8 @@ export const DimensionCard = memo(function DimensionCard({ data, isLoading, isEr
           </SelectContent>
         </Select>
       </CardHeader>
-      {isLive && (
+      {isLive &&
+        (
               <Badge
                 variant="secondary"
                 className="absolute right-4 top-4 z-10 gap-1.5 animate-pulse"
@@ -64,8 +68,15 @@ export const DimensionCard = memo(function DimensionCard({ data, isLoading, isEr
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 Live
               </Badge>
-            )}
-      <ChartBarMixed data={data} dataKey={selectedMetric} />
+        )
+      }
+
+      <ChartBarMixed
+        data={data}
+        dataKey={selectedMetric}
+        onSelectItem={(name) => dispatch(openDrilldown({ dimension, value: name, liveMode: Boolean(isLive) }))}
+      />
+
     </Card>
   );
 });
