@@ -42,7 +42,7 @@ export const DimensionCard = memo(function DimensionCard({ data, isLoading, isEr
   return (
     <Card className="relative">
       <CardHeader className="flex items-center justify-between gap-2">
-        <CardTitle className="capitalize">{dimension} Data</CardTitle>
+        <CardTitle className="capitalize">{dimension}</CardTitle>
         <Select value={selectedMetric} onValueChange={(v) => setSelectedMetric(v as DataKey)}>
           <SelectTrigger className="w-[160px]">
             <SelectValue />

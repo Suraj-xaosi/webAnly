@@ -41,7 +41,7 @@ export function AreaChartGradient({ data }: AreaChartGradientProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>TimeSeries Data - Gradient</CardTitle>
+        <CardTitle>TimeSeries Data </CardTitle>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>

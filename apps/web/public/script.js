@@ -1,5 +1,5 @@
 (function () {
-  const COLLECT_URL = "https://webanly.onrender.com/collect";
+  const COLLECT_URL = script.getAttribute("COLLECT-API-URL");
   const script = document.currentScript;
   const domainName = script.getAttribute("data-domain-name");
   const apikey = script.getAttribute("data-api-key");

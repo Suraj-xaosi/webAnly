@@ -10,6 +10,7 @@ export const publicEnv = {
   // apps/web/components/domain/domainScriptsSection.tsx — the tracking
   // script src shown to users in the copyable code snippet
   NEXT_PUBLIC_COLLECTOR_SCRIPT_URL: process.env.NEXT_PUBLIC_COLLECTOR_SCRIPT_URL,
+  NEXT_PUBLIC_COLLECT_API_URL: process.env.NEXT_PUBLIC_COLLECT_API_URL,
 
   // apps/web/hooks/realtime/useWebSocket.ts — realtime WebSocket server URL
   NEXT_PUBLIC_WSS_URL: process.env.NEXT_PUBLIC_WSS_URL,
