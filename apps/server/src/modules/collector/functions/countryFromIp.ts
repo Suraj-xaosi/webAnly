@@ -43,8 +43,7 @@ export default async function countryFromIp(ip: string): Promise<string> {
   }
 }
 
-/*
-// Future use: returns both city and country in one object.
+
 
 export async function locationFromIp(
   ip: string
@@ -67,4 +66,3 @@ export async function locationFromIp(
     return { city: "Unknown", country: "Unknown" };
   }
 }
-*/

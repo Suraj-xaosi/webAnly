@@ -18,31 +18,15 @@ type EventData = {
   timezone?:  string;
   exitType?:  string | null;
   timeSpent?: number;
-  hiddenFor?: number;   // only present when exitType === "hidden"
+  
 };
 
 export default async function dumpInDB(eventData: EventData) {
   try {
     if (eventData.exitType === "hidden") {
-      await prisma.pageHidden.create({
-        data: {
-          domainId:   eventData.domainId,
-          visitorId:  eventData.visitorId,
-          page:       eventData.page,
-          hiddenAt:   eventData.visitedAt,
-          hiddenFor:  eventData.timeSpent || 0,
-        },
-      });
-
-      console.log("✅ EVENT DUMPING: Hidden event stored", {
-        domainId:   eventData.domainId,
-        domainName: eventData.domainName,
-      });
-
+      // If the exitType is "hidden", we do not want to store this event in the database because it is not a real event. It is just a signal that the user has left the page. So we will just return from this function and not store this event in the database.
       return;
     }
-
-   
     await prisma.pageVisit.create({
       data: {
         domainId:   eventData.domainId,

@@ -4,7 +4,7 @@ import { KAFKA_TOPICS }           from "../../shared/config/kafka.js";
 import parseTime                  from "./functions/parseTimeSpent.js";
 import parseDate                  from "./functions/parseDate.js";
 import { extractRealIp }          from "./functions/extractIP.js";
-import countryFromIp              from "./functions/countryFromIp.js";
+import { locationFromIp }         from "./functions/countryFromIp.js";
 import { Request }                from "express";
 import { extractReferrerHostname } from "./functions/extractReferrerHostname.js";
 import {normalizePath} from "./functions/normalizepath.js";
@@ -24,7 +24,11 @@ function hashVisitorId(visitorId: string): string {
 
 export async function handleCollectEvent(req: Request) {
   const body = req.body || {};
-
+  const exitType  = parseExitType(body.exitType);
+  //if exit type is hidden then we do not want to send this event to kafka because it is not a real event. it is just a signal that the user has left the page. so we will just return from this function and not send this event to kafka.
+  if (exitType==="hidden") {
+    return;
+  }
   let domain: DomainInfo;
   try {
     domain = await apikeyChecker(body.apikey);
@@ -51,15 +55,12 @@ export async function handleCollectEvent(req: Request) {
   const visitorID = extractRealIp(req.ip || "");
   const visitedAt = parseDate(body.visitedAt) || new Date();
   const timeSpent = parseTime(body.timeSpent);
-  const exitType  = parseExitType(body.exitType);
+  
   const referrer  = extractReferrerHostname(body.referrer);
   const page = normalizePath(body.page);
-  let country = "unknown";
-  try {
-    country = visitorID ? await countryFromIp(visitorID) : "unknown";
-  } catch {
-    country = "unknown";
-  }
+ 
+  const {country,city} = visitorID ? await locationFromIp(visitorID) : { country: "unknown", city: "unknown" };
+
 
   let eventData = {
     domainId: domain.domainId,
@@ -73,6 +74,7 @@ export async function handleCollectEvent(req: Request) {
     os: body.os || "Unknown",
     timezone: body.timezone || "Unknown",
     country,
+    city,
     exitType,
     timeSpent,
     visitedAt,
@@ -85,7 +87,7 @@ export async function handleCollectEvent(req: Request) {
 
   
 
-  if(exitType != "hidden") {
+  
   
     const socketEventData = {
       ...eventData,
@@ -95,5 +97,5 @@ export async function handleCollectEvent(req: Request) {
       topic: KAFKA_TOPICS.SOCKET_EVENTS,
       messages: [{ key: domain.domainId, value: JSON.stringify(socketEventData) }],
     });
-  }
+  
 }

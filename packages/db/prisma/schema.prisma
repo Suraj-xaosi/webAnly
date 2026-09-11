@@ -138,7 +138,7 @@ model Domain {
 
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   pageVisits  PageVisit[]
-  pageHiddens PageHidden[]
+  
   payments    Payment[]
 
   @@index([userId])
@@ -208,6 +208,7 @@ model PageVisit {
   pageTitle  String?
   referrer   String?
   country    String?
+  city       String?
   browser    String?
   device     String?
   os         String?
@@ -222,20 +223,7 @@ model PageVisit {
   @@map("page_visit")
 }
 
-model PageHidden {
-  id        String   @id @default(uuid())
-  domainId  String
-  visitorId String
-  page      String
-  hiddenAt  DateTime
-  hiddenFor Int
 
-  domain Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
-
-  @@index([domainId, hiddenAt])
-  @@index([domainId, page])
-  @@map("page_hidden")
-}
 
 // ─────────────────────────────────────────
 // NOTIFICATION MODELS
