@@ -1,5 +1,5 @@
 // Dimension Analytics
-export type Dimension = "page" | "browser" | "device" | "country" | "os" | "referrer";
+export type Dimension = "page" | "browser" | "device" | "country"| "city" | "os" | "referrer";
 
 export interface DimensionPoint {
   name: string;

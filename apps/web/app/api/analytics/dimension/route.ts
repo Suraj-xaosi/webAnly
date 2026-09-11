@@ -13,6 +13,7 @@ const DIMENSION_COL_MAP: Record<string, string> = {
   browser:  "browser",
   device:   "device",
   country:  "country",
+  city:     "city",
   os:       "os",
   referrer: "referrer",
 };

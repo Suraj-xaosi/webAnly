@@ -34,6 +34,7 @@ export default function DashboardPage() {
 
   const browser = useDimension({ domainId, from, to, dimension: "browser", timezone });
   const country = useDimension({ domainId, from, to, dimension: "country", timezone });
+  const city = useDimension({ domainId, from, to, dimension: "city", timezone });
   const device = useDimension({ domainId, from, to, dimension: "device", timezone });
   const os = useDimension({ domainId, from, to, dimension: "os", timezone });
   const referrer = useDimension({ domainId, from, to, dimension: "referrer", timezone });
@@ -41,7 +42,7 @@ export default function DashboardPage() {
   const exitPages = useExitPages({ domainId, from, to, timezone });
 
 
-  const dimensionMap = { browser, country, device, os, referrer, page };
+  const dimensionMap = { browser, country,city, device, os, referrer, page };
 
   const dataErrorMessage = [
     timeseries,

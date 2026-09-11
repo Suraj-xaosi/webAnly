@@ -122,13 +122,15 @@ function LiveDashboardContent({
 
   const browser = useRealtimeDimension("browser", domainId, from, to, apikey, enabled, timezone)
   const country = useRealtimeDimension("country", domainId, from, to, apikey, enabled, timezone)
+  const city = useRealtimeDimension("city", domainId, from, to, apikey, enabled, timezone)
   const device = useRealtimeDimension("device", domainId, from, to, apikey, enabled, timezone)
   const os = useRealtimeDimension("os", domainId, from, to, apikey, enabled, timezone)
   const referrer = useRealtimeDimension("referrer", domainId, from, to, apikey, enabled, timezone)
   const page = useRealtimeDimension("page", domainId, from, to, apikey, enabled, timezone)
+  
   const dimensionMap = useMemo(
-    () => ({ browser, country, device, os, referrer, page }),
-    [browser, country, device, os, referrer, page]
+    () => ({ browser, country, city, device, os, referrer, page }),
+    [browser, country, city, device, os, referrer, page]
   )
 
   return (
