@@ -25,6 +25,8 @@ function isPrivateIp(ip: string): boolean {
     ip.startsWith("172.")
   );
 }
+/*
+// not required anymore 
 
 export default async function countryFromIp(ip: string): Promise<string> {
   if (!ip) return "Unknown";
@@ -42,7 +44,7 @@ export default async function countryFromIp(ip: string): Promise<string> {
     return "Unknown";
   }
 }
-
+*/
 
 
 export async function locationFromIp(

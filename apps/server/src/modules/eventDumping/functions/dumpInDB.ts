@@ -12,6 +12,7 @@ type EventData = {
   pageTitle?: string;
   referrer?:  string;
   country?:   string;
+  city?:      string;
   browser?:   string;
   device?:    string;
   os?:        string;
@@ -36,6 +37,7 @@ export default async function dumpInDB(eventData: EventData) {
         pageTitle:  eventData.pageTitle || "unknown",
         referrer:   eventData.referrer  || "unknown",
         country:    eventData.country   || "unknown",
+        city:       eventData.city      || "unknown",
         browser:    eventData.browser   || "unknown",
         device:     eventData.device    || "unknown",
         os:         eventData.os        || "unknown",
