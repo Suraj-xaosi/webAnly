@@ -22,8 +22,8 @@ function extractText(message: IncomingUIMessage): string {
     .join("")
 }
 
-// Guard-fail cases (login nahi, domain inactive, off-topic, etc) ke liye —
-// ek chhota "canned text" stream, taaki client hamesha SAME format expect kare
+// Return a short canned-text stream for guard failures (not logged in,
+// inactive domain, off-topic, etc.) so the client always receives the same format.
 function quickTextResponse(text: string) {
   const stream = createUIMessageStream({
     execute: async ({ writer }) => {
@@ -41,20 +41,20 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json()
   } catch {
-    return quickTextResponse("Request samajh nahi aayi, phir se try karo.")
+    return quickTextResponse("We could not understand the request. Please try again.")
   }
 
   const { domainId, messages } = body
   if (!domainId || !messages?.length) {
-    return quickTextResponse("domainId aur message dono chahiye.")
+    return quickTextResponse("Both domainId and message are required.")
   }
 
   const latestUserMessage = extractText(messages[messages.length - 1]!)
 
   try {
-    // ── 1. Auth ──────────────────────────────────────────────
+    // ── 1. Authentication ────────────────────────────────────
     const sessionResult = await requireSession()
-    if (!sessionResult.success) return quickTextResponse("Please login karo.")
+    if (!sessionResult.success) return quickTextResponse("Please log in.")
 
     // ── 2. Ownership check ───────────────────────────────────
     const domain = await findOwnedDomain(domainId, sessionResult.data.user.id, {
@@ -63,12 +63,12 @@ export async function POST(req: NextRequest) {
       state: true,
       defaultTimezone: true,
     })
-    if (!domain) return quickTextResponse("Domain not found ya aapka nahi hai.")
+    if (!domain) return quickTextResponse("Domain not found or it does not belong to you.")
 
     // ── 3. Active check ──────────────────────────────────────
     if (domain.state !== "ACTIVE") {
       return quickTextResponse(
-        `${domain.domainName} abhi deactivated hai. Assistant sirf active domains ke liye kaam karta hai.`
+        `${domain.domainName} is currently deactivated. The assistant only works with active domains.`
       )
     }
 
@@ -79,16 +79,16 @@ export async function POST(req: NextRequest) {
     // ── 5. Daily token budget guard ──────────────────────────
     const budget = await checkTokenBudget(domain.id)
     if (!budget.ok) {
-      return quickTextResponse("Aaj ke liye AI assistant ka limit khatam ho gaya. Kal try karo.")
+      return quickTextResponse("The AI assistant's limit for today has been reached. Please try again tomorrow.")
     }
 
     // ── 6. Topic guard ───────────────────────────────────────
     const onTopic = await isOnTopic(latestUserMessage)
     if (!onTopic) {
-      return quickTextResponse("Main sirf aapke website traffic analytics ke sawaalon mein madad kar sakta hoon.")
+      return quickTextResponse("I can only help with questions about your website traffic analytics.")
     }
 
-    // ── 7. Conversation banao, trim karo ──────────────────────
+    // ── 7. Build and trim the conversation ────────────────────
     const today = todayInTimeZone(domain.defaultTimezone)
     const historyMessages = messages.slice(0, -1).map((m) => {
       const text = extractText(m)
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
 
     const rawMessages = [
       new SystemMessage(
-        `Aaj ki date hai ${today} (timezone: ${domain.defaultTimezone}). Tum "${domain.domainName}" ke traffic analytics assistant ho. Sirf isi domain ke traffic data ke baare mein baat karo — kisi doosre domain ka data mangne pe seedha mana kar do.`
+        `Today's date is ${today} (timezone: ${domain.defaultTimezone}). You are the traffic analytics assistant for "${domain.domainName}". Discuss traffic data for this domain only; clearly refuse requests for data from any other domain.`
       ),
       ...historyMessages,
       new HumanMessage(latestUserMessage),
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
       {
         version: "v2" as const,
         recursionLimit: 8,      // infinite-loop guard
-        signal: req.signal,      // client disconnect ho toh agent bhi ruke
+        signal: req.signal,      // stop the agent if the client disconnects
         callbacks: [
           {
             handleLLMEnd(output: any) {
@@ -141,6 +141,6 @@ export async function POST(req: NextRequest) {
     return createUIMessageStreamResponse({ stream: uiMessageStream })
   } catch (err) {
     console.error("[ai-chat] setup error:", err)
-    return quickTextResponse("Kuch galat ho gaya, thodi der baad try karo.")
+    return quickTextResponse("Something went wrong. Please try again later.")
   }
 }

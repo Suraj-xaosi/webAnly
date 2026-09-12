@@ -22,13 +22,13 @@ export function createExitPagesTool(domainId: string, timezone: string) {
         })
       } catch (err) {
         console.error("[tool:get_exit_pages] failed:", err)
-        return JSON.stringify({ error: "Exit pages data fetch nahi ho paya, thodi der baad try karo." })
+        return JSON.stringify({ error: "Could not fetch exit page data. Please try again later." })
       }
     },
     {
       name: "get_exit_pages",
       description:
-        "Kaunse pages se log site chhod ke jaate hain (exit pages), ek date range ke liye. 'Log kahan se chale jaate hain' jaise sawaalon ke liye use karo.",
+        "Returns the pages where visitors leave the site (exit pages) for a date range. Use it for questions such as 'Which pages do visitors leave from?'.",
       schema: z.object({
         from: z.string().describe("Start date, format YYYY-MM-DD"),
         to: z.string().describe("End date, format YYYY-MM-DD"),

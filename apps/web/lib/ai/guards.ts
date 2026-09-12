@@ -9,12 +9,12 @@ export function checkMessageLength(userMessage: string): { ok: boolean; error?: 
   const trimmed = userMessage.trim()
 
   if (trimmed.length === 0) {
-    return { ok: false, error: "Kuch toh likho — sawaal khaali hai." }
+    return { ok: false, error: "Please enter a question." }
   }
   if (trimmed.length > MAX_MESSAGE_LENGTH) {
     return {
       ok: false,
-      error: `Message bahut lamba hai (max ${MAX_MESSAGE_LENGTH} characters). Chhota, seedha sawaal poochho.`,
+      error: `Your message is too long (maximum ${MAX_MESSAGE_LENGTH} characters). Please ask a shorter, more specific question.`,
     }
   }
   return { ok: true }
@@ -24,7 +24,7 @@ const classifierSchema = z.object({
   isAnalyticsRelated: z
     .boolean()
     .describe(
-      "True agar sawaal website traffic, visitors, page views, browsers, devices, countries, referrers, trends ya exit-pages jaise analytics data ke baare mein hai. False agar coding, essays, recipes, ya kuch aur hai."
+      "True if the question is about website analytics data such as traffic, visitors, page views, browsers, devices, countries, referrers, trends, or exit pages. False if it is about coding, essays, recipes, or anything else."
     ),
 })
 
@@ -33,15 +33,15 @@ export async function isOnTopic(userMessage: string): Promise<boolean> {
     const classifier = fastModel.withStructuredOutput(classifierSchema)
     const result = await classifier.invoke([
       new SystemMessage(
-        "Tum ek classifier ho. Sirf yeh decide karo ki sawaal website-traffic-analytics se related hai ya nahi. Koi advice mat do, koi aur kaam mat karo."
+        "You are a classifier. Decide only whether the question is related to website traffic analytics. Do not provide advice or perform any other task."
       ),
       new HumanMessage(userMessage),
     ])
     return result.isAnalyticsRelated
   } catch (err) {
     console.error("[ai-guards] topic classifier failed:", err)
-    // Classifier hi fail ho jaaye (Groq down waghera) toh feature block mat karo —
-    // fail-open, asli agent bhi off-topic jawab handle kar lega system prompt se
+    // Keep the feature available if the classifier fails; the main agent can
+    // handle off-topic requests through its system prompt.
     return true
   }
 }

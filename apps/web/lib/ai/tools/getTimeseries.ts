@@ -12,13 +12,13 @@ export function createTimeseriesTool(domainId: string, timezone: string) {
         return JSON.stringify(result)
       } catch (err) {
         console.error("[tool:get_timeseries] failed:", err)
-        return JSON.stringify({ error: "Timeseries data fetch nahi ho paya, thodi der baad try karo." })
+        return JSON.stringify({ error: "Could not fetch time-series data. Please try again later." })
       }
     },
     {
       name: "get_timeseries",
       description:
-        "Din-wise (ya same-day ke liye hour-wise) views aur visitors ka trend deta hai, ek date range ke liye. 'Traffic kaisa raha', 'trend dikhao' jaise sawaalon ke liye use karo.",
+        "Returns the daily trend of views and visitors, or the hourly trend for a single day, for a date range. Use it for questions such as 'How was traffic?' or 'Show me the trend.'.",
       schema: z.object({
         from: z.string().describe("Start date, format YYYY-MM-DD"),
         to: z.string().describe("End date, format YYYY-MM-DD"),

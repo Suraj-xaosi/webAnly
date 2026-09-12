@@ -37,7 +37,7 @@ export function AnalyticsChatWidget({ domainId }: { domainId: string }) {
       <ScrollArea className="flex-1 px-3 py-2">
         {messages.length === 0 && (
           <p className="mt-4 text-sm text-muted-foreground">
-            Poochho — &quot;Pichhle hafte traffic kaisa raha?&quot;
+            Ask — &quot;How was traffic last week?&quot;
           </p>
         )}
         {messages.map((message) => (
@@ -63,7 +63,7 @@ export function AnalyticsChatWidget({ domainId }: { domainId: string }) {
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Apna sawaal likho..."
+          placeholder="Type your question..."
           disabled={isLoading}
         />
         <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>

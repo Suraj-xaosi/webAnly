@@ -4,8 +4,8 @@ import { z } from "zod"
 import { fetchDimensionData } from "@/lib/shared/functions/fetchDimensionData"
 import type { Dimension } from "@/lib/shared/types/analytics"
 
-// Har dimension ki apni natural "ceiling" — referrer/city unbounded ho sakte
-// hain, page/browser/os naturally chhote hote hain
+// Each dimension has a practical result limit: referrers and cities can be
+// unbounded, while pages, browsers, and operating systems are naturally smaller.
 const DIMENSION_RESULT_LIMIT: Record<Dimension, number> = {
   page: 50,
   country: 50,
@@ -34,17 +34,17 @@ export function createDimensionTool(domainId: string, timezone: string) {
         })
       } catch (err) {
         console.error("[tool:get_dimension_breakdown] failed:", err)
-        return JSON.stringify({ error: "Dimension data fetch nahi ho paya, thodi der baad try karo." })
+        return JSON.stringify({ error: "Could not fetch dimension data. Please try again later." })
       }
     },
     {
       name: "get_dimension_breakdown",
       description:
-        "Currently selected domain ke traffic ka breakdown deta hai kisi dimension (page, browser, device, country, city, os, referrer) ke hisaab se, ek date range ke liye. Yeh sirf isi domain ka data de sakta hai.",
+        "Returns a traffic breakdown for the currently selected domain by dimension (page, browser, device, country, city, OS, or referrer) for a date range. It can only return data for this domain.",
       schema: z.object({
         dimension: z
           .enum(["page", "browser", "device", "country", "city", "os", "referrer"])
-          .describe("Kis cheez ka breakdown chahiye"),
+          .describe("The dimension to break down"),
         from: z.string().describe("Start date, format YYYY-MM-DD"),
         to: z.string().describe("End date, format YYYY-MM-DD"),
       }),
