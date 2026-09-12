@@ -23,4 +23,8 @@ export const env = {
   // apps/web/app/api/webhooks/razorpay/route.ts — HMAC signature
   // verification on incoming webhook payloads
   RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET as string,
+
+  
+  // apps/web/lib/ai/model.ts — Groq API access ke liye
+  GROQ_API_KEY: process.env.GROQ_API_KEY as string,
 }

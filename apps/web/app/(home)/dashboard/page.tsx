@@ -1,5 +1,6 @@
 "use client"
 
+import { AnalyticsChatLauncher } from "@/components/ai/analyticsChatLauncher"
 import { format } from "date-fns";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectDomainId, selectFrom, selectTo, selectInterval, setDateRange,selectTimezone } from "@/store/slices/dashboardSlice";
@@ -20,6 +21,7 @@ import TimezonePicker from "@/components/picker/timezonePicker";
 import { DimensionDrilldownPopup } from "@/components/dashCards/dimensionDrilldownPopup";
 import { closeDrilldown, selectActiveDrilldown } from "@/store/slices/drilldownSlice";
 import { useEffect, useTransition } from "react";
+
 
 const DIMENSIONS: Dimension[] = ["browser", "country", "device", "os", "referrer", "page"];
 
@@ -74,8 +76,9 @@ export default function DashboardPage() {
     <div className="grid gap-6">
 
       <div className="flex items-center justify-between gap-4">
-        <div className="w-fit">
+        <div className="flex w-fit items-center gap-2">
           <DomainSwitch />
+          <AnalyticsChatLauncher />
         </div>
         <DateRangePicker
           value={{ from: new Date(from), to: new Date(to) }}
