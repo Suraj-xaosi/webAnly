@@ -23,7 +23,7 @@ export async function fetchExitPagesData(
       "page" AS name,
       COUNT(*)::int AS views,
       COUNT(*) FILTER (WHERE "exitType" = 'pagehide')::int AS exits
-    FROM "PageVisit"
+    FROM "Page_visit"
     WHERE "domainId" = ${domainId}
       AND "visitedAt"::timestamptz >= ${lowerBoundSql}
       AND "visitedAt"::timestamptz < ${upperBoundSql}

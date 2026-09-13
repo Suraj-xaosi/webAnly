@@ -27,6 +27,6 @@ export const env = {
   
   // apps/web/lib/ai/model.ts — Groq API access ke liye
   GROQ_API_KEY: process.env.GROQ_API_KEY as string,
-  GROQ_MODEL: process.env.GROQ_MODEL || "llama-4-scout-17b-16e-instruct",
+  GROQ_MODEL: process.env.GROQ_MODEL || "meta-llama/llama-4-scout-17b-16e-instruct",
   GROQ_FAST_MODEL: process.env.GROQ_FAST_MODEL || "llama-3.1-8b-instant",
 }
