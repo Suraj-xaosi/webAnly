@@ -27,7 +27,7 @@ export async function fetchTimeseriesData(
         ((EXTRACT(DAY FROM ("visitedAt"::timestamptz AT TIME ZONE ${timezone}))::int - 1) / 7) + 1 AS week_num,
         COUNT(*)::int AS views,
         COUNT(DISTINCT "visitorId")::int AS visitors
-      FROM "PageVisit"
+      FROM "page_visit"
       WHERE "domainId" = ${domainId}
         AND "visitedAt"::timestamptz >= ${lowerBoundSql}
         AND "visitedAt"::timestamptz < ${upperBoundSql}
@@ -44,7 +44,7 @@ export async function fetchTimeseriesData(
         date_trunc(${trunc}, "visitedAt"::timestamptz AT TIME ZONE ${timezone}) AS bucket,
         COUNT(*)::int AS views,
         COUNT(DISTINCT "visitorId")::int AS visitors
-      FROM "PageVisit"
+      FROM "page_visit"
       WHERE "domainId" = ${domainId}
         AND "visitedAt"::timestamptz >= ${lowerBoundSql}
         AND "visitedAt"::timestamptz < ${upperBoundSql}

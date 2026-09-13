@@ -11,7 +11,7 @@ import { SendIcon, Loader2Icon, SparklesIcon } from "lucide-react"
 export function AnalyticsChatWidget({ domainId }: { domainId: string }) {
   const [input, setInput] = useState("")
 
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/ai/chat",
       body: { domainId },
@@ -57,6 +57,11 @@ export function AnalyticsChatWidget({ domainId }: { domainId: string }) {
           </div>
         ))}
         {isLoading && <Loader2Icon className="size-4 animate-spin text-muted-foreground" />}
+        {error && (
+          <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error.message || "The assistant could not respond. Please try again."}
+          </p>
+        )}
       </ScrollArea>
 
       <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t p-2.5">
