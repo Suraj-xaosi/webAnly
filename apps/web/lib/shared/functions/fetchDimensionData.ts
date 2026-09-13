@@ -28,7 +28,7 @@ export async function fetchDimensionData(
       COUNT(*)::int AS views,
       COUNT(DISTINCT "visitorId")::int AS visitors,
       ROUND(AVG(COALESCE("timeSpent", 0)))::int AS "avgDwell"
-    FROM "PageVisit"
+    FROM "page_visit"
     WHERE
       "domainId" = ${domainId}
       AND "visitedAt"::timestamptz >= ${lowerBoundSql}
