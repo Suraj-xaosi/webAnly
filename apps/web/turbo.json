@@ -1,0 +1,22 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "env": [
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "GITHUB_CLIENT_ID",
+        "GITHUB_CLIENT_SECRET",
+        "GROQ_API_KEY",
+        "NEXT_PUBLIC_BETTER_AUTH_BASE_URL",
+        "NEXT_PUBLIC_COLLECTOR_SCRIPT_URL",
+        "NEXT_PUBLIC_COLLECT_API_URL",
+        "NEXT_PUBLIC_WSS_URL",
+        "RAZORPAY_KEY_ID",
+        "RAZORPAY_KEY_SECRET",
+        "RAZORPAY_WEBHOOK_SECRET"
+      ]
+    }
+  }
+}
