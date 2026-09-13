@@ -1,6 +1,6 @@
 export type SortDirection = "asc" | "desc";
 
-export function sortData<T extends Record<string, string | number>>(
+export function sortData<T extends object>(
   data: T[],
   key: keyof T,
   direction: SortDirection = "desc"
