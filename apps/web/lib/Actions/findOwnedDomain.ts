@@ -2,7 +2,7 @@
 
 import { prisma, Prisma } from "@repo/db"
 
-export function findOwnedDomain<T extends Prisma.DomainSelect>(
+export async function findOwnedDomain<T extends Prisma.DomainSelect>(
   domainId: string,
   userId: string,
   select: T,
