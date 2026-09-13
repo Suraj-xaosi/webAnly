@@ -1,8 +1,18 @@
 (function () {
-  const COLLECT_URL = script.getAttribute("COLLECT-API-URL");
   const script = document.currentScript;
+  if (!script) {
+    console.warn("Collector: could not find the current script element.");
+    return;
+  }
+
+  const COLLECT_URL = script.getAttribute("data-collect-api-url");
   const domainName = script.getAttribute("data-domain-name");
   const apikey = script.getAttribute("data-api-key");
+
+  if (!COLLECT_URL) {
+    console.warn("Collector: missing data-collect-api-url on script tag.");
+    return;
+  }
 
   if (!apikey) {
     console.warn("Collector: missing data-api-key on script tag.");

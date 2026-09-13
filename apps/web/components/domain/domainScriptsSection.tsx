@@ -19,7 +19,7 @@ const COLLECT_API_URL=publicEnv.NEXT_PUBLIC_COLLECT_API_URL||"http://localhost:4
 function buildNextSnippet(domainName: string, apikey: string) {
   return `<script
   src="${COLLECTOR_SCRIPT_URL}"
-  COLLERT-API-URL="${COLLECT_API_URL}
+  data-collect-api-url="${COLLECT_API_URL}"
   data-domain-name="${domainName}"
   data-api-key="${apikey}">
 </script>`
@@ -28,7 +28,7 @@ function buildNextSnippet(domainName: string, apikey: string) {
 function buildReactSnippet(domainName: string, apikey: string) {
   return `const script = document.createElement("script")
 script.src = "${COLLECTOR_SCRIPT_URL}"
-script.setAttribute("COLLECT-API-URL","${COLLECT_API_URL})
+script.setAttribute("data-collect-api-url", "${COLLECT_API_URL}")
 script.setAttribute("data-domain-name", "${domainName}")
 script.setAttribute("data-api-key", "${apikey}")
 script.async = true
