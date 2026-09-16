@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { SparklesIcon } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
-import { Popover, PopoverTrigger, PopoverContent } from "@workspace/ui/components/popover"
+import { Dialog, DialogContent, DialogTrigger } from "@workspace/ui/components/dialog"
 import { useAppSelector } from "@/store/hooks"
 import { selectDomainId } from "@/store/slices/dashboardSlice"
 import { AnalyticsChatWidget } from "./analyticsChatWidget"
@@ -13,8 +13,8 @@ export function AnalyticsChatLauncher() {
   const [open, setOpen] = useState(false)
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
         <Button
           variant="outline"
           size="icon"
@@ -23,14 +23,15 @@ export function AnalyticsChatLauncher() {
         >
           <SparklesIcon className="size-4" />
         </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="end"
-        sideOffset={10}
-        className="w-[380px] max-w-[92vw] overflow-hidden p-0 bg-popover/80 shadow-2xl backdrop-blur-xl"
+      </DialogTrigger>
+      <DialogContent
+        showCloseButton
+        onPointerDownOutside={(event) => event.preventDefault()}
+        onInteractOutside={(event) => event.preventDefault()}
+        className="h-[min(86vh,760px)] w-[min(92vw,980px)] max-w-none overflow-hidden border-0 bg-transparent p-0 shadow-none ring-0"
       >
         {domainId && <AnalyticsChatWidget key={domainId} domainId={domainId} />}
-      </PopoverContent>
-    </Popover>
+      </DialogContent>
+    </Dialog>
   )
 }
