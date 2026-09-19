@@ -13,6 +13,7 @@ Webanly lets you track visitors on your own website without relying on third-par
 
 - A **live dashboard** showing visitors, page views, and events as they happen
 - **Historical analytics** — traffic over time, top pages, browsers, devices, countries, referrers, exit pages
+- **AI traffic analyst assistant chat bot** — can explain and traffic and any kind of inshights user want to know about their websites traffic data in easy words with AI.
 - **Automatic spike alerts** when traffic jumps above your site's normal range
 - **Domain-scoped API keys** so each tracked site is isolated
 - **Timezone-aware reporting** — "today" means today in the visitor's timezone, not the server's
@@ -177,3 +178,9 @@ This project is for portfolio/demonstration purposes.
 ![alt text](<Screenshot 2026-08-21 182703.png>)
 ![alt text](<Screenshot 2026-08-21 195432.png>)
 ![alt text](<Screenshot 2026-08-21 195333.png>)
+
+![alt text](<Screenshot 2026-09-17 005924.png>)
+
+![alt text](<Screenshot 2026-09-17 010002.png>)
+
+![alt text](<Screenshot 2026-09-17 010032.png>)

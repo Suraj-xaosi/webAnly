@@ -35,10 +35,7 @@ function maskKey(key: string) {
 
 // Turns the domain's type/state/endsAt into what the badge says and what
 // the pay button should say. Only two real backend outcomes exist
-// (REACTIVATE vs EXTEND) but we show three distinct labels here purely so
-// the wording makes sense to the user (upgrading a free domain "feels"
-// different from extending an already-paid one, even though the server
-// treats them the same way).
+// (REACTIVATE vs EXTEND) 
 function getBillingInfo(domain: Domain) {
   if (domain.state === "DEACTIVATED") {
     return {
