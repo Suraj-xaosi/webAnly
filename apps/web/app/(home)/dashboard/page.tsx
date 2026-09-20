@@ -21,6 +21,9 @@ import TimezonePicker from "@/components/picker/timezonePicker";
 import { DimensionDrilldownPopup } from "@/components/dashCards/dimensionDrilldownPopup";
 import { closeDrilldown, selectActiveDrilldown } from "@/store/slices/drilldownSlice";
 import { useEffect, useTransition } from "react";
+import { useState } from "react";
+import { useFlow } from "@/hooks/analytics/useFlow";
+import { PageFlowCard } from "@/components/dashCards/pageFlowCard";
 
 
 const DIMENSIONS: Dimension[] = ["browser", "country", "device", "os", "referrer", "page"];
@@ -49,6 +52,10 @@ export default function DashboardPage() {
   const referrer = useDimension({ domainId, from, to, dimension: "referrer", timezone });
   const page = useDimension({ domainId, from, to, dimension: "page", timezone });
   const exitPages = useExitPages({ domainId, from, to, timezone });
+  const flowPages = page.data?.data.map((item) => item.name) ?? [];
+  const [selectedFlowPage, setSelectedFlowPage] = useState<string>(flowPages[0] ?? "");
+  const activeFlowPage = selectedFlowPage || flowPages[0] || "";
+  const pageFlow = useFlow({ domainId, page: activeFlowPage, from, to, timezone });
 
 
   const dimensionMap = { browser, country,city, device, os, referrer, page };
@@ -62,6 +69,7 @@ export default function DashboardPage() {
     os,
     referrer,
     page,
+    pageFlow,
   ]
     .find((result) => result.isError && result.error)
     ?.error
@@ -146,6 +154,17 @@ export default function DashboardPage() {
           );
         })}
       </div>
+
+      <PageFlowCard
+        data={pageFlow.data}
+        availablePages={flowPages}
+        selectedPage={activeFlowPage}
+        onPageChange={setSelectedFlowPage}
+        isLoading={pageFlow.isLoading}
+        isError={pageFlow.isError}
+        error={pageFlow.error}
+      />
+
           {activeDrilldown && !activeDrilldown.liveMode && <DimensionDrilldownPopup />}
     </div>
   );

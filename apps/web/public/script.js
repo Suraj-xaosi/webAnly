@@ -19,12 +19,10 @@
     return;
   }
 
-   
   if (!domainName) {
     console.warn("Collector: missing data-domain-name on script tag.");
     return;
   }
-
 
   const rawPattern = script.getAttribute("data-normalize-pattern");
   let customNormalizer = null;
@@ -51,7 +49,6 @@
     try {
       return customNormalizer(path);
     } catch (e) {
-    
       return path;
     }
   }
@@ -85,19 +82,43 @@
     return "Unknown";
   }
 
+  // ── INITIAL REFERRER ───────────────────────────────────────────────────────
+  // Runs once, on the first load of the page.
+  //   empty document.referrer        → direct visit      (referrer: null, previousPage: null)
+  //   different hostname             → external source   (referrer: full URL, previousPage: null)
+  //   same hostname (full page load) → internal          (referrer: null, previousPage: path)
+  // The collector treats "previousPage is null" as "arrived from outside or direct".
+
+  function parseInitialReferrer() {
+    if (!document.referrer) return { referrer: null, previousPage: null };
+    try {
+      const strip = function (h) {
+        return h.replace(/^www\./, "");
+      };
+      const u = new URL(document.referrer);
+      if (strip(u.hostname) === strip(window.location.hostname)) {
+        return { referrer: null, previousPage: normalizePage(u.pathname) };
+      }
+    } catch (_) {}
+    return { referrer: document.referrer, previousPage: null };
+  }
+
+  const initial = parseInitialReferrer();
+
   // ── PAGE STATE ─────────────────────────────────────────────────────────────
   // Snapshot everything when user ARRIVES on a page.
   // Send it all when they LEAVE.
 
   let state = {
-    page:      normalizePage(window.location.pathname),
-    pageTitle: document.title,
-    referrer:  document.referrer || null,
-    startedAt: Date.now(),
+    page:         normalizePage(window.location.pathname),
+    pageTitle:    document.title,
+    referrer:     initial.referrer,
+    previousPage: initial.previousPage,
+    startedAt:    Date.now(),
   };
 
   let lastPath = window.location.pathname; // dedup guard — compare against RAW path, not normalized
-  let flushed = false; // prevent double-flush (e.g. pagehide firing right after hidden)
+  let flushed = false; // prevent double-flush
 
   // ── SEND ───────────────────────────────────────────────────────────────────
 
@@ -118,25 +139,25 @@
   }
 
   // ── FLUSH ──────────────────────────────────────────────────────────────────
-  // Called when user leaves current page (tab close, tab hide, OR SPA navigation).
+  // Called when user leaves current page (tab close OR SPA navigation).
   // Sends the completed visit for the page they're leaving.
   // exitType tells the server WHY this flush happened:
   //   "navigation" - user moved to another page on this same site (NOT a real exit)
   //   "pagehide"   - tab/browser closing, or navigating away entirely (real exit)
-  //   "hidden"     - tab hidden (switched tabs, minimized) — ambiguous, might come back
 
   function flush(exitType) {
     send({
       apikey,
-      page:      state.page, // already normalized when state was set
-      pageTitle: state.pageTitle,
-      referrer:  state.referrer,
-      timeSpent: Math.round((Date.now() - state.startedAt) / 1000),
-      browser:   getBrowser(),
-      os:        getOS(),
-      device:    getDevice(),
-      timezone:  Intl.DateTimeFormat().resolvedOptions().timeZone,
-      visitedAt: new Date(state.startedAt).toISOString(), // when they ARRIVED, not when they left
+      page:         state.page, // already normalized when state was set
+      pageTitle:    state.pageTitle,
+      referrer:     state.referrer,
+      previousPage: state.previousPage,
+      timeSpent:    Math.round((Date.now() - state.startedAt) / 1000),
+      browser:      getBrowser(),
+      os:           getOS(),
+      device:       getDevice(),
+      timezone:     Intl.DateTimeFormat().resolvedOptions().timeZone,
+      visitedAt:    new Date(state.startedAt).toISOString(), // when they ARRIVED, not when they left
       exitType,
     });
   }
@@ -148,17 +169,23 @@
     if (newPath === lastPath) return; // ignore hash jumps / replaceState quirks
     lastPath = newPath;
 
+    // Remember the page they're leaving BEFORE state is replaced
+    const leftPage = state.page;
+
     // 1. Flush the page they just left — this is NOT an exit, they're still on the site
     flush("navigation");
 
     // 2. Wait one tick so framework updates document.title
     setTimeout(() => {
-      // 3. Snapshot the new page they've arrived on
+      // 3. Snapshot the new page they've arrived on.
+      //    referrer is null: document.referrer never changes in an SPA, so reusing it
+      //    would repeat the original source (e.g. google.com) on every page.
       state = {
-        page:      normalizePage(window.location.pathname),
-        pageTitle: document.title,
-        referrer:  document.referrer || null,
-        startedAt: Date.now(),
+        page:         normalizePage(window.location.pathname),
+        pageTitle:    document.title,
+        referrer:     null,
+        previousPage: leftPage,
+        startedAt:    Date.now(),
       };
       flushed = false; // reset for the new page
     }, 0);
@@ -175,17 +202,13 @@
   // ── EXIT DETECTION ─────────────────────────────────────────────────────────
 
   window.addEventListener("pagehide", function () {
-    if (flushed) return; 
+    if (flushed) return;
     flushed = true;
     flush("pagehide");
   });
 
-  document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState === "hidden" && !flushed) {
-      
-      flush("hidden");
-    }
-  });
+  // "hidden" (tab switch / minimize) is intentionally not flushed:
+  // it's ambiguous and not useful for analytics.
 
   // ── INIT ───────────────────────────────────────────────────────────────────
   // Snapshot happens at top (state = ...).
@@ -196,5 +219,4 @@
       state.pageTitle = document.title; // correct title once DOM is ready
     });
   }
-
 })();

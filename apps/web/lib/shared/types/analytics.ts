@@ -52,6 +52,32 @@ export interface ExitPagesParams {
   timezone?: string;
 }
 
+export type FlowEntryType = "page" | "source" | "exit" | "other";
+
+export interface FlowEntry {
+  name: string;
+  type: FlowEntryType;
+  views: number;
+  visitors: number;
+}
+
+export interface FlowResponse {
+  page: string;
+  from: string;
+  to: string;
+  timezone: string;
+  incoming: FlowEntry[];
+  outgoing: FlowEntry[];
+}
+
+export interface FlowParams {
+  domainId: string;
+  page: string;
+  from: string;
+  to: string;
+  timezone?: string;
+}
+
 // Timeseries Analytics
 export type Interval = "hour" | "dayname" | "day" | "week" | "month";
 

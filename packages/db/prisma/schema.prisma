@@ -207,6 +207,7 @@ model PageVisit {
   page       String
   pageTitle  String?
   referrer   String?
+  previousPage String?
   country    String?
   city       String?
   browser    String?
@@ -220,6 +221,8 @@ model PageVisit {
   @@index([domainId, visitedAt])
   @@index([domainId, visitorId])
   @@index([domainId, page])
+  @@index([domainId, previousPage, visitedAt])
+  @@index([domainId, page, visitedAt])
   @@map("page_visit")
 }
 
