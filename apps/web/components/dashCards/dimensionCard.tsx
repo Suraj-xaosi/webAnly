@@ -18,6 +18,7 @@ import type { Dimension, DimensionPoint, ApiError } from "@/hooks/analytics/useD
 import { Badge } from "@workspace/ui/components/badge";
 import { useAppDispatch } from "@/store/hooks";
 import { openDrilldown } from "@/store/slices/drilldownSlice";
+import { AnalyticsCardState } from "./analyticsCardState";
 
 export interface DimensionCardProps {
   data: DimensionPoint[];
@@ -39,8 +40,8 @@ export const DimensionCard = memo(function DimensionCard({ data, isLoading, isEr
   const dispatch = useAppDispatch();
   const [selectedMetric, setSelectedMetric] = useState<DataKey>("visitors");
 
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error: {error?.message}</div>;
+  const state = <AnalyticsCardState isLoading={isLoading} isError={isError} error={error} />;
+  if (state) return state;
 
   return (
     <Card className="relative">

@@ -22,9 +22,18 @@ export async function fetchApiData<T>(url: string, params: Record<string, unknow
 export function normalizeApiError(error: unknown): ApiError {
   if (axios.isAxiosError(error)) {
     const axiosErr = error as AxiosError<{ error?: string }>;
+    const status = axiosErr.response?.status;
+    const messageByStatus: Record<number, string> = {
+      400: "The request could not be completed. Check the selected filters and try again.",
+      401: "Your session has expired. Please sign in again.",
+      403: "You do not have permission to view this data.",
+      404: "The requested analytics data was not found.",
+      429: "Too many requests. Please wait a moment and try again.",
+      500: "Analytics data is temporarily unavailable. Please try again.",
+    };
     return {
-      message: axiosErr.response?.data?.error ?? axiosErr.message,
-      status: axiosErr.response?.status,
+      message: (status && messageByStatus[status]) || "Unable to load analytics data. Please try again.",
+      status,
     };
   }
 
@@ -49,12 +58,21 @@ export function useApiQuery<TData, TError = ApiError>(
     queryFn: () => Promise<TData>;
   }
 ) {
+  const { queryFn, ...queryOptions } = options;
+
   return useQuery<TData, TError>({
     placeholderData: (prev) => prev,
     staleTime: 3 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: (failureCount, error) => shouldRetryQuery(failureCount, normalizeApiError(error)),
-    ...options,
+    queryFn: async () => {
+      try {
+        return await queryFn();
+      } catch (error) {
+        throw normalizeApiError(error) as TError;
+      }
+    },
+    ...queryOptions,
   });
 }
 

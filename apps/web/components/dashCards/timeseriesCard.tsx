@@ -2,6 +2,7 @@
 import { AreaChartGradient } from "@workspace/ui/components/main/areaChartGradient";
 import type { TimeseriesPoint, ApiError } from "@/hooks/analytics/useTimeseries";
 import { Badge } from "@workspace/ui/components/badge";
+import { AnalyticsCardState } from "./analyticsCardState";
 
 interface TimeseriesCardProps {
   data: TimeseriesPoint[];
@@ -12,8 +13,8 @@ interface TimeseriesCardProps {
 }
 
 export function TimeseriesCard({ data, isLoading, isError, error, isLive }: TimeseriesCardProps) {
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error: {error?.message}</div>;
+  const state = <AnalyticsCardState isLoading={isLoading} isError={isError} error={error} />;
+  if (state) return state;
 
   return (
     <div className="relative">

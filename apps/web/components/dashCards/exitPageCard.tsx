@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select";
 import type { ApiError } from "@/hooks/analytics/useExitPages";
+import { AnalyticsCardState } from "./analyticsCardState";
 
 export interface ExitPageCardProps {
   data: ExitPagePoint[];
@@ -31,8 +32,8 @@ const METRIC_OPTIONS: { value: ExitDataKey; label: string }[] = [
 export function ExitPageCard({ data, isLoading, isError, error }: ExitPageCardProps) {
   const [selectedMetric, setSelectedMetric] = useState<ExitDataKey>("exits");
 
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error: {error?.message}</div>;
+  const state = <AnalyticsCardState isLoading={isLoading} isError={isError} error={error} />;
+  if (state) return state;
 
   return (
     <Card>

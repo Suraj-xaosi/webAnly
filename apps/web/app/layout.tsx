@@ -38,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         "font-sans"
       )}
     >
-      <body suppressHydrationWarning>
+      <body>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
 
         <ReactqueryProvider>

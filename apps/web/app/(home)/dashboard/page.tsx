@@ -4,8 +4,6 @@ import { AnalyticsChatLauncher } from "@/components/ai/analyticsChatLauncher"
 import { format } from "date-fns";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectDomainId, selectFrom, selectTo, selectInterval, setDateRange,selectTimezone } from "@/store/slices/dashboardSlice";
-import { useTimeseries } from "@/hooks/analytics/useTimeseries";
-import { useDimension } from "@/hooks/analytics/useDimension";
 import { TimeseriesCard } from "@/components/dashCards/timeseriesCard";
 import { DimensionCard } from "@/components/dashCards/dimensionCard";
 import { DateRangePicker } from "@workspace/ui/components/main/dateRangePicker";
@@ -14,19 +12,13 @@ import {
   CardContent,
 } from "@workspace/ui/components/card";
 import DomainSwitch from "@/components/picker/domainSwitch";
-import type { Dimension } from "@/hooks/analytics/useDimension";
-import { useExitPages } from "@/hooks/analytics/useExitPages";
 import { ExitPageCard } from "@/components/dashCards/exitPageCard";
 import TimezonePicker from "@/components/picker/timezonePicker";
 import { DimensionDrilldownPopup } from "@/components/dashCards/dimensionDrilldownPopup";
 import { closeDrilldown, selectActiveDrilldown } from "@/store/slices/drilldownSlice";
-import { useEffect, useTransition } from "react";
-import { useState } from "react";
-import { useFlow } from "@/hooks/analytics/useFlow";
 import { PageFlowCard } from "@/components/dashCards/pageFlowCard";
-
-
-const DIMENSIONS: Dimension[] = ["browser", "country", "device", "os", "referrer", "page"];
+import { useDashboardAnalytics } from "@/hooks/analytics/useDashboardAnalytics";
+import { useEffect, useTransition } from "react";
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
@@ -42,42 +34,12 @@ export default function DashboardPage() {
     dispatch(closeDrilldown());
   }, [dispatch, domainId]);
 
-  const timeseries = useTimeseries({ domainId, from, to, interval, timezone });
+  const analytics = useDashboardAnalytics({ domainId, from, to, interval, timezone })
 
-  const browser = useDimension({ domainId, from, to, dimension: "browser", timezone });
-  const country = useDimension({ domainId, from, to, dimension: "country", timezone });
-  const city = useDimension({ domainId, from, to, dimension: "city", timezone });
-  const device = useDimension({ domainId, from, to, dimension: "device", timezone });
-  const os = useDimension({ domainId, from, to, dimension: "os", timezone });
-  const referrer = useDimension({ domainId, from, to, dimension: "referrer", timezone });
-  const page = useDimension({ domainId, from, to, dimension: "page", timezone });
-  const exitPages = useExitPages({ domainId, from, to, timezone });
-  const flowPages = page.data?.data.map((item) => item.name) ?? [];
-  const [selectedFlowPage, setSelectedFlowPage] = useState<string>(flowPages[0] ?? "");
-  const activeFlowPage = selectedFlowPage || flowPages[0] || "";
-  const pageFlow = useFlow({ domainId, page: activeFlowPage, from, to, timezone });
-
-
-  const dimensionMap = { browser, country,city, device, os, referrer, page };
-
-  const dataErrorMessage = [
-    timeseries,
-    exitPages,
-    browser,
-    country,
-    device,
-    os,
-    referrer,
-    page,
-    pageFlow,
-  ]
-    .find((result) => result.isError && result.error)
-    ?.error
-
-  const errorMessage = dataErrorMessage
-    ? typeof dataErrorMessage === "string"
-      ? dataErrorMessage
-      : dataErrorMessage.message ?? "Unable to load analytics data. Please try again."
+  const errorMessage = analytics.dataError
+    ? typeof analytics.dataError === "string"
+      ? analytics.dataError
+      : analytics.dataError.message ?? "Unable to load analytics data. Please try again."
     : null
 
   return (
@@ -127,21 +89,21 @@ export default function DashboardPage() {
       ) : null}
 
       <TimeseriesCard
-        data={timeseries.data?.data ?? []}
-        isLoading={timeseries.isLoading}
-        isError={timeseries.isError}
-        error={timeseries.error}
+        data={analytics.timeseries.data?.data ?? []}
+        isLoading={analytics.timeseries.isLoading}
+        isError={analytics.timeseries.isError}
+        error={analytics.timeseries.error}
       />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <ExitPageCard
-          data={exitPages.data?.data ?? []}
-          isLoading={exitPages.isLoading}
-          isError={exitPages.isError}
-          error={exitPages.error}
+          data={analytics.exitPages.data?.data ?? []}
+          isLoading={analytics.exitPages.isLoading}
+          isError={analytics.exitPages.isError}
+          error={analytics.exitPages.error}
         />
-        {DIMENSIONS.map((dimension) => {
-          const result = dimensionMap[dimension];
+        {analytics.dimensions.map((dimension) => {
+          const result = analytics.dimensionMap[dimension];
           return (
             <DimensionCard
               key={dimension}
@@ -156,13 +118,16 @@ export default function DashboardPage() {
       </div>
 
       <PageFlowCard
-        data={pageFlow.data}
-        availablePages={flowPages}
-        selectedPage={activeFlowPage}
-        onPageChange={setSelectedFlowPage}
-        isLoading={pageFlow.isLoading}
-        isError={pageFlow.isError}
-        error={pageFlow.error}
+        data={analytics.pageFlow.data}
+        availablePages={analytics.flowPages}
+        selectedPage={analytics.activeFlowPage}
+        onPageChange={analytics.setSelectedFlowPage}
+        isPagesLoading={analytics.pagesAreLoading}
+        isPagesError={analytics.isPagesError}
+        pagesError={analytics.pagesError}
+        isLoading={analytics.pageFlow.isLoading}
+        isError={analytics.pageFlow.isError}
+        error={analytics.pageFlow.error}
       />
 
           {activeDrilldown && !activeDrilldown.liveMode && <DimensionDrilldownPopup />}

@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select";
 import { format, subDays } from "date-fns";
-import { useEffect, useMemo } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 
 const COMMON_TIMEZONES = [
@@ -54,10 +54,24 @@ export function getBrowserTimezone() {
   return "UTC";
 }
 
+let browserTimezoneOptions: string[] | undefined;
+
+function getClientTimezoneOptions() {
+  return (browserTimezoneOptions ??= getTimezoneOptions());
+}
+
+function subscribeToTimezoneOptions() {
+  return () => {};
+}
+
 export default function TimezonePicker() {
   const dispatch = useAppDispatch();
   const timezone = useAppSelector(selectTimezone) ?? "UTC";
-  const options = useMemo(() => getTimezoneOptions(), []);
+  const options = useSyncExternalStore(
+    subscribeToTimezoneOptions,
+    getClientTimezoneOptions,
+    () => COMMON_TIMEZONES
+  );
 
 useEffect(() => {
   const browserTimezone = getBrowserTimezone();

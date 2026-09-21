@@ -21,6 +21,9 @@ export interface PageFlowCardProps {
   availablePages: string[]
   selectedPage: string
   onPageChange: (page: string) => void
+  isPagesLoading: boolean
+  isPagesError: boolean
+  pagesError?: ApiError | null
   isLoading: boolean
   isError: boolean
   error?: ApiError | null
@@ -40,6 +43,9 @@ export function PageFlowCard({
   availablePages,
   selectedPage,
   onPageChange,
+  isPagesLoading,
+  isPagesError,
+  pagesError,
   isLoading,
   isError,
   error,
@@ -47,17 +53,18 @@ export function PageFlowCard({
   const [metric, setMetric] = useState<FlowMetric>("views")
   const chartData = useMemo(() => buildPageFlowChartData(data, metric), [data, metric])
 
-  if (isLoading) return <div>Loading...</div>
-  if (isError) return <div>Error: {error?.message}</div>
-
   return (
     <Card className="col-span-full">
       <CardHeader className="flex items-center justify-between gap-2">
         <CardTitle>Page Flow</CardTitle>
         <div className="flex items-center gap-2">
-          <Select value={selectedPage} onValueChange={onPageChange} disabled={availablePages.length === 0}>
+          <Select
+            value={selectedPage || undefined}
+            onValueChange={onPageChange}
+            disabled={isPagesLoading || isPagesError || availablePages.length === 0}
+          >
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select a page" />
+              <SelectValue placeholder={isPagesLoading ? "Loading pages..." : "Select a page"} />
             </SelectTrigger>
             <SelectContent>
               {availablePages.map((page) => (
@@ -83,7 +90,23 @@ export function PageFlowCard({
         </div>
       </CardHeader>
 
-      {!data || (!data.incoming.length && !data.outgoing.length) ? (
+      {isPagesLoading ? (
+        <div className="px-6 pb-6 text-sm text-muted-foreground">Loading available pages...</div>
+      ) : isPagesError ? (
+        <div className="px-6 pb-6 text-sm text-destructive">
+          {pagesError?.message ?? "Unable to load available pages. Please try again."}
+        </div>
+      ) : !availablePages.length ? (
+        <div className="px-6 pb-6 text-sm text-muted-foreground">
+          No pages are available for this time range.
+        </div>
+      ) : isLoading ? (
+        <div className="px-6 pb-6 text-sm text-muted-foreground">Loading page flow...</div>
+      ) : isError ? (
+        <div className="px-6 pb-6 text-sm text-destructive">
+          {error?.message ?? "Unable to load page flow. Please try again."}
+        </div>
+      ) : !data || (!data.incoming.length && !data.outgoing.length) ? (
         <div className="px-6 pb-6 text-sm text-muted-foreground">
           No page-flow data for {selectedPage || "this time range"}.
         </div>
