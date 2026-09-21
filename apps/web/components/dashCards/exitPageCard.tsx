@@ -32,8 +32,9 @@ const METRIC_OPTIONS: { value: ExitDataKey; label: string }[] = [
 export function ExitPageCard({ data, isLoading, isError, error }: ExitPageCardProps) {
   const [selectedMetric, setSelectedMetric] = useState<ExitDataKey>("exits");
 
-  const state = <AnalyticsCardState isLoading={isLoading} isError={isError} error={error} />;
-  if (state) return state;
+  if (isLoading || isError) {
+    return <AnalyticsCardState isLoading={isLoading} isError={isError} error={error} />;
+  }
 
   return (
     <Card>

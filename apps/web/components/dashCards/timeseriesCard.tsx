@@ -13,8 +13,9 @@ interface TimeseriesCardProps {
 }
 
 export function TimeseriesCard({ data, isLoading, isError, error, isLive }: TimeseriesCardProps) {
-  const state = <AnalyticsCardState isLoading={isLoading} isError={isError} error={error} />;
-  if (state) return state;
+  if (isLoading || isError) {
+    return <AnalyticsCardState isLoading={isLoading} isError={isError} error={error} />;
+  }
 
   return (
     <div className="relative">

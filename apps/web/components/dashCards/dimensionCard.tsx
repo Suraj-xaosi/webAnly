@@ -40,8 +40,9 @@ export const DimensionCard = memo(function DimensionCard({ data, isLoading, isEr
   const dispatch = useAppDispatch();
   const [selectedMetric, setSelectedMetric] = useState<DataKey>("visitors");
 
-  const state = <AnalyticsCardState isLoading={isLoading} isError={isError} error={error} />;
-  if (state) return state;
+  if (isLoading || isError) {
+    return <AnalyticsCardState isLoading={isLoading} isError={isError} error={error} />;
+  }
 
   return (
     <Card className="relative">

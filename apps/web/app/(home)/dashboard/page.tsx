@@ -17,8 +17,13 @@ import TimezonePicker from "@/components/picker/timezonePicker";
 import { DimensionDrilldownPopup } from "@/components/dashCards/dimensionDrilldownPopup";
 import { closeDrilldown, selectActiveDrilldown } from "@/store/slices/drilldownSlice";
 import { PageFlowCard } from "@/components/dashCards/pageFlowCard";
-import { useDashboardAnalytics } from "@/hooks/analytics/useDashboardAnalytics";
-import { useEffect, useTransition } from "react";
+import { useTimeseries } from "@/hooks/analytics/useTimeseries";
+import { useDimension, type Dimension } from "@/hooks/analytics/useDimension";
+import { useExitPages } from "@/hooks/analytics/useExitPages";
+import { useFlow } from "@/hooks/analytics/useFlow";
+import { useEffect, useState, useTransition } from "react";
+
+const DIMENSIONS: Dimension[] = ["browser", "country", "city", "device", "os", "referrer", "page"];
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
@@ -34,12 +39,29 @@ export default function DashboardPage() {
     dispatch(closeDrilldown());
   }, [dispatch, domainId]);
 
-  const analytics = useDashboardAnalytics({ domainId, from, to, interval, timezone })
+  const timeseries = useTimeseries({ domainId, from, to, interval, timezone });
+  const browser = useDimension({ domainId, from, to, dimension: "browser", timezone });
+  const country = useDimension({ domainId, from, to, dimension: "country", timezone });
+  const city = useDimension({ domainId, from, to, dimension: "city", timezone });
+  const device = useDimension({ domainId, from, to, dimension: "device", timezone });
+  const os = useDimension({ domainId, from, to, dimension: "os", timezone });
+  const referrer = useDimension({ domainId, from, to, dimension: "referrer", timezone });
+  const page = useDimension({ domainId, from, to, dimension: "page", timezone });
+  const exitPages = useExitPages({ domainId, from, to, timezone });
+  const flowPages = page.data?.data.map((item) => item.name) ?? [];
+  const [selectedFlowPage, setSelectedFlowPage] = useState<string>(flowPages[0] ?? "");
+  const activeFlowPage = selectedFlowPage || flowPages[0] || "";
+  const pageFlow = useFlow({ domainId, page: activeFlowPage, from, to, timezone });
 
-  const errorMessage = analytics.dataError
-    ? typeof analytics.dataError === "string"
-      ? analytics.dataError
-      : analytics.dataError.message ?? "Unable to load analytics data. Please try again."
+  const dimensionMap = { browser, country, city, device, os, referrer, page };
+  const dataError = [timeseries, exitPages, browser, country, city, device, os, referrer, page, pageFlow]
+    .find((result) => result.isError && result.error)
+    ?.error;
+
+  const errorMessage = dataError
+    ? typeof dataError === "string"
+      ? dataError
+      : dataError.message ?? "Unable to load analytics data. Please try again."
     : null
 
   return (
@@ -89,21 +111,21 @@ export default function DashboardPage() {
       ) : null}
 
       <TimeseriesCard
-        data={analytics.timeseries.data?.data ?? []}
-        isLoading={analytics.timeseries.isLoading}
-        isError={analytics.timeseries.isError}
-        error={analytics.timeseries.error}
+        data={timeseries.data?.data ?? []}
+        isLoading={timeseries.isLoading}
+        isError={timeseries.isError}
+        error={timeseries.error}
       />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <ExitPageCard
-          data={analytics.exitPages.data?.data ?? []}
-          isLoading={analytics.exitPages.isLoading}
-          isError={analytics.exitPages.isError}
-          error={analytics.exitPages.error}
+          data={exitPages.data?.data ?? []}
+          isLoading={exitPages.isLoading}
+          isError={exitPages.isError}
+          error={exitPages.error}
         />
-        {analytics.dimensions.map((dimension) => {
-          const result = analytics.dimensionMap[dimension];
+        {DIMENSIONS.map((dimension) => {
+          const result = dimensionMap[dimension];
           return (
             <DimensionCard
               key={dimension}
@@ -118,16 +140,16 @@ export default function DashboardPage() {
       </div>
 
       <PageFlowCard
-        data={analytics.pageFlow.data}
-        availablePages={analytics.flowPages}
-        selectedPage={analytics.activeFlowPage}
-        onPageChange={analytics.setSelectedFlowPage}
-        isPagesLoading={analytics.pagesAreLoading}
-        isPagesError={analytics.isPagesError}
-        pagesError={analytics.pagesError}
-        isLoading={analytics.pageFlow.isLoading}
-        isError={analytics.pageFlow.isError}
-        error={analytics.pageFlow.error}
+        data={pageFlow.data}
+        availablePages={flowPages}
+        selectedPage={activeFlowPage}
+        onPageChange={setSelectedFlowPage}
+        isPagesLoading={page.isFetching}
+        isPagesError={page.isError}
+        pagesError={page.error}
+        isLoading={pageFlow.isLoading}
+        isError={pageFlow.isError}
+        error={pageFlow.error}
       />
 
           {activeDrilldown && !activeDrilldown.liveMode && <DimensionDrilldownPopup />}
