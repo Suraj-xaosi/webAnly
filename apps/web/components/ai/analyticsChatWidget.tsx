@@ -84,7 +84,7 @@ export function AnalyticsChatWidget({ domainId }: { domainId: string }) {
     <div className="flex h-full min-h-0 flex-col text-foreground">
       <div className="flex shrink-0 items-center gap-2 border-b border-border/50 px-5 py-4">
         <SparklesIcon className="size-4 text-primary" />
-        <p className="font-heading text-sm font-semibold">Traffic Assistant</p>
+        <p className="text-sm font-semibold">Traffic Assistant</p>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 [scrollbar-width:thin]">

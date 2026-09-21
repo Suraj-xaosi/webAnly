@@ -14,44 +14,43 @@ import {
   ShieldCheckIcon,
   ZapIcon,
 } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
 
 const features = [
   {
     icon: <ZapIcon className="h-5 w-5" />,
-    title: "Real-time analytics",
+    title: "See visitors and views",
     description:
-      "Watch visitors, page views, and events land the moment they happen, powered by a Kafka + WebSocket pipeline.",
+      "See how many people visit your website and how many pages they view.",
   },
   {
     icon: <GlobeIcon className="h-5 w-5" />,
-    title: "Multi-domain support",
+    title: "Track more than one website",
     description:
-      "Track as many domains as you like from one account, each with its own scoped API key and script.",
+      "Keep each website separate while managing them from the same account.",
   },
   {
     icon: <GaugeIcon className="h-5 w-5" />,
-    title: "Timezone-aware reporting",
+    title: "Use your own timezone",
     description:
-      "Every chart respects each domain's local timezone, so 'today' always means today for your visitors.",
+      "Choose a timezone so dates and daily reports match the place you work from.",
   },
   {
     icon: <BellIcon className="h-5 w-5" />,
-    title: "Spike detection & alerts",
+    title: "Understand page journeys",
     description:
-      "An adaptive baseline watches your traffic and notifies you the moment something unusual happens.",
+      "See where visitors came from, which page they opened, and where they went next.",
   },
   {
     icon: <ShieldCheckIcon className="h-5 w-5" />,
-    title: "Privacy-conscious by design",
+    title: "Ask the traffic assistant",
     description:
-      "Visitor identity is derived from a server-side hash, never raw IPs stored client-side.",
+      "Ask plain-language questions about your traffic and get an answer from your analytics data.",
   },
   {
     icon: <ActivityIcon className="h-5 w-5" />,
-    title: "Lightweight collector",
+    title: "Keep setup simple",
     description:
-      "A tiny async script that won't slow down your site, no cookies required for basic tracking.",
+      "Add one small script to your website, then use the dashboard to explore the results.",
   },
 ]
 
@@ -63,18 +62,15 @@ export function IntroductionSection() {
           Welcome
         </Badge>
         <h2 className="text-2xl font-heading font-semibold tracking-tight">What is Webanly?</h2>
-        <p className="max-w-2xl font-heading text-muted-foreground">
-          Webanly is a web analytics platform that gives you a real-time, privacy-conscious
-          view of how people use your site. Add a domain, drop in one script, and get a live
-          dashboard of visitors, page views, dwell time, exit pages, and traffic spikes.
+        <p className="max-w-2xl text-muted-foreground">
+          Webanly is a simple dashboard for understanding your website traffic. It helps you
+          see visitors, page views, popular pages, traffic sources, and page journeys without
+          making you dig through complicated reports.
         </p>
-         <Alert>
-            <ShieldCheckIcon className="h-4 w-4" />
-            <AlertTitle>Not for professional use</AlertTitle>
-            <AlertDescription>
-                this app do not varifies domain names through dns or any varification. treating domain names as just a user name.
-            </AlertDescription>
-        </Alert>
+        <p className="max-w-2xl text-sm text-muted-foreground">
+          Start by adding your website and placing the tracking script in its head section.
+          After that, open the dashboard whenever you want to understand what your visitors are doing.
+        </p>
       </div>
 
       <Separator />

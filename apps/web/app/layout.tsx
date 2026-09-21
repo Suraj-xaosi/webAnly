@@ -1,12 +1,12 @@
 import ReactqueryProvider from "@/lib/providers/ReactqueryProvider"
-import { Geist, Geist_Mono, Cinzel, Space_Grotesk, Fraunces } from "next/font/google"
+import { Geist_Mono, Cinzel, Space_Grotesk, Fraunces, DM_Sans } from "next/font/google"
 import "@workspace/ui/globals.css"
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import { cn } from "@workspace/ui/lib/utils"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
 import { THEME_NAMES } from "@/store/slices/themeSlice"
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
+const bodyFont = DM_Sans({ subsets: ["latin"], variable: "--font-body" })
 const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
 
 const cinzel = Cinzel({ subsets: ["latin"], variable: "--font-cinzel" })
@@ -31,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={cn(
         "antialiased",
         fontMono.variable,
-        geist.variable,
+        bodyFont.variable,
         cinzel.variable,
         spaceGrotesk.variable,
         fraunces.variable,

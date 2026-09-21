@@ -47,7 +47,7 @@
     --radius-2xl: calc(var(--radius) * 1.8);
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
-    --font-sans: var(--font-sans);
+    --font-sans: var(--font-body);
 }
 
 :root,
@@ -217,7 +217,7 @@
     --chart-4: #E9C46A;
     --chart-5: #E76F51;
     --radius: 0.9rem;
-    --font-heading-family: var(--font-cormorant);
+    --font-heading-family: var(--font-fraunces);
     --sidebar: #EAF1EC;
     --sidebar-foreground: #223140;
     --sidebar-primary: #2E8BC0;
@@ -358,7 +358,7 @@
     --chart-4: #C77DD4;
     --chart-5: #7EB8D9;
     --radius: 0.9rem;
-    --font-heading-family: var(--font-dm-serif);
+    --font-heading-family: var(--font-fraunces);
     --sidebar: #FFFDFA;
     --sidebar-foreground: #3A2E28;
     --sidebar-primary: #F0733E;

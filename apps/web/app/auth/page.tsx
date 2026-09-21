@@ -13,7 +13,6 @@ import {
 } from "@workspace/ui/components/dialog"
 import {
   Card,
-  CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
@@ -37,8 +36,8 @@ export default function LandingPage() {
               <CardTitle className="text-xl">Webanly</CardTitle>
       
             <Separator orientation="vertical" className="h-6" />
-              <CardDescription className="text-sm text-muted-foreground">
-                 traffic analytics platform
+              <CardDescription className="font-sans text-sm text-muted-foreground">
+                Simple website analytics
               </CardDescription>
             
           </div>
@@ -65,11 +64,11 @@ export default function LandingPage() {
             <div className="space-y-6">
               <CardTitle className="text-4xl font-semibold tracking-tight sm:text-5xl">
 
-                Understand your website traffic with clarity and confidence.
+                See what is happening on your website.
                 </CardTitle>
               
-              <CardDescription className="text-lg font-semibold text-muted-foreground">
-                Webanly gives you a live view of visitors, traffic sources, and activity on your site — accurate to the second. Track conversions, spot trends, and act before your next surge.
+              <CardDescription className="font-sans text-lg font-semibold text-muted-foreground">
+                Webanly shows your visitors, popular pages, traffic sources, and page journeys in one clear dashboard. Ask the traffic assistant questions when you want a quick answer.
                 
               </CardDescription>
             </div>
@@ -95,11 +94,11 @@ export default function LandingPage() {
             <div className="rounded-[2rem] border p-6 shadow-2xl">
               <div className="flex items-center justify-between gap-4 rounded-3xl px-5 py-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.24em]">Live · webanly.com</p>
-                  <p className="mt-2 text-sm font-semibold">Realtime visitor stream</p>
+                  <p className="text-xs uppercase tracking-[0.24em]">Your website</p>
+                  <p className="mt-2 text-sm font-semibold">A simple view of your traffic</p>
                 </div>
                 <Badge variant="secondary" className="rounded-full px-3 py-1 text-[0.65rem] uppercase tracking-[0.18em]">
-                  Active
+                  Live data
                 </Badge>
               </div>
               <div className="mt-6 rounded-[1.5rem] p-5">
@@ -115,15 +114,15 @@ export default function LandingPage() {
               <div className="grid gap-4 font-heading sm:grid-cols-3 pt-4 text-sm">
                 <div>
                   <p className="text-xl font-semibold">8.2K</p>
-                  <p>Visitors today</p>
+                  <p>Visitors</p>
                 </div>
                 <div>
                   <p className="text-xl font-semibold">15K</p>
-                  <p>Total views</p>
+                  <p>Page views</p>
                 </div>
                 <div>
                   <p className="text-xl font-semibold">35s</p>
-                  <p>Avg time</p>
+                  <p>Average time</p>
                 </div>
               </div>
             </div>
@@ -135,12 +134,12 @@ export default function LandingPage() {
 
       <section id="features" className="mx-auto max-w-6xl px-6 py-20">
         <div className="mb-12 max-w-2xl">
-          <CardDescription className="text-sm uppercase tracking-[0.32em]">Fast, reliable visibility</CardDescription>
+          <CardDescription className="text-sm uppercase tracking-[0.32em]">What you can do</CardDescription>
           <CardTitle className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Everything you need to read your traffic.
+            The important parts of your traffic, in one place.
           </CardTitle>
           <p className="mt-4 max-w-xl text-lg leading-8">
-            Webanly brings clarity to every visitor session, campaign source, and traffic spike so your team can make decisions with confidence.
+            Open the dashboard, choose a date range, and explore your data. Nothing complicated is required.
           </p>
         </div>
 
@@ -148,54 +147,54 @@ export default function LandingPage() {
           <Card>
             <CardHeader>
               <Activity className="mb-2 h-5 w-5" />
-              <CardTitle className="text-base">Traffic analytics</CardTitle>
+              <CardTitle className="text-base">Understand visitors</CardTitle>
               <CardDescription>
-                Monitor traffic patterns and discover which pages are driving engagement.
+                See how many people visit your site and how often they return.
               </CardDescription>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader>
               <Globe className="mb-2 h-5 w-5" />
-              <CardTitle className="text-base">Source insights</CardTitle>
+              <CardTitle className="text-base">Find popular pages</CardTitle>
               <CardDescription>
-                See exactly where traffic is coming from, including referrers and campaigns.
+                Compare pages by views, visitors, and time spent.
               </CardDescription>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader>
               <Bell className="mb-2 h-5 w-5" />
-              <CardTitle className="text-base">Spike alerts</CardTitle>
+              <CardTitle className="text-base">Follow page journeys</CardTitle>
               <CardDescription>
-                Get notified instantly when traffic moves outside of your normal range.
+                See which pages visitors came from and where they went next.
               </CardDescription>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader>
               <LineChart className="mb-2 h-5 w-5" />
-              <CardTitle className="text-base">Historical trends</CardTitle>
+              <CardTitle className="text-base">Choose any time range</CardTitle>
               <CardDescription>
-                Compare performance day-over-day, week-over-week, and quarter-over-quarter.
+                Look at today, last week, this month, or a range you choose.
               </CardDescription>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader>
               <Activity className="mb-2 h-5 w-5" />
-              <CardTitle className="text-base">Live visitor count</CardTitle>
+              <CardTitle className="text-base">Ask the traffic assistant</CardTitle>
               <CardDescription>
-                Watch concurrent visitor numbers rise and fall in real time.
+                Ask questions such as “How did traffic change last week?”
               </CardDescription>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader>
               <Globe className="mb-2 h-5 w-5" />
-              <CardTitle className="text-base">Performance pulse</CardTitle>
+              <CardTitle className="text-base">Keep your data in one place</CardTitle>
               <CardDescription>
-                Keep your dashboard in sync with the most important traffic indicators.
+                Add your website once and return to the same dashboard whenever you need it.
               </CardDescription>
             </CardHeader>
           </Card>
