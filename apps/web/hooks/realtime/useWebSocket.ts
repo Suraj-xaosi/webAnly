@@ -1,4 +1,4 @@
-// apps/web/hooks/realtime/useWebSocket.ts
+
 import { useEffect, useRef, useState } from "react";
 import type { WebSocketMessage } from "@/lib/shared/types/realtime";
 import { publicEnv } from "@/lib/env/client";
@@ -78,9 +78,19 @@ export function useWebSocket(
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.close();
+
+      const ws = wsRef.current;
+      if (ws) {
+        ws.onopen = null;
+        ws.onmessage = null;
+        ws.onerror = null;
+        ws.onclose = null;
+        if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+          ws.close();
+        }
+        wsRef.current = null;
       }
+      setIsConnected(false);
     };
   }, [domainId, apikey, wsServerUrl]);
 

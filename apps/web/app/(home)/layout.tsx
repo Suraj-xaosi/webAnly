@@ -1,4 +1,3 @@
-
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/betterAuth/auth"
 import { headers } from "next/headers"
@@ -17,7 +16,13 @@ export default async function HomeLayout({ children }: { children: React.ReactNo
 
   return (
     <SidebarProvider>
-      <AppSidebarWrapper />
+      <AppSidebarWrapper
+        user={{
+          name: session.user.name,
+          email: session.user.email,
+          image: session.user.image,
+        }}
+      />
       <SidebarInset>
         <HorizontalNavbarWrapper />
         <main className="flex-1 p-6">

@@ -3,6 +3,7 @@ export const queryKeys = {
   apikey: (domainId: string) => ["apikey", domainId] as const,
   pricing: () => ["pricing"] as const,
   notifications: () => ["notifications"] as const,
+  domainAccess: (domainId: string) => ["domain-access", domainId] as const,
   analytics: {
     dimension: (
       domainId: string,

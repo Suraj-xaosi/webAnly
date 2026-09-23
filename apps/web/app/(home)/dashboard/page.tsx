@@ -15,13 +15,13 @@ import DomainSwitch from "@/components/picker/domainSwitch";
 import { ExitPageCard } from "@/components/dashCards/exitPageCard";
 import TimezonePicker from "@/components/picker/timezonePicker";
 import { DimensionDrilldownPopup } from "@/components/dashCards/dimensionDrilldownPopup";
-import { closeDrilldown, selectActiveDrilldown } from "@/store/slices/drilldownSlice";
+import { selectActiveDrilldown } from "@/store/slices/drilldownSlice";
 import { PageFlowCard } from "@/components/dashCards/pageFlowCard";
 import { useTimeseries } from "@/hooks/analytics/useTimeseries";
 import { useDimension, type Dimension } from "@/hooks/analytics/useDimension";
 import { useExitPages } from "@/hooks/analytics/useExitPages";
 import { useFlow } from "@/hooks/analytics/useFlow";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 
 const DIMENSIONS: Dimension[] = ["browser", "country", "city", "device", "os", "referrer", "page"];
 
@@ -34,10 +34,6 @@ export default function DashboardPage() {
   const to = useAppSelector(selectTo);
   const interval = useAppSelector(selectInterval);
   const timezone = useAppSelector(selectTimezone);
-
-  useEffect(() => {
-    dispatch(closeDrilldown());
-  }, [dispatch, domainId]);
 
   const timeseries = useTimeseries({ domainId, from, to, interval, timezone });
   const browser = useDimension({ domainId, from, to, dimension: "browser", timezone });

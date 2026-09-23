@@ -4,37 +4,27 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { authClient } from "@/lib/betterAuth/auth-client"
 import { AppSidebar as AppSidebarBase } from "@workspace/ui/components/main/app-sidebar"
-import { useEffect, useState } from "react"
 
-export function AppSidebarWrapper(props: React.ComponentProps<typeof AppSidebarBase>) {
+type SidebarUser = {
+  name: string
+  email: string
+  image?: string | null
+}
+
+type AppSidebarWrapperProps = Omit<React.ComponentProps<typeof AppSidebarBase>, "user" | "onSignOut" | "LinkComponent"> & { user: SidebarUser }
+
+export function AppSidebarWrapper({ user, ...props }: AppSidebarWrapperProps) {
   const router = useRouter()
-  const { data: session, isPending } = authClient.useSession()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   async function handleSignOut() {
     await authClient.signOut()
     router.push("/auth")
   }
 
-
-  if (!mounted || isPending || !session?.user) {
-    return null
-  }
-
-  const user = {
-    name: session.user.name,
-    email: session.user.email,
-    avatar: session.user.image,
-  }
-
   return (
     <AppSidebarBase
       {...props}
-      user={user}
+      user={{ name: user.name, email: user.email, avatar: user.image as string }}
       onSignOut={handleSignOut}
       LinkComponent={Link}
     />

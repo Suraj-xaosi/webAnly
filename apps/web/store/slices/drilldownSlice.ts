@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { Dimension } from "@/lib/shared/types/analytics";
+import { setDomainId } from "./dashboardSlice";
 
 export interface ActiveDrilldown {
   dimension: Dimension;
@@ -25,6 +26,11 @@ const drilldownSlice = createSlice({
     closeDrilldown(state) {
       state.active = null;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(setDomainId, (state) => {
+      state.active = null;
+    });
   },
 });
 

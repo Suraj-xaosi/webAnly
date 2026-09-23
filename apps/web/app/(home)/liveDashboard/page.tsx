@@ -1,19 +1,19 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { useMemo } from "react"
+import { useAppSelector } from "@/store/hooks"
 import { selectDomainId } from "@/store/slices/dashboardSlice"
-import { closeDrilldown, selectActiveDrilldown } from "@/store/slices/drilldownSlice";
+import { selectActiveDrilldown } from "@/store/slices/drilldownSlice";
 import { useRealtimeTimeseries } from "@/hooks/realtime/useRealtimeTimeseries"
 import { useRealtimeDimension } from "@/hooks/realtime/useRealtimeDimension"
 import { RealtimeProvider } from "@/components/wrapper/RealtimeProvider"
 import { TimeseriesCard } from "@/components/dashCards/timeseriesCard"
 import { DimensionCard } from "@/components/dashCards/dimensionCard"
-import { isActiveDomain } from "../../../lib/Actions/isActiveDomain"
 
 import { Card, CardContent } from "@workspace/ui/components/card"
 import DomainSwitch from "@/components/picker/domainSwitch"
 import { useApiKey } from "@/hooks/useApikey"
+import { useDomainAccess } from "@/hooks/domainCrud/useDomainAcess"
 import type { Dimension } from "@/hooks/analytics/useDimension"
 import { DimensionDrilldownPopup } from "@/components/dashCards/dimensionDrilldownPopup";
 
@@ -24,37 +24,15 @@ function getDateInTimezone(timezone: string) {
 }
 
 export default function LiveDashboardPage() {
-  const dispatch = useAppDispatch()
   const domainId = useAppSelector(selectDomainId)
-  const [isDomainActive, setIsDomainActive] = useState<boolean | null>(null)
-  const [timezone, setTimezone] = useState<string>("UTC")
 
-  useEffect(() => {
-    dispatch(closeDrilldown())
-  }, [dispatch, domainId])
-
-  useEffect(() => {
-    let ignore = false
-
-    async function loadAccess() {
-      if (!domainId) {
-        setIsDomainActive(null)
-        return
-      }
-
-      const result = await isActiveDomain(domainId)
-      if (!ignore) {
-        setIsDomainActive(result.success ? result.data.active : false)
-        setTimezone(result.success ? result.data.timezone : "UTC")
-      }
-    }
-
-    void loadAccess()
-
-    return () => {
-      ignore = true
-    }
-  }, [domainId])
+  const domainAccess = useDomainAccess(domainId)
+  const isDomainActive = !domainId
+    ? null
+    : domainAccess.isError
+      ? false
+      : domainAccess.data?.active ?? null
+  const timezone = domainAccess.data?.timezone ?? "UTC"
 
   const from = useMemo(() => getDateInTimezone(timezone), [timezone])
   const to = from
