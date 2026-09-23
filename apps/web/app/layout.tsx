@@ -1,5 +1,5 @@
 import ReactqueryProvider from "@/lib/providers/ReactqueryProvider"
-import { Geist_Mono, Cinzel, Space_Grotesk, Fraunces, DM_Sans } from "next/font/google"
+import { Geist_Mono, EB_Garamond, Space_Grotesk, Fraunces, DM_Sans } from "next/font/google
 import "@workspace/ui/globals.css"
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import { cn } from "@workspace/ui/lib/utils"
@@ -9,7 +9,7 @@ import { THEME_NAMES } from "@/store/slices/themeSlice"
 const bodyFont = DM_Sans({ subsets: ["latin"], variable: "--font-body" })
 const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
 
-const cinzel = Cinzel({ subsets: ["latin"], variable: "--font-cinzel" })
+const ebGaramond = EB_Garamond({ subsets: ["latin"], variable: "--font-eb-garamond" })
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" })
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" })
 
@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         "antialiased",
         fontMono.variable,
         bodyFont.variable,
-        cinzel.variable,
+        ebGaramond.variable,
         spaceGrotesk.variable,
         fraunces.variable,
         "font-sans"
