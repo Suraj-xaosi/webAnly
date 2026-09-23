@@ -17,7 +17,7 @@ function renderInlineMarkdown(text: string) {
     if (token.startsWith("**") && token.endsWith("**")) {
       return <strong key={index}>{token.slice(2, -2)}</strong>
     }
-    const link = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/)
+    const link = token.match(/^\[([^\]]+)\]\(([^)]+)\)\$/)
     if (link) {
       return <a key={index} href={link[2]} target="_blank" rel="noreferrer" className="underline underline-offset-2">{link[1]}</a>
     }
@@ -44,9 +44,9 @@ function AssistantMessage({ text }: { text: string }) {
       return
     }
 
-    const heading = line.match(/^#{1,3}\s+(.+)$/)
-    const bullet = line.match(/^\s*[-*]\s+(.+)$/)
-    const numbered = line.match(/^\s*\d+[.)]\s+(.+)$/)
+    const heading = line.match(/^#{1,3}\s+(.+)\$/)
+    const bullet = line.match(/^\s*[-*]\s+(.+)\$/)
+    const numbered = line.match(/^\s*\d+[.)]\s+(.+)\$/)
     if (heading) {
       blocks.push(<p key={index} className="mt-3 font-semibold first:mt-0">{renderInlineMarkdown(heading[1] ?? "")}</p>)
     } else if (bullet || numbered) {
@@ -87,7 +87,8 @@ export function AnalyticsChatWidget({ domainId }: { domainId: string }) {
         <p className="text-sm font-semibold">Traffic Assistant</p>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 [scrollbar-width:thin]">
+      {/* Styled custom scrollbar applies here */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40">
         {messages.length === 0 && (
           <div className="mt-10 text-center text-sm text-muted-foreground">Ask &quot;How was traffic last week?&quot;</div>
         )}
