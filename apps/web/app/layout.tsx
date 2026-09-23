@@ -1,5 +1,5 @@
 import ReactqueryProvider from "@/lib/providers/ReactqueryProvider"
-import { Geist_Mono, EB_Garamond, Space_Grotesk, Fraunces, DM_Sans } from "next/font/google
+import { Geist_Mono, EB_Garamond, Space_Grotesk, Fraunces, DM_Sans } from "next/font/google"
 import "@workspace/ui/globals.css"
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import { cn } from "@workspace/ui/lib/utils"
