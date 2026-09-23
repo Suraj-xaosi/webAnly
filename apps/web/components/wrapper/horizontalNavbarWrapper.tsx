@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import { HorizontalNavbar } from "@workspace/ui/components/main/horizontalNavbar"
 import { ThemeSwitcher } from "@/components/theme/theme-switcher"
 import NotificationBell from "@/components/notify/notificationBell"
-import { authClient } from "@/lib/auth-client"
+import { authClient } from "@/lib/betterAuth/auth-client"
 
 export function HorizontalNavbarWrapper() {
     const { data: session } = authClient.useSession()

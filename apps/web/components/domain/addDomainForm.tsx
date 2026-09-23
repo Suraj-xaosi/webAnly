@@ -49,10 +49,8 @@ export function AddDomainForm() {
 
   useEffect(() => {
     const browserTimezone = getBrowserTimezone()
-    if (!defaultTimezone || defaultTimezone === "UTC" || !options.includes(defaultTimezone)) {
-      setDefaultTimezone(browserTimezone)
-    }
-  }, [defaultTimezone, options])
+    if (options.includes(browserTimezone)) setDefaultTimezone(browserTimezone)
+  }, [options])
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()

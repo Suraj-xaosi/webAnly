@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { authClient } from "@/lib/auth-client"
+import { authClient } from "@/lib/betterAuth/auth-client"
 import { AppSidebar as AppSidebarBase } from "@workspace/ui/components/main/app-sidebar"
 import { useEffect, useState } from "react"
 

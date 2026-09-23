@@ -2,7 +2,7 @@
 "use client";
 
 import { Bell } from "lucide-react";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useNotifications } from "@/hooks/notification/useNotifications";
 import { NotificationList } from "./notificationList";
 import { Button } from "@workspace/ui/components/button";
 import {

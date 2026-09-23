@@ -1,5 +1,5 @@
 "use server"
-import { auth } from "@/lib/auth"
+import { auth } from "@/lib/betterAuth/auth"
 import { headers } from "next/headers"
 import { actionErr, actionOk, type ActionResult } from "@/lib/shared/types/actionResult"
 

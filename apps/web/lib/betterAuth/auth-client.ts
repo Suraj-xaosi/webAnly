@@ -1,5 +1,5 @@
 import { createAuthClient } from "better-auth/react"
-import { publicEnv } from "./env/client"
+import { publicEnv } from "../env/client"
 
 
 export const authClient:any = createAuthClient({

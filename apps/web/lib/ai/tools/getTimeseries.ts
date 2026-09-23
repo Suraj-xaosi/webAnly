@@ -1,7 +1,7 @@
 import "server-only"
 import { tool } from "@langchain/core/tools"
 import { z } from "zod"
-import { fetchTimeseriesData } from "@/lib/shared/functions/fetchTimeseriesData"
+import { fetchTimeseriesData } from "@/lib/shared/DBfunctions/fetchTimeseriesData"
 
 export function createTimeseriesTool(domainId: string, timezone: string) {
   return tool(

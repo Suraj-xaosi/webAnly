@@ -1,7 +1,7 @@
 import "server-only"
 import { prisma, Prisma } from "@repo/db"
-import { DIMENSION_COL_MAP } from "./analyticsConstants"
-import { getAnalyticsDateBounds, readCachedResponse, writeCachedResponse } from "./analyticsRouteUtils"
+import { DIMENSION_COL_MAP } from "./helper/analyticsConstants"
+import { getAnalyticsDateBounds, readCachedResponse, writeCachedResponse } from "./helper/analyticsRouteUtils"
 import type { Dimension, DimensionResponse } from "@/lib/shared/types/analytics"
 
 export async function fetchDimensionData(

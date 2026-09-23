@@ -13,6 +13,7 @@ export interface DashboardState {
   to:       string;
   interval: Interval;
   timezone?: string;
+  timezoneResolved: boolean;
 }
 
 
@@ -22,6 +23,7 @@ const initialState: DashboardState = {
   to:       todayInZone("UTC"),
   interval: "hour",
   timezone: "UTC",
+  timezoneResolved: false,
 };
 
 const dashboardSlice = createSlice({
@@ -42,6 +44,7 @@ const dashboardSlice = createSlice({
     },
     setTimezone(state, action: PayloadAction<string>) {
       state.timezone = action.payload;
+      state.timezoneResolved = true;
     },
 
   },
@@ -57,4 +60,5 @@ export const selectFrom      = (state: RootState) => state.dashboard.from;
 export const selectTo        = (state: RootState) => state.dashboard.to;
 export const selectInterval  = (state: RootState) => state.dashboard.interval;
 export const selectTimezone  = (state: RootState) => state.dashboard.timezone;
+export const selectTimezoneResolved = (state: RootState) => state.dashboard.timezoneResolved;
 export const selectDashboard = (state: RootState) => state.dashboard;

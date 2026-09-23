@@ -1,6 +1,6 @@
 import "server-only"
 import { prisma } from "@repo/db"
-import { getAnalyticsDateBounds, readCachedResponse, writeCachedResponse } from "./analyticsRouteUtils"
+import { getAnalyticsDateBounds, readCachedResponse, writeCachedResponse } from "./helper/analyticsRouteUtils"
 import type { FlowEntry, FlowResponse } from "@/lib/shared/types/analytics"
 
 export async function fetchFlowData(

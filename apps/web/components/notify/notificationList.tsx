@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useNotifications, useMarkAsRead, useMarkAllAsRead } from "@/hooks/useNotifications";
+import { useNotifications, useMarkAsRead, useMarkAllAsRead } from "@/hooks/notification/useNotifications";
 import { NotificationItem } from "./notificationItem";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import { Button } from "@workspace/ui/components/button";

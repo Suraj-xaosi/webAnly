@@ -1,7 +1,7 @@
 import "server-only"
 import { tool } from "@langchain/core/tools"
 import { z } from "zod"
-import { fetchExitPagesData } from "@/lib/shared/functions/fetchExitPagesdata"
+import { fetchExitPagesData } from "@/lib/shared/DBfunctions/fetchExitPagesdata"
 
 const EXIT_PAGES_RESULT_LIMIT = 30
 

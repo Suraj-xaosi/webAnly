@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { useDomain } from "@/hooks/domainCrud/useDomain"
 import { useDeleteDomain } from "@/hooks/domainCrud/useDeleteDomain"
-import { usePricing } from "@/hooks/usePricing"
-import { useRazorpayCheckout } from "@/hooks/useRazorpayCheckout"
+import { usePricing } from "@/hooks/razorpayIntegration/usePricing"
+import { useRazorpayCheckout } from "@/hooks/razorpayIntegration/useRazorpayCheckout"
 import { Button } from "@workspace/ui/components/button"
 import {
   Card,

@@ -1,7 +1,7 @@
 
 "use client"
 
-import { authClient } from "@/lib/auth-client"
+import { authClient } from "@/lib/betterAuth/auth-client"
 import { Button } from "@workspace/ui/components/button"
 import { Badge } from "@workspace/ui/components/badge"
 import { Separator } from "@workspace/ui/components/separator"

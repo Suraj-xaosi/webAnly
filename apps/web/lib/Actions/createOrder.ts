@@ -3,7 +3,7 @@
 import { prisma, type PaymentPurpose } from "@repo/db"
 import { requireSession } from "./requireSession"
 import { getPricing } from "./getPricing"
-import { razorpay } from "@/lib/razorPay"
+import { razorpay } from "@/lib/razorpayIntegration/razorPay"
 import { env } from "@/lib/env/server"
 import { actionErr, actionOk } from "@/lib/shared/types/actionResult"
 import { findOwnedDomain } from "./findOwnedDomain"

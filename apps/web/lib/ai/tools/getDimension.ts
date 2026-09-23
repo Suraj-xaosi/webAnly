@@ -1,7 +1,7 @@
 import "server-only"
 import { tool } from "@langchain/core/tools"
 import { z } from "zod"
-import { fetchDimensionData } from "@/lib/shared/functions/fetchDimensionData"
+import { fetchDimensionData } from "@/lib/shared/DBfunctions/fetchDimensionData"
 import type { Dimension } from "@/lib/shared/types/analytics"
 
 // Each dimension has a practical result limit: referrers and cities can be

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { VALID_INTERVALS, type Interval } from "@/lib/shared/functions/analyticsConstants";
-import { validateDateParams } from "@/lib/shared/functions/TimeFunctions";
-import { fetchTimeseriesData } from "@/lib/shared/functions/fetchTimeseriesData";
-import { analyticsErrorResponse } from "@/lib/shared/functions/analyticsRouteUtils";
+import { VALID_INTERVALS, type Interval } from "@/lib/shared/DBfunctions/helper/analyticsConstants";
+import { validateDateParams } from "@/lib/shared/DBfunctions/helper/TimeFunctions";
+import { fetchTimeseriesData } from "@/lib/shared/DBfunctions/fetchTimeseriesData";
+import { analyticsErrorResponse } from "@/lib/shared/DBfunctions/helper/analyticsRouteUtils";
 
 export async function GET(req: NextRequest) {
   try {

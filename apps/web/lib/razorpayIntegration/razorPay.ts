@@ -1,5 +1,5 @@
 import Razorpay from "razorpay"
-import { env } from "./env/server"
+import { env } from "../env/server"
 
 // Single shared Razorpay client instance.
 // Reused by createOrder.ts (order creation) and later the webhook handler.

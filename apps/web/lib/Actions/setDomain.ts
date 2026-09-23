@@ -52,7 +52,7 @@ export async function setDomain(domainName: string, expectedVisitors: number, de
 
     const domain = await prisma.domain.create({
       data: {
-        domainName: `fun${sanitizedDomain}${threeDigitUid}`,
+        domainName: `${sanitizedDomain}${threeDigitUid}`,
         userId: user.id,
         apikey: crypto.randomUUID(),
         type: "FREE",

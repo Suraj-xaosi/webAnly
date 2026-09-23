@@ -2,7 +2,12 @@
 
 import { Clock3 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { selectTimezone, setDateRange, setTimezone } from "@/store/slices/dashboardSlice";
+import {
+  selectTimezone,
+  selectTimezoneResolved,
+  setDateRange,
+  setTimezone,
+} from "@/store/slices/dashboardSlice";
 import {
   Select,
   SelectContent,
@@ -67,15 +72,17 @@ function subscribeToTimezoneOptions() {
 export default function TimezonePicker() {
   const dispatch = useAppDispatch();
   const timezone = useAppSelector(selectTimezone) ?? "UTC";
+  const resolved = useAppSelector(selectTimezoneResolved);
   const options = useSyncExternalStore(
     subscribeToTimezoneOptions,
     getClientTimezoneOptions,
     () => COMMON_TIMEZONES
   );
 
-useEffect(() => {
-  const browserTimezone = getBrowserTimezone();
-  if (!timezone || timezone === "UTC") {
+  useEffect(() => {
+    if (resolved) return;
+
+    const browserTimezone = getBrowserTimezone();
     dispatch(setTimezone(browserTimezone));
 
     if (browserTimezone !== "UTC") {
@@ -87,8 +94,7 @@ useEffect(() => {
         interval: "day",
       }));
     }
-  }
-}, [dispatch, timezone]);
+  }, [dispatch, resolved]);
 
   return (
     <div className="flex items-center gap-2">

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateDateParams } from "@/lib/shared/functions/TimeFunctions";
-import { fetchExitPagesData } from "@/lib/shared/functions/fetchExitPagesdata";
-import { analyticsErrorResponse } from "@/lib/shared/functions/analyticsRouteUtils";
+import { validateDateParams } from "@/lib/shared/DBfunctions/helper/TimeFunctions";
+import { fetchExitPagesData } from "@/lib/shared/DBfunctions/fetchExitPagesdata";
+import { analyticsErrorResponse } from "@/lib/shared/DBfunctions/helper/analyticsRouteUtils";
 
 export async function GET(req: NextRequest) {
   try {

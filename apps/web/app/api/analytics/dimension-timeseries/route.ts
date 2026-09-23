@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DIMENSION_COL_MAP, VALID_INTERVALS, type Interval } from "@/lib/shared/functions/analyticsConstants";
+import { DIMENSION_COL_MAP, VALID_INTERVALS, type Interval } from "@/lib/shared/DBfunctions/helper/analyticsConstants";
 import type { Dimension } from "@/lib/shared/types/analytics";
-import { validateDateParams } from "@/lib/shared/functions/TimeFunctions";
-import { fetchDimensionTimeseriesData } from "@/lib/shared/functions/fetchDimensionTimeseriesData";
-import { analyticsErrorResponse } from "@/lib/shared/functions/analyticsRouteUtils";
+import { validateDateParams } from "@/lib/shared/DBfunctions/helper/TimeFunctions";
+import { fetchDimensionTimeseriesData } from "@/lib/shared/DBfunctions/fetchDimensionTimeseriesData";
+import { analyticsErrorResponse } from "@/lib/shared/DBfunctions/helper/analyticsRouteUtils";
 
 export async function GET(req: NextRequest) {
   try {

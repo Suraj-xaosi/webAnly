@@ -1,6 +1,6 @@
 
 import { redirect } from "next/navigation"
-import { auth } from "@/lib/auth"
+import { auth } from "@/lib/betterAuth/auth"
 import { headers } from "next/headers"
 import { SidebarProvider, SidebarInset } from "@workspace/ui/components/sidebar"
 import { AppSidebarWrapper } from "../../components/wrapper/sidebarWrapper"
