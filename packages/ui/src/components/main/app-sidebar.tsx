@@ -18,7 +18,7 @@ import { GalleryVerticalEndIcon, AudioLinesIcon, TerminalIcon, TerminalSquareIco
 // This is sample data.
 const data = {
   brand: {
-    name: "webanly",
+    name: "WebAnly",
     avatar: "/avatars/shadcn.jpg",
   },
   teams: [
@@ -40,23 +40,23 @@ const data = {
   ],
   navMain: [
     {
-      title: "domain",
+      title: "Domain",
       url: "/domain",
       icon: <TerminalSquareIcon />,
       isActive: true,
       items: [
-        { title: "domains & scripts", url: "/domain#scripts" },
-        { title: "domain - apikey", url: "/domain#apikey" },
-        { title: "add & update domain", url: "/domain#add" },
+        { title: "Domains & Scripts", url: "/domain#scripts" },
+        { title: "Domain - Apikey", url: "/domain#apikey" },
+        { title: "Add Domain", url: "/domain#add" },
       ],
     },
     {
-      title: "dashboard",
+      title: "Dashboard",
       url: "/dashboard",
       icon: <BotIcon />,
       items: [
-        { title: "analytics dashboard", url: "/dashboard" },
-        { title: "Live dashboard", url: "/liveDashboard" },
+        { title: "Analytics Dashboard", url: "/dashboard" },
+        { title: "Live Dashboard", url: "/liveDashboard" },
         
       ],
     },
