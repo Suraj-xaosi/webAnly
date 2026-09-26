@@ -1,31 +1,51 @@
 import type { FlowEntry, FlowResponse } from "@/lib/shared/types/analytics"
 
 export type FlowMetric = "views" | "visitors"
+export type FlowNodeRole = "incoming" | "selected" | "outgoing" | "exit"
+
+type FlowMetrics = Pick<FlowEntry, "views" | "visitors">
 
 export interface SankeyChartData {
-  nodes: { name: string }[]
+  nodes: { name: string; role: FlowNodeRole; amount: number | null }[]
   links: { source: number; target: number; value: number }[]
 }
 
 type FlowNode = {
   id: string
   name: string
+  role: FlowNodeRole
+  amount: number | null
 }
 
-function valueForMetric(entry: FlowEntry, metric: FlowMetric): number {
+function valueForMetric(entry: FlowMetrics, metric: FlowMetric): number {
   return metric === "views" ? entry.views : entry.visitors
 }
 
-function createFlowNodes(data: FlowResponse): FlowNode[] {
+function createFlowNodes(
+  data: FlowResponse,
+  metric: FlowMetric,
+  selectedPageMetrics?: FlowMetrics
+): FlowNode[] {
   return [
     ...data.incoming.map((entry, index) => ({
       id: `incoming-${index}`,
       name: entry.name,
+      role: "incoming" as const,
+      amount: valueForMetric(entry, metric),
     })),
-    { id: "selected-page", name: data.page },
+    {
+      id: "selected-page",
+      name: data.page,
+      role: "selected" as const,
+      amount: selectedPageMetrics
+        ? valueForMetric(selectedPageMetrics, metric)
+        : null,
+    },
     ...data.outgoing.map((entry, index) => ({
       id: `outgoing-${index}`,
       name: entry.name,
+      role: entry.type === "exit" ? ("exit" as const) : ("outgoing" as const),
+      amount: valueForMetric(entry, metric),
     })),
   ]
 }
@@ -58,21 +78,32 @@ function createOutgoingLinks(
 
 export function buildPageFlowChartData(
   data: FlowResponse | undefined,
-  metric: FlowMetric
+  metric: FlowMetric,
+  selectedPageMetrics?: FlowMetrics
 ): SankeyChartData {
   if (!data || (!data.incoming.length && !data.outgoing.length)) {
     return { nodes: [], links: [] }
   }
 
-  const flowNodes = createFlowNodes(data)
+  const flowNodes = createFlowNodes(data, metric, selectedPageMetrics)
   const nodeIndex = new Map(flowNodes.map((node, index) => [node.id, index]))
   const selectedPageIndex = nodeIndex.get("selected-page") ?? 0
 
   return {
-    nodes: flowNodes.map((node) => ({ name: node.name })),
+    nodes: flowNodes.map(({ name, role, amount }) => ({ name, role, amount })),
     links: [
-      ...createIncomingLinks(data.incoming, nodeIndex, selectedPageIndex, metric),
-      ...createOutgoingLinks(data.outgoing, nodeIndex, selectedPageIndex, metric),
+      ...createIncomingLinks(
+        data.incoming,
+        nodeIndex,
+        selectedPageIndex,
+        metric
+      ),
+      ...createOutgoingLinks(
+        data.outgoing,
+        nodeIndex,
+        selectedPageIndex,
+        metric
+      ),
     ],
   }
 }

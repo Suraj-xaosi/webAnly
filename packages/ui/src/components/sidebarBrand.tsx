@@ -9,7 +9,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@workspace/ui/components/sidebar"
 
 export function SidebarBrand({
@@ -20,8 +19,6 @@ export function SidebarBrand({
     avatar: string
   }
 }) {
-  const { isMobile } = useSidebar()
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>

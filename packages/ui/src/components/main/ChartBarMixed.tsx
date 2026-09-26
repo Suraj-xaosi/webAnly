@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Bar, BarChart, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, XAxis, YAxis, type BarRectangleItem } from "recharts"
 import { CardContent } from "@workspace/ui/components/card"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -62,6 +62,21 @@ function formatDwell(seconds: number): string {
   return `${m}m ${s}s`
 }
 
+function getBarName(barData: BarRectangleItem): string | undefined {
+  const payload: unknown = barData.payload
+
+  if (
+    typeof payload === "object" &&
+    payload !== null &&
+    "name" in payload &&
+    typeof payload.name === "string"
+  ) {
+    return payload.name
+  }
+
+  return undefined
+}
+
 type SortKey = keyof Omit<DimensionPoint, "name"> | "name"
 
 export function ChartBarMixed({ data, dataKey, title = "Details",onSelectItem  }: BarChartProps) {
@@ -112,7 +127,10 @@ export function ChartBarMixed({ data, dataKey, title = "Details",onSelectItem  }
             cursor={onSelectItem ? "pointer" : undefined}
             onClick={
               onSelectItem
-                ? (barData: any) => onSelectItem(barData?.name ?? barData?.payload?.name)
+                ? (barData: BarRectangleItem) => {
+                    const name = getBarName(barData)
+                    if (name !== undefined) onSelectItem(name)
+                  }
                 : undefined
             }
           />

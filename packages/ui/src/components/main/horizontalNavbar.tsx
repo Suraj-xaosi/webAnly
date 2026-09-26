@@ -3,7 +3,7 @@
 
 import * as React from "react"
 import { useTheme } from "next-themes"
-import { Bell, Sun, Moon, Settings, Search } from "lucide-react"
+import { Sun, Moon, Settings, Search } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar"
 import { SidebarTrigger } from "@workspace/ui/components/sidebar"

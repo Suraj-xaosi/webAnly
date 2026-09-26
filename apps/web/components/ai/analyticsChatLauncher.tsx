@@ -1,12 +1,23 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { useState } from "react"
 import { SparklesIcon } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import { Dialog, DialogContent, DialogTrigger } from "@workspace/ui/components/dialog"
 import { useAppSelector } from "@/store/hooks"
 import { selectDomainId } from "@/store/slices/dashboardSlice"
-import { AnalyticsChatWidget } from "./analyticsChatWidget"
+
+const AnalyticsChatWidget = dynamic(
+  () => import("./analyticsChatWidget").then((module) => module.AnalyticsChatWidget),
+  {
+    loading: () => (
+      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+        Loading assistant...
+      </div>
+    ),
+  }
+)
 
 export function AnalyticsChatLauncher() {
   const domainId = useAppSelector(selectDomainId)

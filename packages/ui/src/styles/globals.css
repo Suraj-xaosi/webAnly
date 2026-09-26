@@ -47,7 +47,7 @@
     --radius-2xl: calc(var(--radius) * 1.8);
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
-    --font-sans: var(--font-body);
+    --font-sans: var(--font-body-family);
 }
 
 :root,
@@ -76,7 +76,8 @@
     --chart-4: #C9A7EB;
     --chart-5: #FF9A76;
     --radius: 0.9rem;
-    --font-heading-family: var(--font-eb-garamond);
+    --font-heading-family: var(--font-cinzel);
+    --font-body-family: var(--font-cormorant-garamond);
     --sidebar: #FFF9F7;
     --sidebar-foreground: #4A3B3A;
     --sidebar-primary: #FF6F91;
@@ -148,6 +149,7 @@
     --chart-5: #C9A2E0;
     --radius: 0.9rem;
     --font-heading-family: var(--font-fraunces);
+    --font-body-family: var(--font-cormorant-garamond);
     --sidebar: #FFFDFA;
     --sidebar-foreground: #4A3B3A;
     --sidebar-primary: #F4A6C1;
@@ -218,6 +220,7 @@
     --chart-5: #E76F51;
     --radius: 0.9rem;
     --font-heading-family: var(--font-fraunces);
+    --font-body-family: var(--font-dm-sans);
     --sidebar: #EAF1EC;
     --sidebar-foreground: #223140;
     --sidebar-primary: #2E8BC0;
@@ -289,6 +292,7 @@
     --chart-5: #7B95D1;
     --radius: 0.9rem;
     --font-heading-family: var(--font-space-grotesk);
+    --font-body-family: var(--font-dm-sans);
     --sidebar: #FFFFFF;
     --sidebar-foreground: #3A3540;
     --sidebar-primary: #B8A6E0;
@@ -359,6 +363,7 @@
     --chart-5: #7EB8D9;
     --radius: 0.9rem;
     --font-heading-family: var(--font-fraunces);
+    --font-body-family: var(--font-cormorant-garamond);
     --sidebar: #FFFDFA;
     --sidebar-foreground: #3A2E28;
     --sidebar-primary: #F0733E;
@@ -409,5 +414,9 @@
     }
   body {
     @apply bg-background text-foreground;
+        font-family: var(--font-body-family);
+        }
+    :is(h1, h2, h3, h4, h5, h6) {
+        font-family: var(--font-heading-family);
     }
 }

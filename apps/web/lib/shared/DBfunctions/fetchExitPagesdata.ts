@@ -28,6 +28,7 @@ export async function fetchExitPagesData(
       AND "visitedAt"::timestamptz >= ${lowerBoundSql}
       AND "visitedAt"::timestamptz < ${upperBoundSql}
     GROUP BY 1
+    HAVING COUNT(*) FILTER (WHERE "exitType" = 'pagehide') > 0
     ORDER BY exits DESC
   `
 

@@ -109,7 +109,7 @@ model PricingConfig {
 //   DEACTIVATED → event collection OFF, dashboard OFF
 //                 reversed by: payment (reactivate or extend)
 
-// Soft delete via deletedAt — never hard delete 
+
 
 enum DomainType {
   FREE

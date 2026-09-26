@@ -23,7 +23,13 @@ export async function fetchFlowData(
     visitors: number
   }
 
-  const incomingRows = await prisma.$queryRaw<Row[]>`
+  type ExitRow = {
+    views: number
+    visitors: number
+  }
+
+  const [incomingRows, outgoingRows, exitRows] = await Promise.all([
+    prisma.$queryRaw<Row[]>`
     SELECT
       NULLIF("previousPage", '') AS name,
       COUNT(*)::int AS views,
@@ -36,9 +42,9 @@ export async function fetchFlowData(
     GROUP BY 1
     ORDER BY views DESC, visitors DESC
     LIMIT 10
-  `
+    `,
 
-  const outgoingRows = await prisma.$queryRaw<Row[]>`
+    prisma.$queryRaw<Row[]>`
     SELECT
       "page" AS name,
       COUNT(*)::int AS views,
@@ -51,11 +57,10 @@ export async function fetchFlowData(
     GROUP BY 1
     ORDER BY views DESC, visitors DESC
     LIMIT 10
-  `
+    `,
 
-  const exitRows = await prisma.$queryRaw<Row[]>`
+    prisma.$queryRaw<ExitRow[]>`
     SELECT
-      "page" AS name,
       COUNT(*)::int AS views,
       COUNT(DISTINCT "visitorId")::int AS visitors
     FROM "page_visit"
@@ -64,8 +69,8 @@ export async function fetchFlowData(
       AND "exitType" = 'pagehide'
       AND "visitedAt"::timestamptz >= ${lowerBoundSql}
       AND "visitedAt"::timestamptz < ${upperBoundSql}
-    GROUP BY 1
-  `
+    `,
+  ])
 
   function foldRows(rows: Row[], type: "page" | "source", otherName: string): FlowEntry[] {
     const entries: FlowEntry[] = rows.map((row) => ({
