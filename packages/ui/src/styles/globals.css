@@ -482,13 +482,27 @@
 .page-network-node-circle {
     stroke: var(--card);
     stroke-width: 3px;
-    transition: filter 150ms ease, transform 150ms ease;
+    transition: filter 150ms ease;
 }
 
 .page-network-node:hover .page-network-node-circle,
 .page-network-node:focus-visible .page-network-node-circle {
     filter: drop-shadow(0 4px 8px color-mix(in srgb, var(--foreground) 24%, transparent));
+}
+
+.page-network-node-visual {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 150ms ease;
+}
+
+.page-network-node:hover .page-network-node-visual,
+.page-network-node:focus-visible .page-network-node-visual {
     transform: scale(1.08);
+}
+
+.page-network-node-hit {
+    pointer-events: all;
 }
 
 .page-network-node-mark {
@@ -527,7 +541,8 @@
         transform: none;
     }
 
-    .page-network-node-circle {
+    .page-network-node-circle,
+    .page-network-node-visual {
         transition: none;
     }
 }

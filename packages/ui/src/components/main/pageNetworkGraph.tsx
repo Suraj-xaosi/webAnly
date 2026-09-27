@@ -332,11 +332,16 @@ export function PageNetworkGraph({
         onPointerLeave={() => setTooltip(null)}
       >
         {layout.edges.map((edge, index) => {
-          const metricValue = metric === "views" ? edge.views : edge.visitors
-          const metricLabel = metric === "views" ? "views" : "visitors"
-          const tooltipLines = [
-            `${metricValue.toLocaleString()} ${metricLabel}`,
-          ]
+          const tooltipLines =
+            metric === "views"
+              ? [
+                  `Views: ${edge.views.toLocaleString()}`,
+                  `Visitors: ${edge.visitors.toLocaleString()}`,
+                ]
+              : [
+                  `Visitors: ${edge.visitors.toLocaleString()}`,
+                  `Views: ${edge.views.toLocaleString()}`,
+                ]
           const source =
             nodes.find((node) => node.id === edge.source)?.label ?? edge.source
           const target =
@@ -392,40 +397,47 @@ export function PageNetworkGraph({
             style={{ animationDelay: `${Math.min(index * 35, 420)}ms` }}
             tabIndex={0}
             role="img"
-            aria-label={`${node.label}: ${node.views.toLocaleString()} views, ${node.visitors.toLocaleString()} visitors, ${node.exits.toLocaleString()} exits`}
+            aria-label={`${node.label}: ${node.exits.toLocaleString()} exits`}
             onPointerEnter={(event) =>
               showTooltip(event.currentTarget, node.label, [
-                `${node.views.toLocaleString()} views`,
-                `${node.visitors.toLocaleString()} visitors`,
-                `${node.exits.toLocaleString()} exits`,
+                `Exits: ${node.exits.toLocaleString()}`,
               ])
             }
             onFocus={(event) =>
               showTooltip(event.currentTarget, node.label, [
-                `${node.views.toLocaleString()} views`,
-                `${node.visitors.toLocaleString()} visitors`,
-                `${node.exits.toLocaleString()} exits`,
+                `Exits: ${node.exits.toLocaleString()}`,
               ])
             }
             onBlur={() => setTooltip(null)}
           >
-            <title>{node.label}</title>
+            <g className="page-network-node-visual">
+              <title>{node.label}</title>
+              <circle
+                className="page-network-node-circle"
+                cx={node.x}
+                cy={node.y}
+                r={NODE_RADIUS}
+                fill={node.color}
+              />
+              <text
+                className="page-network-node-mark"
+                x={node.x}
+                y={node.y}
+                textAnchor="middle"
+                dominantBaseline="central"
+              >
+                {getNodeMark(node.label)}
+              </text>
+            </g>
             <circle
-              className="page-network-node-circle"
+              className="page-network-node-hit"
               cx={node.x}
               cy={node.y}
-              r={NODE_RADIUS}
-              fill={node.color}
+              r={NODE_RADIUS + 14}
+              fill="transparent"
+              pointerEvents="all"
+              aria-hidden="true"
             />
-            <text
-              className="page-network-node-mark"
-              x={node.x}
-              y={node.y}
-              textAnchor="middle"
-              dominantBaseline="central"
-            >
-              {getNodeMark(node.label)}
-            </text>
           </g>
         ))}
       </svg>
@@ -441,6 +453,12 @@ export function PageNetworkGraph({
             <span key={line}>{line}</span>
           ))}
         </div>
+      )}
+
+      {layout.edges.length === 0 && (
+        <p className="px-4 py-3 text-center text-sm text-muted-foreground">
+          No internal page transitions were recorded for this time range.
+        </p>
       )}
     </div>
   )

@@ -11,8 +11,9 @@ import type {
   PageMapResponse,
 } from "@/lib/shared/types/analytics"
 
-const MAX_PAGE_MAP_NODES = 15
+const MAX_PAGE_MAP_NODES = 14
 const MAX_PAGE_MAP_EDGES = 40
+const OTHER_PAGES_NODE_ID = "__all_page_map_other__"
 
 type GraphRow = {
   nodes: PageMapNode[]
@@ -53,23 +54,59 @@ export async function fetchAllPageMapData(
       LIMIT ${MAX_PAGE_MAP_NODES}
     ), ranked_edges AS (
       SELECT
-        visits."previousPage" AS source,
-        visits."page" AS target,
+        CASE
+          WHEN source_page.id IS NULL THEN ${OTHER_PAGES_NODE_ID}
+          ELSE visits."previousPage"
+        END AS source,
+        CASE
+          WHEN target_page.id IS NULL THEN ${OTHER_PAGES_NODE_ID}
+          ELSE visits."page"
+        END AS target,
         COUNT(*)::int AS views,
         COUNT(DISTINCT visits."visitorId")::int AS visitors
       FROM "page_visit" AS visits
-      INNER JOIN selected_pages AS source_page
+      LEFT JOIN selected_pages AS source_page
         ON source_page.id = visits."previousPage"
-      INNER JOIN selected_pages AS target_page
+      LEFT JOIN selected_pages AS target_page
         ON target_page.id = visits."page"
       WHERE visits."domainId" = ${domainId}
         AND visits."previousPage" IS NOT NULL
         AND visits."previousPage" <> ''
+        AND visits."previousPage" <> visits."page"
+        AND (source_page.id IS NOT NULL OR target_page.id IS NOT NULL)
         AND visits."visitedAt"::timestamptz >= ${lowerBoundSql}
         AND visits."visitedAt"::timestamptz < ${upperBoundSql}
-      GROUP BY visits."previousPage", visits."page"
+      GROUP BY 1, 2
       ORDER BY views DESC, visitors DESC, source ASC, target ASC
       LIMIT ${MAX_PAGE_MAP_EDGES}
+    ), other_pages AS (
+      SELECT
+        ${OTHER_PAGES_NODE_ID} AS id,
+        'Other pages' AS label,
+        COUNT(*)::int AS views,
+        COUNT(DISTINCT visits."visitorId")::int AS visitors,
+        COUNT(*) FILTER (WHERE visits."exitType" = 'pagehide')::int AS exits
+      FROM "page_visit" AS visits
+      LEFT JOIN selected_pages AS selected_page
+        ON selected_page.id = visits."page"
+      WHERE visits."domainId" = ${domainId}
+        AND visits."visitedAt"::timestamptz >= ${lowerBoundSql}
+        AND visits."visitedAt"::timestamptz < ${upperBoundSql}
+        AND selected_page.id IS NULL
+        AND visits."page" <> ''
+        AND EXISTS (
+          SELECT 1
+          FROM ranked_edges
+          WHERE source = ${OTHER_PAGES_NODE_ID}
+             OR target = ${OTHER_PAGES_NODE_ID}
+        )
+      HAVING COUNT(*) > 0
+    ), graph_nodes AS (
+      SELECT id, id AS label, views, visitors, exits
+      FROM selected_pages
+      UNION ALL
+      SELECT id, label, views, visitors, exits
+      FROM other_pages
     )
     SELECT
       COALESCE(
@@ -83,7 +120,7 @@ export async function fetchAllPageMapData(
               'exits', exits
             ) ORDER BY views DESC, visitors DESC, id ASC
           )
-          FROM selected_pages
+          FROM graph_nodes
         ),
         '[]'::jsonb
       ) AS nodes,
