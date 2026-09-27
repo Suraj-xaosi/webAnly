@@ -38,6 +38,8 @@ export default function DashboardPage() {
     flowPages,
     activeFlowPage,
     pageFlow,
+    allPageMap,
+    isAllPageMap,
     pagesAreLoading,
     pagesError,
     isPagesError,
@@ -132,6 +134,10 @@ export default function DashboardPage() {
       <PageFlowCard
         data={pageFlow.data}
         selectedPageMetrics={selectedPageMetrics}
+        allPageMapData={allPageMap.data}
+        allPageMapLoading={allPageMap.isLoading}
+        allPageMapError={allPageMap.error}
+        isAllPageMap={isAllPageMap}
         availablePages={flowPages}
         selectedPage={activeFlowPage}
         onPageChange={setSelectedFlowPage}

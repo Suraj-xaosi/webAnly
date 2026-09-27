@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import { Card, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import {
   Select,
@@ -16,7 +16,12 @@ import {
   type SankeyLinkProps,
   type SankeyNodeProps,
 } from "recharts"
+import { PageNetworkGraph } from "@workspace/ui/components/main/pageNetworkGraph"
 import type { FlowResponse, ApiError } from "@/hooks/analytics/useFlow"
+import {
+  ALL_PAGE_MAP_VALUE,
+  type PageMapResponse,
+} from "@/lib/shared/types/analytics"
 import {
   buildPageFlowChartData,
   type FlowMetric,
@@ -26,6 +31,10 @@ import {
 export interface PageFlowCardProps {
   data: FlowResponse | undefined
   selectedPageMetrics?: { views: number; visitors: number }
+  allPageMapData: PageMapResponse | undefined
+  allPageMapLoading: boolean
+  allPageMapError?: ApiError | null
+  isAllPageMap: boolean
   availablePages: string[]
   selectedPage: string
   onPageChange: (page: string) => void
@@ -156,6 +165,10 @@ function renderFlowLink({
 export function PageFlowCard({
   data,
   selectedPageMetrics,
+  allPageMapData,
+  allPageMapLoading,
+  allPageMapError,
+  isAllPageMap,
   availablePages,
   selectedPage,
   onPageChange,
@@ -181,11 +194,103 @@ export function PageFlowCard({
     () => (props: SankeyNodeProps) => renderFlowNode(props, metric),
     [metric]
   )
+  let visualization: ReactNode
+
+  if (isAllPageMap) {
+    if (allPageMapLoading) {
+      visualization = (
+        <div className="px-6 pb-6 text-sm text-muted-foreground">
+          Building page map...
+        </div>
+      )
+    } else if (allPageMapError) {
+      visualization = (
+        <div className="px-6 pb-6 text-sm text-destructive">
+          {allPageMapError.message ??
+            "Unable to load the page map. Please try again."}
+        </div>
+      )
+    } else {
+      visualization = (
+        <PageNetworkGraph
+          nodes={allPageMapData?.nodes ?? []}
+          edges={allPageMapData?.edges ?? []}
+          metric={metric}
+        />
+      )
+    }
+  } else if (isPagesLoading) {
+    visualization = (
+      <div className="px-6 pb-6 text-sm text-muted-foreground">
+        Loading available pages...
+      </div>
+    )
+  } else if (isPagesError) {
+    visualization = (
+      <div className="px-6 pb-6 text-sm text-destructive">
+        {pagesError?.message ??
+          "Unable to load available pages. Please try again."}
+      </div>
+    )
+  } else if (!availablePages.length) {
+    visualization = (
+      <div className="px-6 pb-6 text-sm text-muted-foreground">
+        No pages are available for this time range.
+      </div>
+    )
+  } else if (isLoading) {
+    visualization = (
+      <div className="px-6 pb-6 text-sm text-muted-foreground">
+        Loading page flow...
+      </div>
+    )
+  } else if (isError) {
+    visualization = (
+      <div className="px-6 pb-6 text-sm text-destructive">
+        {error?.message ?? "Unable to load page flow. Please try again."}
+      </div>
+    )
+  } else if (!data || (!data.incoming.length && !data.outgoing.length)) {
+    visualization = (
+      <div className="px-6 pb-6 text-sm text-muted-foreground">
+        No page-flow data for {selectedPage || "this time range"}.
+      </div>
+    )
+  } else {
+    visualization = (
+      <div className="overflow-x-auto px-4 pb-2">
+        <div className="min-w-[760px]" style={{ height: chartHeight }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <Sankey
+              data={chartData}
+              node={nodeRenderer}
+              nodePadding={16}
+              margin={{ top: 40, right: 140, bottom: 12, left: 140 }}
+              nodeWidth={16}
+              link={renderFlowLink}
+              iterations={48}
+            >
+              <Tooltip
+                contentStyle={{
+                  background: "var(--popover)",
+                  border: "1px solid var(--border)",
+                }}
+                formatter={(value) => [
+                  formatMetricValue(Number(value ?? 0)),
+                  metric === "views" ? "Views" : "Visitors",
+                ]}
+              />
+            </Sankey>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <Card className="col-span-full">
       <CardHeader className="flex items-center justify-between gap-2">
-        <CardTitle>Page Flow</CardTitle>
+        <CardTitle>{isAllPageMap ? "All Page Map" : "Page Flow"}</CardTitle>
         <div className="flex items-center gap-2">
           <Select
             value={selectedPage || undefined}
@@ -202,11 +307,16 @@ export function PageFlowCard({
               />
             </SelectTrigger>
             <SelectContent>
-              {availablePages.map((page) => (
-                <SelectItem key={page} value={page}>
-                  {page}
-                </SelectItem>
-              ))}
+              <SelectItem key={ALL_PAGE_MAP_VALUE} value={ALL_PAGE_MAP_VALUE}>
+                All Page Map
+              </SelectItem>
+              {availablePages
+                .filter((page) => page !== ALL_PAGE_MAP_VALUE)
+                .map((page) => (
+                  <SelectItem key={page} value={page}>
+                    {page}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
 
@@ -228,78 +338,29 @@ export function PageFlowCard({
         </div>
       </CardHeader>
 
-      {isPagesLoading ? (
-        <div className="px-6 pb-6 text-sm text-muted-foreground">
-          Loading available pages...
-        </div>
-      ) : isPagesError ? (
-        <div className="px-6 pb-6 text-sm text-destructive">
-          {pagesError?.message ??
-            "Unable to load available pages. Please try again."}
-        </div>
-      ) : !availablePages.length ? (
-        <div className="px-6 pb-6 text-sm text-muted-foreground">
-          No pages are available for this time range.
-        </div>
-      ) : isLoading ? (
-        <div className="px-6 pb-6 text-sm text-muted-foreground">
-          Loading page flow...
-        </div>
-      ) : isError ? (
-        <div className="px-6 pb-6 text-sm text-destructive">
-          {error?.message ?? "Unable to load page flow. Please try again."}
-        </div>
-      ) : !data || (!data.incoming.length && !data.outgoing.length) ? (
-        <div className="px-6 pb-6 text-sm text-muted-foreground">
-          No page-flow data for {selectedPage || "this time range"}.
-        </div>
-      ) : (
-        <div className="overflow-x-auto px-4 pb-2">
-          <div className="min-w-[760px]" style={{ height: chartHeight }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <Sankey
-                data={chartData}
-                node={nodeRenderer}
-                nodePadding={16}
-                margin={{ top: 40, right: 140, bottom: 12, left: 140 }}
-                nodeWidth={16}
-                link={renderFlowLink}
-                iterations={48}
-              >
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--popover)",
-                    border: "1px solid var(--border)",
-                  }}
-                  formatter={(value) => [
-                    formatMetricValue(Number(value ?? 0)),
-                    metric === "views" ? "Views" : "Visitors",
-                  ]}
-                />
-              </Sankey>
-            </ResponsiveContainer>
-          </div>
+      {visualization}
+
+      {!isAllPageMap && (
+        <div
+          className="flex flex-wrap gap-x-5 gap-y-2 px-6 pb-3 text-xs text-muted-foreground"
+          aria-label="Page flow categories"
+        >
+          {FLOW_LEGEND.map(({ role, label }) => (
+            <span key={role} className="inline-flex items-center gap-1.5">
+              <span
+                className="size-2 rounded-full"
+                style={{ backgroundColor: FLOW_COLORS[role] }}
+              />
+              {label}
+            </span>
+          ))}
         </div>
       )}
 
-      <div
-        className="flex flex-wrap gap-x-5 gap-y-2 px-6 pb-3 text-xs text-muted-foreground"
-        aria-label="Page flow categories"
-      >
-        {FLOW_LEGEND.map(({ role, label }) => (
-          <span key={role} className="inline-flex items-center gap-1.5">
-            <span
-              className="size-2 rounded-full"
-              style={{ backgroundColor: FLOW_COLORS[role] }}
-            />
-            {label}
-          </span>
-        ))}
-      </div>
-
       <div className="px-6 pb-4 text-xs text-muted-foreground">
-        Showing incoming and outgoing transitions for{" "}
-        {selectedPage || "the selected page"}.
+        {isAllPageMap
+          ? "Showing the top pages and their transitions for this time range."
+          : `Showing incoming and outgoing transitions for ${selectedPage || "the selected page"}.`}
       </div>
     </Card>
   )
