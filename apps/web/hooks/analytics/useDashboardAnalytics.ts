@@ -90,19 +90,6 @@ export function useDashboardAnalytics({
   )
 
   const dimensionMap = { browser, country, city, device, os, referrer, page }
-  const dataError = [
-    timeseries,
-    exitPages,
-    browser,
-    country,
-    city,
-    device,
-    os,
-    referrer,
-    page,
-    pageFlow,
-    allPageMap,
-  ].find((result) => result.isError && result.error)?.error
   const setSelectedFlowPageIfAvailable = useCallback(
     (nextPage: string) => {
       if (nextPage === ALL_PAGE_MAP_VALUE || flowPages.includes(nextPage)) {
@@ -125,7 +112,6 @@ export function useDashboardAnalytics({
     pagesAreLoading,
     pagesError: page.error,
     isPagesError: page.isError,
-    dataError,
     setSelectedFlowPage: setSelectedFlowPageIfAvailable,
   }
 }

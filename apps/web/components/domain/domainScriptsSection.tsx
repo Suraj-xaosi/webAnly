@@ -14,8 +14,11 @@ import { CopyIcon, CheckIcon, GlobeIcon } from "lucide-react"
 import { cn } from "@workspace/ui/lib/utils"
 import { publicEnv } from "@/lib/env/client"
 
-const COLLECTOR_SCRIPT_URL = publicEnv.NEXT_PUBLIC_COLLECTOR_SCRIPT_URL || "http://localhost:3000/script.js"
-const COLLECT_API_URL=publicEnv.NEXT_PUBLIC_COLLECT_API_URL||"http://localhost:4000/collect"
+const COLLECTOR_SCRIPT_URL =
+  publicEnv.NEXT_PUBLIC_COLLECTOR_SCRIPT_URL ||
+  "http://localhost:3000/script.js"
+const COLLECT_API_URL =
+  publicEnv.NEXT_PUBLIC_COLLECT_API_URL || "http://localhost:4000/collect"
 function buildNextSnippet(domainName: string, apikey: string) {
   return `<script
   src="${COLLECTOR_SCRIPT_URL}"
@@ -58,13 +61,13 @@ function ScriptBlock({
 
   return (
     <div className="relative">
-      <pre className="rounded-md bg-muted px-4 py-3 text-xs overflow-x-auto font-mono leading-relaxed">
+      <pre className="overflow-x-auto rounded-md bg-muted px-4 py-3 font-mono text-xs leading-relaxed">
         {snippet}
       </pre>
       <Button
         size="sm"
         variant="outline"
-        className="absolute top-2 right-2 gap-1.5 text-xs h-7"
+        className="absolute top-2 right-2 h-7 gap-1.5 text-xs"
         onClick={handleCopy}
       >
         {copied ? (
@@ -84,14 +87,29 @@ function ScriptBlock({
 }
 
 export function DomainScriptsSection() {
-  const { data: domains, isLoading, error } = useDomain()
+  const { data: domains, isLoading, error, refetch } = useDomain()
 
-  if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading domains...</p>
+  if (isLoading && !domains) {
+    return (
+      <p
+        className="text-sm text-muted-foreground"
+        role="status"
+        aria-busy="true"
+      >
+        Loading domains...
+      </p>
+    )
   }
 
-  if (error) {
-    return <p className="text-sm text-destructive">Error: {error.message}</p>
+  if (error && !domains) {
+    return (
+      <div className="grid justify-items-start gap-2" role="alert">
+        <p className="text-sm text-destructive">{error.message}</p>
+        <Button variant="outline" size="sm" onClick={() => void refetch()}>
+          Try again
+        </Button>
+      </div>
+    )
   }
 
   if (!domains || domains.length === 0) {
@@ -104,6 +122,11 @@ export function DomainScriptsSection() {
 
   return (
     <div className="flex flex-col gap-4">
+      {error && (
+        <p className="text-sm text-destructive" role="alert">
+          Could not refresh domains: {error.message}
+        </p>
+      )}
       {domains.map((domain) => {
         const isActive = domain.state === "ACTIVE"
         return (
@@ -114,7 +137,7 @@ export function DomainScriptsSection() {
                 {domain.domainName}
                 <span
                   className={cn(
-                    "ml-auto text-xs px-2 py-0.5 rounded-full",
+                    "ml-auto rounded-full px-2 py-0.5 text-xs",
                     isActive
                       ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                       : "bg-muted text-muted-foreground"
@@ -131,7 +154,8 @@ export function DomainScriptsSection() {
               <div className="flex flex-col gap-2">
                 <p className="text-sm font-medium">Next.js</p>
                 <p className="text-xs text-muted-foreground">
-                  Paste into your site's <code>&lt;head&gt;</code> tag, such as in
+                  Paste into your site&apos;s <code>&lt;head&gt;</code> tag,
+                  such as in
                   <code> layout.tsx</code>.
                 </p>
                 <ScriptBlock

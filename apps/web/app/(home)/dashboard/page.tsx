@@ -7,10 +7,6 @@ import { selectDomainId, selectFrom, selectTo, selectInterval, setDateRange,sele
 import { TimeseriesCard } from "@/components/dashCards/timeseriesCard";
 import { DimensionCard } from "@/components/dashCards/dimensionCard";
 import { DateRangePicker } from "@workspace/ui/components/main/dateRangePicker";
-import {
-  Card,
-  CardContent,
-} from "@workspace/ui/components/card";
 import DomainSwitch from "@/components/picker/domainSwitch";
 import { ExitPageCard } from "@/components/dashCards/exitPageCard";
 import TimezonePicker from "@/components/picker/timezonePicker";
@@ -43,18 +39,11 @@ export default function DashboardPage() {
     pagesAreLoading,
     pagesError,
     isPagesError,
-    dataError,
     setSelectedFlowPage,
   } = useDashboardAnalytics({ domainId, from, to, interval, timezone });
   const selectedPageMetrics = dimensionMap.page.data?.data.find(
     (entry) => entry.name === activeFlowPage
   );
-
-  const errorMessage = dataError
-    ? typeof dataError === "string"
-      ? dataError
-      : dataError.message ?? "Unable to load analytics data. Please try again."
-    : null
 
   return (
     <div className="grid gap-6">
@@ -93,20 +82,12 @@ export default function DashboardPage() {
 
       </div>
 
-      {errorMessage ? (
-        <Card className="border-destructive">
-          <CardContent className="p-6">
-            <p className="text-base font-semibold">Data loading failed</p>
-            <p className="mt-2 text-sm text-muted-foreground">{errorMessage}</p>
-          </CardContent>
-        </Card>
-      ) : null}
-
       <TimeseriesCard
         data={timeseries.data?.data ?? []}
         isLoading={timeseries.isLoading}
         isError={timeseries.isError}
         error={timeseries.error}
+        onRetry={timeseries.refetch}
       />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -115,6 +96,7 @@ export default function DashboardPage() {
           isLoading={exitPages.isLoading}
           isError={exitPages.isError}
           error={exitPages.error}
+          onRetry={exitPages.refetch}
         />
         {dimensions.map((dimension) => {
           const result = dimensionMap[dimension];
@@ -126,6 +108,7 @@ export default function DashboardPage() {
               isLoading={result.isLoading}
               isError={result.isError}
               error={result.error}
+              onRetry={result.refetch}
             />
           );
         })}
@@ -137,6 +120,7 @@ export default function DashboardPage() {
         allPageMapData={allPageMap.data}
         allPageMapLoading={allPageMap.isLoading}
         allPageMapError={allPageMap.error}
+        onRetryAllPageMap={allPageMap.refetch}
         isAllPageMap={isAllPageMap}
         availablePages={flowPages}
         selectedPage={activeFlowPage}
@@ -144,9 +128,11 @@ export default function DashboardPage() {
         isPagesLoading={pagesAreLoading}
         isPagesError={isPagesError}
         pagesError={pagesError}
+        onRetryPages={dimensionMap.page.refetch}
         isLoading={pageFlow.isLoading}
         isError={pageFlow.isError}
         error={pageFlow.error}
+        onRetryFlow={pageFlow.refetch}
       />
 
           {activeDrilldown && !activeDrilldown.liveMode && <DimensionDrilldownPopup />}

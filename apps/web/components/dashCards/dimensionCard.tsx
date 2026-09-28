@@ -27,6 +27,7 @@ export interface DimensionCardProps {
   error?: ApiError | null;
   dimension: Dimension;
   isLive?: boolean;
+  onRetry?: () => void;
 }
 
 const METRIC_OPTIONS: { value: DataKey; label: string }[] = [
@@ -36,12 +37,12 @@ const METRIC_OPTIONS: { value: DataKey; label: string }[] = [
   { value: "viewsPerVisitor", label: "Views per Visitor" },
 ];
 
-export const DimensionCard = memo(function DimensionCard({ data, isLoading, isError, error, dimension, isLive }: DimensionCardProps) {
+export const DimensionCard = memo(function DimensionCard({ data, isLoading, isError, error, dimension, isLive, onRetry }: DimensionCardProps) {
   const dispatch = useAppDispatch();
   const [selectedMetric, setSelectedMetric] = useState<DataKey>("visitors");
 
-  if (isLoading || isError) {
-    return <AnalyticsCardState isLoading={isLoading} isError={isError} error={error} />;
+  if (isLoading || (isError && data.length === 0)) {
+    return <AnalyticsCardState isLoading={isLoading} isError={isError} error={error} onRetry={onRetry} />;
   }
 
   return (
@@ -61,6 +62,11 @@ export const DimensionCard = memo(function DimensionCard({ data, isLoading, isEr
           </SelectContent>
         </Select>
       </CardHeader>
+      {isError && (
+        <div className="px-6 pb-3">
+          <AnalyticsCardState isLoading={false} isError error={error} hasData onRetry={onRetry} />
+        </div>
+      )}
       {isLive &&
         (
               <Badge

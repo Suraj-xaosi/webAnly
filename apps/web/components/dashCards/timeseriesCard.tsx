@@ -10,15 +10,19 @@ interface TimeseriesCardProps {
   isError: boolean;
   error?: ApiError | null;
   isLive?: boolean;
+  onRetry?: () => void;
 }
 
-export function TimeseriesCard({ data, isLoading, isError, error, isLive }: TimeseriesCardProps) {
-  if (isLoading || isError) {
-    return <AnalyticsCardState isLoading={isLoading} isError={isError} error={error} />;
+export function TimeseriesCard({ data, isLoading, isError, error, isLive, onRetry }: TimeseriesCardProps) {
+  if (isLoading || (isError && data.length === 0)) {
+    return <AnalyticsCardState isLoading={isLoading} isError={isError} error={error} onRetry={onRetry} />;
   }
 
   return (
     <div className="relative">
+      {isError && (
+        <AnalyticsCardState isLoading={false} isError error={error} hasData onRetry={onRetry} />
+      )}
       {isLive && (
         <Badge
           variant="secondary"

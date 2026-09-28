@@ -22,6 +22,7 @@ export interface ExitPageCardProps {
   isLoading: boolean;
   isError: boolean;
   error?: ApiError | null;
+  onRetry?: () => void;
 }
 
 const METRIC_OPTIONS: { value: ExitDataKey; label: string }[] = [
@@ -29,11 +30,11 @@ const METRIC_OPTIONS: { value: ExitDataKey; label: string }[] = [
   { value: "exitRate", label: "Exit Rate (%)" },
 ];
 
-export function ExitPageCard({ data, isLoading, isError, error }: ExitPageCardProps) {
+export function ExitPageCard({ data, isLoading, isError, error, onRetry }: ExitPageCardProps) {
   const [selectedMetric, setSelectedMetric] = useState<ExitDataKey>("exits");
 
-  if (isLoading || isError) {
-    return <AnalyticsCardState isLoading={isLoading} isError={isError} error={error} />;
+  if (isLoading || (isError && data.length === 0)) {
+    return <AnalyticsCardState isLoading={isLoading} isError={isError} error={error} onRetry={onRetry} />;
   }
 
   return (
@@ -53,6 +54,11 @@ export function ExitPageCard({ data, isLoading, isError, error }: ExitPageCardPr
           </SelectContent>
         </Select>
       </CardHeader>
+      {isError && (
+        <div className="px-6 pb-3">
+          <AnalyticsCardState isLoading={false} isError error={error} hasData onRetry={onRetry} />
+        </div>
+      )}
       <ChartBarExit data={data} dataKey={selectedMetric} />
     </Card>
   );

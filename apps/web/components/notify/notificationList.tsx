@@ -1,10 +1,13 @@
+"use client"
 
-"use client";
-
-import { useNotifications, useMarkAsRead, useMarkAllAsRead } from "@/hooks/notification/useNotifications";
-import { NotificationItem } from "./notificationItem";
-import { ScrollArea } from "@workspace/ui/components/scroll-area";
-import { Button } from "@workspace/ui/components/button";
+import {
+  useNotifications,
+  useMarkAsRead,
+  useMarkAllAsRead,
+} from "@/hooks/notification/useNotifications"
+import { NotificationItem } from "./notificationItem"
+import { ScrollArea } from "@workspace/ui/components/scroll-area"
+import { Button } from "@workspace/ui/components/button"
 import {
   Card,
   CardAction,
@@ -12,16 +15,23 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@workspace/ui/components/card";
+} from "@workspace/ui/components/card"
 
 export function NotificationList() {
-  const { data: notifications, isLoading, error } = useNotifications();
-  const markAsRead = useMarkAsRead();
-  const markAllAsRead = useMarkAllAsRead();
+  const {
+    data: notifications,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useNotifications()
+  const markAsRead = useMarkAsRead()
+  const markAllAsRead = useMarkAllAsRead()
 
-  const allNotifications = notifications ?? [];
-  const unreadNotifications = allNotifications.filter((n) => !n.read);
-  const unreadCount = unreadNotifications.length;
+  const allNotifications = notifications ?? []
+  const unreadNotifications = allNotifications.filter((n) => !n.read)
+  const unreadCount = unreadNotifications.length
+  const mutationError = markAsRead.error ?? markAllAsRead.error
 
   return (
     <Card className="w-full overflow-hidden border-0 bg-background shadow-none">
@@ -49,12 +59,35 @@ export function NotificationList() {
                 Loading...
               </CardDescription>
             )}
-            {error && (
-              <CardDescription className="p-3 text-sm text-destructive">
-                {error.message}
+            {isError && (
+              <div className="grid gap-2 p-3" role="alert">
+                <CardDescription className="text-sm text-destructive">
+                  {notifications
+                    ? `Could not refresh notifications: ${error.message}`
+                    : error.message}
+                </CardDescription>
+                {!notifications && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-fit"
+                    onClick={() => void refetch()}
+                  >
+                    Try again
+                  </Button>
+                )}
+              </div>
+            )}
+            {mutationError && (
+              <CardDescription
+                className="p-3 text-sm text-destructive"
+                role="alert"
+              >
+                {mutationError.message} Try again by selecting the notification
+                again.
               </CardDescription>
             )}
-            {!isLoading && unreadNotifications.length === 0 && (
+            {!isLoading && !isError && unreadNotifications.length === 0 && (
               <CardDescription className="p-3 text-sm text-muted-foreground">
                 You&apos;re all caught up.
               </CardDescription>
@@ -70,5 +103,5 @@ export function NotificationList() {
         </ScrollArea>
       </CardContent>
     </Card>
-  );
+  )
 }

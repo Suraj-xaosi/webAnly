@@ -18,6 +18,7 @@ import {
 } from "recharts"
 import { PageNetworkGraph } from "@workspace/ui/components/main/pageNetworkGraph"
 import type { FlowResponse, ApiError } from "@/hooks/analytics/useFlow"
+import { AnalyticsCardState } from "./analyticsCardState"
 import {
   ALL_PAGE_MAP_VALUE,
   type PageMapResponse,
@@ -34,6 +35,7 @@ export interface PageFlowCardProps {
   allPageMapData: PageMapResponse | undefined
   allPageMapLoading: boolean
   allPageMapError?: ApiError | null
+  onRetryAllPageMap?: () => void
   isAllPageMap: boolean
   availablePages: string[]
   selectedPage: string
@@ -41,9 +43,11 @@ export interface PageFlowCardProps {
   isPagesLoading: boolean
   isPagesError: boolean
   pagesError?: ApiError | null
+  onRetryPages?: () => void
   isLoading: boolean
   isError: boolean
   error?: ApiError | null
+  onRetryFlow?: () => void
 }
 
 const METRIC_OPTIONS: { value: FlowMetric; label: string }[] = [
@@ -168,6 +172,7 @@ export function PageFlowCard({
   allPageMapData,
   allPageMapLoading,
   allPageMapError,
+  onRetryAllPageMap,
   isAllPageMap,
   availablePages,
   selectedPage,
@@ -175,9 +180,11 @@ export function PageFlowCard({
   isPagesLoading,
   isPagesError,
   pagesError,
+  onRetryPages,
   isLoading,
   isError,
   error,
+  onRetryFlow,
 }: PageFlowCardProps) {
   const [metric, setMetric] = useState<FlowMetric>("views")
   const chartData = useMemo(
@@ -197,40 +204,51 @@ export function PageFlowCard({
   let visualization: ReactNode
 
   if (isAllPageMap) {
-    if (allPageMapLoading) {
+    if (allPageMapLoading && !allPageMapData) {
       visualization = (
-        <div className="px-6 pb-6 text-sm text-muted-foreground">
-          Building page map...
-        </div>
+        <AnalyticsCardState isLoading isError={false} />
       )
-    } else if (allPageMapError) {
+    } else if (allPageMapError && !allPageMapData) {
       visualization = (
-        <div className="px-6 pb-6 text-sm text-destructive">
-          {allPageMapError.message ??
-            "Unable to load the page map. Please try again."}
-        </div>
+        <AnalyticsCardState
+          isLoading={false}
+          isError
+          error={allPageMapError}
+          onRetry={onRetryAllPageMap}
+        />
       )
     } else {
       visualization = (
-        <PageNetworkGraph
-          nodes={allPageMapData?.nodes ?? []}
-          edges={allPageMapData?.edges ?? []}
-          metric={metric}
-        />
+        <>
+          {allPageMapError && (
+            <AnalyticsCardState
+              isLoading={false}
+              isError
+              error={allPageMapError}
+              hasData
+              onRetry={onRetryAllPageMap}
+            />
+          )}
+          <PageNetworkGraph
+            nodes={allPageMapData?.nodes ?? []}
+            edges={allPageMapData?.edges ?? []}
+            metric={metric}
+          />
+        </>
       )
     }
   } else if (isPagesLoading) {
     visualization = (
-      <div className="px-6 pb-6 text-sm text-muted-foreground">
-        Loading available pages...
-      </div>
+      <AnalyticsCardState isLoading isError={false} />
     )
   } else if (isPagesError) {
     visualization = (
-      <div className="px-6 pb-6 text-sm text-destructive">
-        {pagesError?.message ??
-          "Unable to load available pages. Please try again."}
-      </div>
+      <AnalyticsCardState
+        isLoading={false}
+        isError
+        error={pagesError}
+        onRetry={onRetryPages}
+      />
     )
   } else if (!availablePages.length) {
     visualization = (
@@ -238,17 +256,18 @@ export function PageFlowCard({
         No pages are available for this time range.
       </div>
     )
-  } else if (isLoading) {
+  } else if (isLoading && !data) {
     visualization = (
-      <div className="px-6 pb-6 text-sm text-muted-foreground">
-        Loading page flow...
-      </div>
+      <AnalyticsCardState isLoading isError={false} />
     )
-  } else if (isError) {
+  } else if (isError && !data) {
     visualization = (
-      <div className="px-6 pb-6 text-sm text-destructive">
-        {error?.message ?? "Unable to load page flow. Please try again."}
-      </div>
+      <AnalyticsCardState
+        isLoading={false}
+        isError
+        error={error}
+        onRetry={onRetryFlow}
+      />
     )
   } else if (!data || (!data.incoming.length && !data.outgoing.length)) {
     visualization = (
@@ -260,6 +279,15 @@ export function PageFlowCard({
     visualization = (
       <div className="overflow-x-auto px-4 pb-2">
         <div className="min-w-[760px]" style={{ height: chartHeight }}>
+          {isError && (
+            <AnalyticsCardState
+              isLoading={false}
+              isError
+              error={error}
+              hasData
+              onRetry={onRetryFlow}
+            />
+          )}
           <ResponsiveContainer width="100%" height="100%">
             <Sankey
               data={chartData}

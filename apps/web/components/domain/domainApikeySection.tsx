@@ -24,7 +24,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@workspace/ui/components/alert-dialog"
-import { EyeIcon, EyeOffIcon, CopyIcon, CheckIcon, KeyIcon, Trash2Icon, Loader2Icon, CreditCardIcon } from "lucide-react"
+import {
+  EyeIcon,
+  EyeOffIcon,
+  CopyIcon,
+  CheckIcon,
+  KeyIcon,
+  Trash2Icon,
+  Loader2Icon,
+  CreditCardIcon,
+} from "lucide-react"
 import { cn } from "@workspace/ui/lib/utils"
 import type { Domain } from "@/lib/shared/types/domain"
 
@@ -35,7 +44,7 @@ function maskKey(key: string) {
 
 // Turns the domain's type/state/endsAt into what the badge says and what
 // the pay button should say. Only two real backend outcomes exist
-// (REACTIVATE vs EXTEND) 
+// (REACTIVATE vs EXTEND)
 function getBillingInfo(domain: Domain) {
   if (domain.state === "DEACTIVATED") {
     return {
@@ -47,7 +56,9 @@ function getBillingInfo(domain: Domain) {
 
   const daysLeft = Math.max(
     0,
-    Math.ceil((new Date(domain.endsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    Math.ceil(
+      (new Date(domain.endsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    )
   )
 
   if (domain.type === "FREE") {
@@ -82,21 +93,23 @@ function BillingButton({
     checkout.status === "creating-order"
       ? "Starting checkout..."
       : checkout.status === "awaiting-payment"
-      ? "Waiting for payment..."
-      : checkout.status === "confirming"
-      ? "Confirming payment..."
-      : null
+        ? "Waiting for payment..."
+        : checkout.status === "confirming"
+          ? "Confirming payment..."
+          : null
 
   return (
     <div className="flex flex-col gap-2">
-      <span className={cn("w-fit text-xs px-2 py-0.5 rounded-full", badgeClass)}>
+      <span
+        className={cn("w-fit rounded-full px-2 py-0.5 text-xs", badgeClass)}
+      >
         {badgeLabel}
       </span>
 
       <Button
         size="sm"
         variant="outline"
-        className="gap-1.5 w-fit"
+        className="w-fit gap-1.5"
         disabled={isThisDomainBusy || !checkout.scriptReady}
         onClick={() => checkout.payForDomain(domain)}
       >
@@ -105,7 +118,9 @@ function BillingButton({
         ) : (
           <CreditCardIcon className="size-3.5" />
         )}
-        {isThisDomainBusy ? statusText : `${buttonLabel}${priceLabel ? ` — ${priceLabel}` : ""}`}
+        {isThisDomainBusy
+          ? statusText
+          : `${buttonLabel}${priceLabel ? ` — ${priceLabel}` : ""}`}
       </Button>
 
       {checkout.status === "error" && checkout.activeDomainId === domain.id && (
@@ -117,7 +132,13 @@ function BillingButton({
   )
 }
 
-function ApiKeyRow({ domain, priceLabel }: { domain: Domain; priceLabel: string | null }) {
+function ApiKeyRow({
+  domain,
+  priceLabel,
+}: {
+  domain: Domain
+  priceLabel: string | null
+}) {
   const [revealed, setRevealed] = useState(false)
   const [copied, setCopied] = useState(false)
   const deleteMutation = useDeleteDomain()
@@ -140,12 +161,13 @@ function ApiKeyRow({ domain, priceLabel }: { domain: Domain; priceLabel: string 
           {domain.domainName}
         </CardTitle>
         <CardDescription>
-          Use this key in the <code>data-api-key</code> attribute of your tracking script.
+          Use this key in the <code>data-api-key</code> attribute of your
+          tracking script.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <code className="flex-1 rounded-md bg-muted px-3 py-2 text-sm font-mono">
+          <code className="flex-1 rounded-md bg-muted px-3 py-2 font-mono text-sm">
             {revealed ? domain.apikey : maskKey(domain.apikey)}
           </code>
           <Button
@@ -155,7 +177,11 @@ function ApiKeyRow({ domain, priceLabel }: { domain: Domain; priceLabel: string 
             onClick={() => setRevealed((r) => !r)}
             aria-label={revealed ? "Hide API key" : "Show API key"}
           >
-            {revealed ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
+            {revealed ? (
+              <EyeOffIcon className="size-4" />
+            ) : (
+              <EyeIcon className="size-4" />
+            )}
           </Button>
           <Button
             size="icon"
@@ -164,7 +190,11 @@ function ApiKeyRow({ domain, priceLabel }: { domain: Domain; priceLabel: string 
             onClick={handleCopy}
             aria-label="Copy API key"
           >
-            {copied ? <CheckIcon className="size-4" /> : <CopyIcon className="size-4" />}
+            {copied ? (
+              <CheckIcon className="size-4" />
+            ) : (
+              <CopyIcon className="size-4" />
+            )}
           </Button>
         </div>
 
@@ -172,7 +202,9 @@ function ApiKeyRow({ domain, priceLabel }: { domain: Domain; priceLabel: string 
           <BillingButton domain={domain} priceLabel={priceLabel} />
 
           {deleteMutation.error && (
-            <p className="text-sm text-destructive">{deleteMutation.error.message}</p>
+            <p className="text-sm text-destructive">
+              {deleteMutation.error.message}
+            </p>
           )}
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -194,15 +226,15 @@ function ApiKeyRow({ domain, priceLabel }: { domain: Domain; priceLabel: string 
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete {domain.domainName}?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently delete this domain, its API key, and all collected
-                  analytics data for it. This action cannot be undone.
+                  This will permanently delete this domain, its API key, and all
+                  collected analytics data for it. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => deleteMutation.mutate(domain.id)}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
                 >
                   Delete
                 </AlertDialogAction>
@@ -216,17 +248,32 @@ function ApiKeyRow({ domain, priceLabel }: { domain: Domain; priceLabel: string 
 }
 
 export function DomainApiKeySection() {
-  const { data: domains, isLoading, error } = useDomain()
+  const { data: domains, isLoading, error, refetch } = useDomain()
   const { data: pricing } = usePricing()
 
   const priceLabel = pricing ? `₹${pricing.paidDomainPrice / 100}` : null
 
-  if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading domains...</p>
+  if (isLoading && !domains) {
+    return (
+      <p
+        className="text-sm text-muted-foreground"
+        role="status"
+        aria-busy="true"
+      >
+        Loading domains...
+      </p>
+    )
   }
 
-  if (error) {
-    return <p className="text-sm text-destructive">Error: {error.message}</p>
+  if (error && !domains) {
+    return (
+      <div className="grid justify-items-start gap-2" role="alert">
+        <p className="text-sm text-destructive">{error.message}</p>
+        <Button variant="outline" size="sm" onClick={() => void refetch()}>
+          Try again
+        </Button>
+      </div>
+    )
   }
 
   if (!domains || domains.length === 0) {
@@ -239,8 +286,17 @@ export function DomainApiKeySection() {
 
   return (
     <div className="flex flex-col gap-4">
+      {error && (
+        <p className="text-sm text-destructive" role="alert">
+          Could not refresh domains: {error.message}
+        </p>
+      )}
       {domains.map((domain) => (
-        <ApiKeyRow key={domain.id} domain={domain as unknown as Domain} priceLabel={priceLabel} />
+        <ApiKeyRow
+          key={domain.id}
+          domain={domain as unknown as Domain}
+          priceLabel={priceLabel}
+        />
       ))}
     </div>
   )

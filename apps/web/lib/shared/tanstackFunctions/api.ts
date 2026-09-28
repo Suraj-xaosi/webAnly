@@ -20,6 +20,19 @@ export async function fetchApiData<T>(url: string, params: Record<string, unknow
 }
 
 export function normalizeApiError(error: unknown): ApiError {
+  if (
+    !axios.isAxiosError(error) &&
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return {
+      message: error.message,
+      status: "status" in error && typeof error.status === "number" ? error.status : undefined,
+    }
+  }
+
   if (axios.isAxiosError(error)) {
     const axiosErr = error as AxiosError<{ error?: string }>;
     const status = axiosErr.response?.status;
@@ -31,8 +44,19 @@ export function normalizeApiError(error: unknown): ApiError {
       429: "Too many requests. Please wait a moment and try again.",
       500: "Analytics data is temporarily unavailable. Please try again.",
     };
+    if (!axiosErr.response) {
+      const message =
+        axiosErr.code === "ECONNABORTED" || axiosErr.code === "ETIMEDOUT"
+          ? "The request timed out. Check your connection and try again."
+          : "Unable to reach the server. Check your connection and try again.";
+      return { message };
+    }
+
     return {
-      message: (status && messageByStatus[status]) || "Unable to load analytics data. Please try again.",
+      message:
+        axiosErr.response.data?.error ||
+        (status && messageByStatus[status]) ||
+        "Unable to load analytics data. Please try again.",
       status,
     };
   }
