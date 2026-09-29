@@ -21,7 +21,7 @@ import { startDomainLifecycleJob } from "./modules/domainLifeCycle/index.js";
 const app        = express();
 const httpServer = createServer(app);
 
-app.set("trust proxy", true);
+app.set("trust proxy", 1);
 app.use(express.json());
 app.use(cors({ origin: true, credentials: true }));
 

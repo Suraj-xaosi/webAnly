@@ -17,7 +17,7 @@ import {
 import type { Dimension, DimensionPoint, ApiError } from "@/hooks/analytics/useDimension";
 import { Badge } from "@workspace/ui/components/badge";
 import { useAppDispatch } from "@/store/hooks";
-import { openDrilldown } from "@/store/slices/drilldownSlice";
+import { openDimensionTimeseries } from "@/store/slices/dimensionTimeseriesSlice";
 import { AnalyticsCardState } from "./analyticsCardState";
 
 export interface DimensionCardProps {
@@ -82,7 +82,11 @@ export const DimensionCard = memo(function DimensionCard({ data, isLoading, isEr
       <ChartBarMixed
         data={data}
         dataKey={selectedMetric}
-        onSelectItem={(name) => dispatch(openDrilldown({ dimension, value: name, liveMode: Boolean(isLive) }))}
+        onSelectItem={(name) => dispatch(openDimensionTimeseries({
+          dimension,
+          value: name,
+          mode: isLive ? "live" : "historical",
+        }))}
       />
 
     </Card>

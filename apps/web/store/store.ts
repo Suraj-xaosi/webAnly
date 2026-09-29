@@ -2,14 +2,14 @@
 import { configureStore } from "@reduxjs/toolkit";
 import dashboardReducer from "./slices/dashboardSlice";
 import themeReducer from "./slices/themeSlice";
-import drilldownReducer from "./slices/drilldownSlice";
+import dimensionTimeseriesReducer from "./slices/dimensionTimeseriesSlice";
 
 export const createStore = () => {
   return configureStore({
     reducer: {
       dashboard: dashboardReducer,
       theme: themeReducer,
-      drilldown: drilldownReducer,
+      dimensionTimeseries: dimensionTimeseriesReducer,
     },
   });
 };

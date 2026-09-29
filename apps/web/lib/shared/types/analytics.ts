@@ -135,7 +135,7 @@ export interface TimeseriesParams {
   timezone?: string
 }
 
-// Dimension Drilldown Timeseries (NEW — for popup)
+// Dimension timeseries selection for the detail panel
 export interface DimensionTimeseriesParams {
   domainId: string
   from: string

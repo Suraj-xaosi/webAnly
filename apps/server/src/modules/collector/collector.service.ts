@@ -10,6 +10,11 @@ import { extractReferrerHostname }     from "./functions/extractReferrerHostname
 import { normalizePath }               from "./functions/normalizepath.js";
 import { isOriginAllowed }             from "./functions/checkOrigin.js";
 import { createHash }                  from "crypto";
+import {
+  checkCollectorIpBan,
+  checkCollectorRateLimit,
+  type CollectorRateLimitResult,
+} from "./functions/collectorRateLimiter.js";
 
 const VALID_EXIT_TYPES = new Set(["navigation", "pagehide", "hidden"]);
 
@@ -27,27 +32,38 @@ function parsePreviousPage(value: any): string | null {
   return normalizePath(value.slice(0, 500));
 }
 
-export async function handleCollectEvent(req: Request) {
+export async function handleCollectEvent(
+  req: Request
+): Promise<CollectorRateLimitResult | null> {
   const body = req.body || {};
   const exitType = parseExitType(body.exitType);
 
   // "hidden" is not a real event, just a signal that the tab was hidden. Do not send it to Kafka.
   if (exitType === "hidden") {
-    return;
+    return null;
   }
 
   let domain: DomainInfo;
   try {
     domain = await apikeyChecker(body.apikey);
   } catch (err) {
+    const ipBan = await checkCollectorIpBan(extractRealIp(req.ip || ""));
+    if (ipBan) return ipBan;
+
     console.warn(`COLLECTOR: apikey check failed`, err);
-    return;
+    return null;
   }
 
   if (domain.state !== "ACTIVE") {
     console.log(`COLLECTOR : this ${domain.domainName} is inactive`);
-    return;
+    return null;
   }
+
+  const rateLimit = await checkCollectorRateLimit(
+    body.apikey,
+    extractRealIp(req.ip || "")
+  );
+  if (rateLimit) return rateLimit;
 
   const allowed = isOriginAllowed(
     req.headers.origin as string | undefined,
@@ -107,4 +123,6 @@ export async function handleCollectEvent(req: Request) {
     topic: KAFKA_TOPICS.SOCKET_EVENTS,
     messages: [{ key: domain.domainId, value: JSON.stringify(socketEventData) }],
   });
+
+  return null;
 }

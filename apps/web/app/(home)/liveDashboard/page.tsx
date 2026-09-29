@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import { useAppSelector } from "@/store/hooks"
 import { selectDomainId } from "@/store/slices/dashboardSlice"
-import { selectActiveDrilldown } from "@/store/slices/drilldownSlice";
+import { selectDimensionTimeseriesSelection } from "@/store/slices/dimensionTimeseriesSlice";
 import { useRealtimeTimeseries } from "@/hooks/realtime/useRealtimeTimeseries"
 import { useRealtimeDimension } from "@/hooks/realtime/useRealtimeDimension"
 import { RealtimeProvider } from "@/components/wrapper/RealtimeProvider"
@@ -15,7 +15,7 @@ import DomainSwitch from "@/components/picker/domainSwitch"
 import { useApiKey } from "@/hooks/useApikey"
 import { useDomainAccess } from "@/hooks/domainCrud/useDomainAcess"
 import type { Dimension } from "@/hooks/analytics/useDimension"
-import { DimensionDrilldownPopup } from "@/components/dashCards/dimensionDrilldownPopup";
+import { DimensionTimeseriesPanel } from "@/components/dashCards/dimensionTimeseriesPanel";
 
 const DIMENSIONS: Dimension[] = ["browser", "country", "device", "os", "referrer", "page"]
 
@@ -117,7 +117,7 @@ function LiveDashboardContent({
     () => ({ browser, country, city, device, os, referrer, page }),
     [browser, country, city, device, os, referrer, page]
   )
-  const activeDrilldown = useAppSelector(selectActiveDrilldown)
+  const dimensionTimeseriesSelection = useAppSelector(selectDimensionTimeseriesSelection)
 
   return (
     <>
@@ -146,7 +146,7 @@ function LiveDashboardContent({
         })}
       </div>
 
-      {activeDrilldown?.liveMode && <DimensionDrilldownPopup />}
+      {dimensionTimeseriesSelection?.mode === "live" && <DimensionTimeseriesPanel />}
     </>
   )
 }

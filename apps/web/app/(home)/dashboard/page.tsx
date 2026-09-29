@@ -10,8 +10,8 @@ import { DateRangePicker } from "@workspace/ui/components/main/dateRangePicker";
 import DomainSwitch from "@/components/picker/domainSwitch";
 import { ExitPageCard } from "@/components/dashCards/exitPageCard";
 import TimezonePicker from "@/components/picker/timezonePicker";
-import { DimensionDrilldownPopup } from "@/components/dashCards/dimensionDrilldownPopup";
-import { selectActiveDrilldown } from "@/store/slices/drilldownSlice";
+import { DimensionTimeseriesPanel } from "@/components/dashCards/dimensionTimeseriesPanel";
+import { selectDimensionTimeseriesSelection } from "@/store/slices/dimensionTimeseriesSlice";
 import { PageFlowCard } from "@/components/dashCards/pageFlowCard";
 import { useDashboardAnalytics } from "@/hooks/analytics/useDashboardAnalytics";
 import { useTransition } from "react";
@@ -19,7 +19,7 @@ import { useTransition } from "react";
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
   const [isPending, startTransition] = useTransition();
-  const activeDrilldown = useAppSelector(selectActiveDrilldown);
+  const dimensionTimeseriesSelection = useAppSelector(selectDimensionTimeseriesSelection);
   const domainId = useAppSelector(selectDomainId);
   const from = useAppSelector(selectFrom);
   const to = useAppSelector(selectTo);
@@ -135,7 +135,7 @@ export default function DashboardPage() {
         onRetryFlow={pageFlow.refetch}
       />
 
-          {activeDrilldown && !activeDrilldown.liveMode && <DimensionDrilldownPopup />}
+          {dimensionTimeseriesSelection?.mode === "historical" && <DimensionTimeseriesPanel />}
     </div>
   );
 }

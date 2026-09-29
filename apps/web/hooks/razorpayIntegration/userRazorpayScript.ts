@@ -1,12 +1,29 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
 
 const SCRIPT_SRC = "https://checkout.razorpay.com/v1/checkout.js"
 
+interface RazorpayCheckoutOptions {
+  key: string
+  order_id: string
+  amount: number
+  currency: string
+  name: string
+  description: string
+  handler: () => void
+  modal: {
+    ondismiss: () => void
+  }
+}
+
+interface RazorpayCheckout {
+  open: () => void
+}
+
 declare global {
   interface Window {
-    Razorpay: any
+    Razorpay: new (options: RazorpayCheckoutOptions) => RazorpayCheckout
   }
 }
 
@@ -14,32 +31,47 @@ declare global {
 // is used by multiple components on the same page. Returns true once
 // window.Razorpay is available and the checkout popup can be opened.
 export function useRazorpayScript() {
-  const [isReady, setIsReady] = useState(
-    typeof window !== "undefined" && !!window.Razorpay
+  return useSyncExternalStore(
+    subscribeToRazorpay,
+    getRazorpaySnapshot,
+    getServerRazorpaySnapshot
   )
+}
 
-  useEffect(() => {
-    if (isReady || typeof window === "undefined") return
+function getRazorpaySnapshot() {
+  return typeof window !== "undefined" && !!window.Razorpay
+}
 
-    const existing = document.querySelector<HTMLScriptElement>(
-      `script[src="${SCRIPT_SRC}"]`
-    )
+function getServerRazorpaySnapshot() {
+  return false
+}
 
-    if (existing) {
-      if (window.Razorpay) {
-        setIsReady(true)
-      } else {
-        existing.addEventListener("load", () => setIsReady(true))
-      }
-      return
-    }
+function subscribeToRazorpay(onStoreChange: () => void) {
+  if (typeof window === "undefined" || window.Razorpay) return () => {}
 
-    const script = document.createElement("script")
+  let script = document.querySelector<HTMLScriptElement>(
+    `script[src="${SCRIPT_SRC}"]`
+  )
+  const shouldAppend = !script
+
+  if (!script) {
+    script = document.createElement("script")
     script.src = SCRIPT_SRC
     script.async = true
-    script.onload = () => setIsReady(true)
-    document.body.appendChild(script)
-  }, [isReady])
+  }
 
-  return isReady
+  const handleLoad = () => onStoreChange()
+  const handleError = () => {
+    console.error("Failed to load Razorpay checkout script.")
+    onStoreChange()
+  }
+
+  script.addEventListener("load", handleLoad)
+  script.addEventListener("error", handleError)
+  if (shouldAppend) document.body.appendChild(script)
+
+  return () => {
+    script?.removeEventListener("load", handleLoad)
+    script?.removeEventListener("error", handleError)
+  }
 }
