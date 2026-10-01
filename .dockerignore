@@ -1,11 +1,64 @@
+# Keep the Docker build context aligned with .gitignore.
+
+# Dependencies and package-manager state
 node_modules
 **/node_modules
-**/.next
-**/dist
-**/.turbo
-.git
+.pnp
+.pnp.js
+
+# Local environment files and secrets
 .env
 .env.local
-**/*.mmdb
+.env.development.local
+.env.test.local
+.env.production.local
+**/.env
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+*.pem
+
+# Test output
+coverage
+**/coverage
+
+# Build output and generated files
+.next
+.next/
+**/.next
+out
+out/
+**/out
+build
+**/build
+dist
+**/dist
+packages/db/src/generated
+packages/db/src/generated/
+
+# Tool and deployment state
+.turbo
+**/.turbo
+.vercel
+**/.vercel
+.git
+
+# Logs and operating-system files
+npm-debug.log*
+.DS_Store
+
+# GeoIP databases are downloaded during server startup when needed
+*.mmdb
+
+# Files intentionally excluded from Git
+CODEBASE_GUIDE_HINGLISH.md
+LLD_PRACTICES_HINGLISH.md
+NEXTJS_PRACTICES_HINGLISH.md
+REACT_PERFORMANCE_PRACTICES_HINGLISH.md
+SERVER_PRACTICES_HINGLISH.md
+TANSTACK_QUERY_PRACTICES_HINGLISH.md
+
+# Existing Docker-context exclusions
 README.md
 *.png

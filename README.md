@@ -51,6 +51,8 @@ Webanly lets you track visitors on your own website without relying on third-par
 
 ## Project Structure
 
+### Codebase and engineering notes
+
 ```
 webanly/
 ├── apps/

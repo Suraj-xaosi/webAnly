@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes"
-import { ThemeNameSync } from "./theme-name-sync"
 
 function ThemeProvider({
   children,
@@ -17,7 +16,6 @@ function ThemeProvider({
       {...props}
     >
       <ThemeHotkey />
-      <ThemeNameSync />
       {children}
     </NextThemesProvider>
   )
@@ -39,7 +37,6 @@ function isTypingTarget(target: EventTarget | null) {
 function ThemeHotkey() {
   const { resolvedTheme, setTheme } = useTheme()
 
-
   const resolvedThemeRef = React.useRef(resolvedTheme)
   resolvedThemeRef.current = resolvedTheme
 
@@ -50,7 +47,6 @@ function ThemeHotkey() {
       if (event.key.toLowerCase() !== "d") return
       if (isTypingTarget(event.target)) return
 
-      
       setTheme(resolvedThemeRef.current === "dark" ? "light" : "dark")
     }
 
@@ -60,7 +56,7 @@ function ThemeHotkey() {
       window.removeEventListener("keydown", onKeyDown)
     }
   }, [setTheme])
-  
+
   return null
 }
 

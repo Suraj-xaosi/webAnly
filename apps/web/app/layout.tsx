@@ -1,4 +1,3 @@
-import ReactqueryProvider from "@/lib/providers/ReactqueryProvider"
 import {
   Cinzel,
   Cormorant_Garamond,
@@ -13,12 +12,18 @@ import { cn } from "@workspace/ui/lib/utils"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
 import { THEME_NAMES } from "@/store/slices/themeSlice"
 
-const cormorantGaramond = Cormorant_Garamond({ subsets: ["latin"], variable: "--font-cormorant-garamond" })
+const cormorantGaramond = Cormorant_Garamond({
+  subsets: ["latin"],
+  variable: "--font-cormorant-garamond",
+})
 const cinzel = Cinzel({ subsets: ["latin"], variable: "--font-cinzel" })
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" })
 const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
 
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" })
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+})
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" })
 
 const THEME_INIT_SCRIPT = `
@@ -31,7 +36,11 @@ const THEME_INIT_SCRIPT = `
   } catch (e) {}
 `
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html
       lang="en"
@@ -50,13 +59,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
 
-        <ReactqueryProvider>
-          <ThemeProvider>
-            <TooltipProvider>
-              {children}
-            </TooltipProvider>
-          </ThemeProvider>
-        </ReactqueryProvider>
+        <ThemeProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

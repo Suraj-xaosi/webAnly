@@ -4,16 +4,19 @@ import { useRouter } from "next/navigation"
 import { HorizontalNavbar } from "@workspace/ui/components/main/horizontalNavbar"
 import { ThemeSwitcher } from "@/components/theme/theme-switcher"
 import NotificationBell from "@/components/notify/notificationBell"
-import { authClient } from "@/lib/betterAuth/auth-client"
 
-export function HorizontalNavbarWrapper() {
-    const { data: session } = authClient.useSession()
-    const user = {
-        name: session?.user.name,
-        email: session?.user.email,
-        avatar: session?.user.image,
-    }
-    const router = useRouter()
+interface HorizontalNavbarWrapperProps {
+  user: {
+    name: string
+    email: string
+    avatar: string
+  }
+}
+
+export function HorizontalNavbarWrapper({
+  user,
+}: HorizontalNavbarWrapperProps) {
+  const router = useRouter()
 
   return (
     <HorizontalNavbar

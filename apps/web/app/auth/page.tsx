@@ -1,59 +1,33 @@
-
-"use client"
-
-import { authClient } from "@/lib/betterAuth/auth-client"
 import { Button } from "@workspace/ui/components/button"
 import { Badge } from "@workspace/ui/components/badge"
 import { Separator } from "@workspace/ui/components/separator"
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogTrigger,
-} from "@workspace/ui/components/dialog"
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
 } from "@workspace/ui/components/card"
-import { LoginForm } from "@workspace/ui/components/main/login-form"
 import { Activity, Globe, Bell, LineChart } from "lucide-react"
+import { SignInDialog } from "@/components/auth/signInDialog"
 
 export default function LandingPage() {
-  
-
-  async function handleGithubLogin() {
-    await authClient.signIn.social({ provider: "github", callbackURL: "/dashboard" })
-  }
-
   return (
     <main className="min-h-screen min-w-full">
-      <nav className="border-b backdrop-blur-xl">
+      <nav className="animate-in border-b backdrop-blur-xl duration-[650ms] ease-[cubic-bezier(0.2,0.75,0.25,1)] fade-in-0 [animation-delay:40ms] slide-in-from-bottom-[14px] motion-reduce:animate-none">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <div className="flex items-center gap-4">
-           
-              <CardTitle className="text-xl">Webanly</CardTitle>
-      
+            <CardTitle className="text-xl">Webanly</CardTitle>
+
             <Separator orientation="vertical" className="h-6" />
-              <CardDescription className="font-sans text-sm text-muted-foreground">
-                Simple website analytics
-              </CardDescription>
-            
+            <CardDescription className="font-sans text-sm text-muted-foreground">
+              Simple website analytics
+            </CardDescription>
           </div>
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" asChild>
               <a href="#features">Features</a>
             </Button>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button size="sm">Sign in</Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-sm">
-                <DialogTitle>Sign in</DialogTitle>
-                <LoginForm onGithubLogin={handleGithubLogin} />
-              </DialogContent>
-            </Dialog>
+            <SignInDialog label="Sign in" size="sm" variant="ghost" />
           </div>
         </div>
       </nav>
@@ -63,46 +37,49 @@ export default function LandingPage() {
           <div className="space-y-10">
             <div className="space-y-6">
               <CardTitle className="text-4xl font-semibold tracking-tight sm:text-5xl">
+                <span className="block animate-in duration-[650ms] ease-[cubic-bezier(0.2,0.75,0.25,1)] fade-in-0 [animation-delay:120ms] slide-in-from-bottom-[14px] motion-reduce:animate-none">
+                  See what is happening
+                </span>
+                <span className="block animate-in duration-[650ms] ease-[cubic-bezier(0.2,0.75,0.25,1)] fade-in-0 [animation-delay:240ms] slide-in-from-bottom-[14px] motion-reduce:animate-none">
+                  on your website.
+                </span>
+              </CardTitle>
 
-                See what is happening on your website.
-                </CardTitle>
-              
-              <CardDescription className="font-sans text-lg font-semibold text-muted-foreground">
-                Webanly shows your visitors, popular pages, traffic sources, and page journeys in one clear dashboard. Ask the traffic assistant questions when you want a quick answer.
-                
+              <CardDescription className="animate-in font-sans text-lg font-semibold text-muted-foreground duration-[650ms] ease-[cubic-bezier(0.2,0.75,0.25,1)] fade-in-0 [animation-delay:360ms] slide-in-from-bottom-[14px] motion-reduce:animate-none">
+                Webanly shows your visitors, popular pages, traffic sources, and
+                page journeys in one clear dashboard. Ask the traffic assistant
+                questions when you want a quick answer.
               </CardDescription>
             </div>
 
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button size="lg">Get started</Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-sm">
-                  <DialogTitle>Sign in</DialogTitle>
-                  <LoginForm onGithubLogin={handleGithubLogin} />
-                </DialogContent>
-              </Dialog>
-              
+            <div className="flex animate-in flex-col gap-4 duration-[650ms] ease-[cubic-bezier(0.2,0.75,0.25,1)] fade-in-0 [animation-delay:480ms] slide-in-from-bottom-[14px] motion-reduce:animate-none sm:flex-row sm:items-center">
+              <SignInDialog label="Get started" size="lg" />
             </div>
-            
-
-            
           </div>
 
-          <div className="space-y-6">
+          <div className="animate-in space-y-6 duration-[650ms] ease-[cubic-bezier(0.2,0.75,0.25,1)] fade-in-0 [animation-delay:260ms] slide-in-from-bottom-[14px] motion-reduce:animate-none">
             <div className="rounded-[2rem] border p-6 shadow-2xl">
               <div className="flex items-center justify-between gap-4 rounded-3xl px-5 py-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.24em]">Your website</p>
-                  <p className="mt-2 text-sm font-semibold">A simple view of your traffic</p>
+                  <p className="text-xs tracking-[0.24em] uppercase">
+                    Your website
+                  </p>
+                  <p className="mt-2 text-sm font-semibold">
+                    A simple view of your traffic
+                  </p>
                 </div>
-                <Badge variant="secondary" className="rounded-full px-3 py-1 text-[0.65rem] uppercase tracking-[0.18em]">
+                <Badge
+                  variant="secondary"
+                  className="rounded-full px-3 py-1 text-[0.65rem] tracking-[0.18em] uppercase"
+                >
                   Live data
                 </Badge>
               </div>
               <div className="mt-6 rounded-[1.5rem] p-5">
-                <svg viewBox="0 0 400 120" className="h-40 w-full overflow-visible">
+                <svg
+                  viewBox="0 0 400 120"
+                  className="h-40 w-full overflow-visible"
+                >
                   <polyline
                     fill="none"
                     stroke="currentColor"
@@ -111,7 +88,7 @@ export default function LandingPage() {
                   />
                 </svg>
               </div>
-              <div className="grid gap-4 font-heading sm:grid-cols-3 pt-4 text-sm">
+              <div className="grid gap-4 pt-4 font-heading text-sm sm:grid-cols-3">
                 <div>
                   <p className="text-xl font-semibold">8.2K</p>
                   <p>Visitors</p>
@@ -130,21 +107,22 @@ export default function LandingPage() {
         </div>
       </section>
 
-      
-
       <section id="features" className="mx-auto max-w-6xl px-6 py-20">
-        <div className="mb-12 max-w-2xl">
-          <CardDescription className="text-sm uppercase tracking-[0.32em]">What you can do</CardDescription>
+        <div className="mb-12 max-w-2xl animate-in duration-[650ms] ease-[cubic-bezier(0.2,0.75,0.25,1)] fade-in-0 [animation-delay:120ms] slide-in-from-bottom-[14px] motion-reduce:animate-none">
+          <CardDescription className="text-sm tracking-[0.32em] uppercase">
+            What you can do
+          </CardDescription>
           <CardTitle className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
             The important parts of your traffic, in one place.
           </CardTitle>
           <p className="mt-4 max-w-xl text-lg leading-8">
-            Open the dashboard, choose a date range, and explore your data. Nothing complicated is required.
+            Open the dashboard, choose a date range, and explore your data.
+            Nothing complicated is required.
           </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          <Card>
+          <Card className="animate-in duration-[600ms] ease-[cubic-bezier(0.2,0.75,0.25,1)] fade-in-0 [animation-delay:180ms] slide-in-from-bottom-[14px] motion-reduce:animate-none">
             <CardHeader>
               <Activity className="mb-2 h-5 w-5" />
               <CardTitle className="text-base">Understand visitors</CardTitle>
@@ -153,7 +131,7 @@ export default function LandingPage() {
               </CardDescription>
             </CardHeader>
           </Card>
-          <Card>
+          <Card className="animate-in duration-[600ms] ease-[cubic-bezier(0.2,0.75,0.25,1)] fade-in-0 [animation-delay:250ms] slide-in-from-bottom-[14px] motion-reduce:animate-none">
             <CardHeader>
               <Globe className="mb-2 h-5 w-5" />
               <CardTitle className="text-base">Find popular pages</CardTitle>
@@ -162,7 +140,7 @@ export default function LandingPage() {
               </CardDescription>
             </CardHeader>
           </Card>
-          <Card>
+          <Card className="animate-in duration-[600ms] ease-[cubic-bezier(0.2,0.75,0.25,1)] fade-in-0 [animation-delay:320ms] slide-in-from-bottom-[14px] motion-reduce:animate-none">
             <CardHeader>
               <Bell className="mb-2 h-5 w-5" />
               <CardTitle className="text-base">Follow page journeys</CardTitle>
@@ -171,7 +149,7 @@ export default function LandingPage() {
               </CardDescription>
             </CardHeader>
           </Card>
-          <Card>
+          <Card className="animate-in duration-[600ms] ease-[cubic-bezier(0.2,0.75,0.25,1)] fade-in-0 [animation-delay:390ms] slide-in-from-bottom-[14px] motion-reduce:animate-none">
             <CardHeader>
               <LineChart className="mb-2 h-5 w-5" />
               <CardTitle className="text-base">Choose any time range</CardTitle>
@@ -180,27 +158,31 @@ export default function LandingPage() {
               </CardDescription>
             </CardHeader>
           </Card>
-          <Card>
+          <Card className="animate-in duration-[600ms] ease-[cubic-bezier(0.2,0.75,0.25,1)] fade-in-0 [animation-delay:460ms] slide-in-from-bottom-[14px] motion-reduce:animate-none">
             <CardHeader>
               <Activity className="mb-2 h-5 w-5" />
-              <CardTitle className="text-base">Ask the traffic assistant</CardTitle>
+              <CardTitle className="text-base">
+                Ask the traffic assistant
+              </CardTitle>
               <CardDescription>
                 Ask questions such as “How did traffic change last week?”
               </CardDescription>
             </CardHeader>
           </Card>
-          <Card>
+          <Card className="animate-in duration-[600ms] ease-[cubic-bezier(0.2,0.75,0.25,1)] fade-in-0 [animation-delay:530ms] slide-in-from-bottom-[14px] motion-reduce:animate-none">
             <CardHeader>
               <Globe className="mb-2 h-5 w-5" />
-              <CardTitle className="text-base">Keep your data in one place</CardTitle>
+              <CardTitle className="text-base">
+                Keep your data in one place
+              </CardTitle>
               <CardDescription>
-                Add your website once and return to the same dashboard whenever you need it.
+                Add your website once and return to the same dashboard whenever
+                you need it.
               </CardDescription>
             </CardHeader>
           </Card>
         </div>
       </section>
-
     </main>
   )
 }
