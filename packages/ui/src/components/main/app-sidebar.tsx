@@ -19,7 +19,6 @@ import { GalleryVerticalEndIcon, AudioLinesIcon, TerminalIcon, TerminalSquareIco
 const data = {
   brand: {
     name: "WebAnly",
-    avatar: "/avatars/shadcn.jpg",
   },
   teams: [
     {

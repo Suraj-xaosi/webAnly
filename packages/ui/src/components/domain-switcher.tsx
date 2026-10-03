@@ -52,13 +52,13 @@ export function DomainSwitcher({ domains, activeDomainId, onSelect }: DomainSwit
   }
 
   return (
-    <SidebarMenu>
+    <SidebarMenu className="w-fit">
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="w-fit min-w-40 max-w-full data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                 {getDomainInitial(activeDomain.domainName)}

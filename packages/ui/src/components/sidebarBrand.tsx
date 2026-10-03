@@ -3,7 +3,6 @@
 import {
   Avatar,
   AvatarFallback,
-  AvatarImage,
 } from "@workspace/ui/components/avatar"
 import {
   SidebarMenu,
@@ -16,7 +15,6 @@ export function SidebarBrand({
 }: {
   brand: {
     name: string
-    avatar: string
   }
 }) {
   return (
@@ -27,8 +25,9 @@ export function SidebarBrand({
           className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
         >
           <Avatar className="h-8 w-8 rounded-lg">
-            <AvatarImage src={brand.avatar} alt={brand.name} />
-            <AvatarFallback className="rounded-lg">WA</AvatarFallback>
+            <AvatarFallback className="rounded-lg bg-primary/10 text-primary">
+              WA
+            </AvatarFallback>
           </Avatar>
           <div className="grid flex-1 text-left text-sm leading-tight">
             <span className="truncate font-heading font-medium">{brand.name}</span>
