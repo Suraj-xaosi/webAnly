@@ -2,13 +2,14 @@
 
 import { useMemo } from "react"
 import { useAppSelector } from "@/store/hooks"
-import { selectDomainId } from "@/store/slices/dashboardSlice"
+import { useDomainSelection } from "@/hooks/domainCrud/useDomainSelection"
 import { selectDimensionTimeseriesSelection } from "@/store/slices/dimensionTimeseriesSlice";
 import { useRealtimeTimeseries } from "@/hooks/realtime/useRealtimeTimeseries"
 import { useRealtimeDimension } from "@/hooks/realtime/useRealtimeDimension"
 import { RealtimeProvider } from "@/components/wrapper/RealtimeProvider"
 import { TimeseriesCard } from "@/components/dashCards/timeseriesCard"
 import { DimensionCard } from "@/components/dashCards/dimensionCard"
+import { ExitPageCard } from "@/components/dashCards/exitPageCard"
 
 import { Card, CardContent } from "@workspace/ui/components/card"
 import DomainSwitch from "@/components/picker/domainSwitch"
@@ -16,6 +17,7 @@ import { useApiKey } from "@/hooks/useApikey"
 import { useDomainAccess } from "@/hooks/domainCrud/useDomainAcess"
 import type { Dimension } from "@/hooks/analytics/useDimension"
 import { DimensionTimeseriesPanel } from "@/components/dashCards/dimensionTimeseriesPanel";
+import { useRealtimeExitPages } from "@/hooks/realtime/useRealtimeExitPages"
 
 const DIMENSIONS: Dimension[] = ["browser", "country", "device", "os", "referrer", "page"]
 
@@ -24,7 +26,7 @@ function getDateInTimezone(timezone: string) {
 }
 
 export default function LiveDashboardPage() {
-  const domainId = useAppSelector(selectDomainId)
+  const { activeDomainId: domainId } = useDomainSelection()
 
   const domainAccess = useDomainAccess(domainId)
   const isDomainActive = !domainId
@@ -112,6 +114,14 @@ function LiveDashboardContent({
   const os = useRealtimeDimension("os", domainId, from, to, apikey, enabled, timezone)
   const referrer = useRealtimeDimension("referrer", domainId, from, to, apikey, enabled, timezone)
   const page = useRealtimeDimension("page", domainId, from, to, apikey, enabled, timezone)
+  const exitPages = useRealtimeExitPages(
+    domainId,
+    from,
+    to,
+    timezone,
+    enabled,
+    page.data
+  )
 
   const dimensionMap = useMemo(
     () => ({ browser, country, city, device, os, referrer, page }),
@@ -130,6 +140,13 @@ function LiveDashboardContent({
       />
 
       <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-2">
+        <ExitPageCard
+          data={exitPages.data}
+          isLoading={exitPages.isLoading}
+          isError={exitPages.isError}
+          error={exitPages.error}
+          onRetry={exitPages.refetch}
+        />
         {DIMENSIONS.map((dimension) => {
           const result = dimensionMap[dimension];
           return (

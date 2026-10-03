@@ -5,8 +5,7 @@ import { useState } from "react"
 import { SparklesIcon } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import { Dialog, DialogContent, DialogTrigger } from "@workspace/ui/components/dialog"
-import { useAppSelector } from "@/store/hooks"
-import { selectDomainId } from "@/store/slices/dashboardSlice"
+import { useDomainSelection } from "@/hooks/domainCrud/useDomainSelection"
 
 const AnalyticsChatWidget = dynamic(
   () => import("./analyticsChatWidget").then((module) => module.AnalyticsChatWidget),
@@ -20,7 +19,7 @@ const AnalyticsChatWidget = dynamic(
 )
 
 export function AnalyticsChatLauncher() {
-  const domainId = useAppSelector(selectDomainId)
+  const { activeDomainId: domainId } = useDomainSelection()
   const [open, setOpen] = useState(false)
 
   return (

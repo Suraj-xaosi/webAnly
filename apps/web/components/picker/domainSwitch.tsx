@@ -1,24 +1,19 @@
 "use client";
 
-import { useEffect } from "react";
-import { useDomain } from "@/hooks/domainCrud/useDomain";
+import { useDomainSelection } from "@/hooks/domainCrud/useDomainSelection";
 import { DomainSwitcher } from "@workspace/ui/components/domain-switcher";
 import { Skeleton } from "@workspace/ui/components/skeleton";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setDomainId, selectDomainId } from "@/store/slices/dashboardSlice";
+import { useAppDispatch } from "@/store/hooks";
+import { setDomainId } from "@/store/slices/dashboardSlice";
 
 export default function DomainSwitch() {
   const dispatch = useAppDispatch();
-  const domainId = useAppSelector(selectDomainId);
-  const { data: domains, isLoading, error } = useDomain();
-
-  const defaultDomainId = domains && domains.length > 0 ? domains[0]!.id : "";
-
-  useEffect(() => {
-    if (defaultDomainId && !domainId) {
-      dispatch(setDomainId(defaultDomainId));
-    }
-  }, [defaultDomainId, dispatch, domainId]);
+  const {
+    data: domains,
+    isLoading,
+    error,
+    activeDomainId,
+  } = useDomainSelection();
 
   if (isLoading) {
     return (
@@ -30,8 +25,6 @@ export default function DomainSwitch() {
     );
   }
   if (error)     return <div>Error: {error.message}</div>;
-
-  const activeDomainId = domainId || defaultDomainId;
 
   return (
     <DomainSwitcher
