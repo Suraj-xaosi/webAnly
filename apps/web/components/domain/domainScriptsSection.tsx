@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useDomain } from "@/hooks/domainCrud/useDomain"
 import { Button } from "@workspace/ui/components/button"
+import { Skeleton } from "@workspace/ui/components/skeleton"
 import {
   Card,
   CardContent,
@@ -91,13 +92,15 @@ export function DomainScriptsSection() {
 
   if (isLoading && !domains) {
     return (
-      <p
-        className="text-sm text-muted-foreground"
-        role="status"
-        aria-busy="true"
-      >
-        Loading domains...
-      </p>
+      <div className="grid gap-4" role="status" aria-busy="true" aria-label="Loading domains">
+        {[0, 1].map((item) => (
+          <div key={item} className="grid gap-4 rounded-xl border p-5">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-4 w-64 max-w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+        ))}
+      </div>
     )
   }
 

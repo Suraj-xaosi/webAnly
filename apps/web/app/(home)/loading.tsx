@@ -1,3 +1,5 @@
+import { Skeleton } from "@workspace/ui/components/skeleton"
+
 export default function HomeLoading() {
   return (
     <div
@@ -7,18 +9,10 @@ export default function HomeLoading() {
       aria-label="Loading page"
     >
       <span className="sr-only">Loading page content</span>
-      <div className="flex items-center justify-between gap-4">
-        <div className="h-10 w-48 animate-pulse rounded-md bg-muted" />
-        <div className="h-10 w-64 animate-pulse rounded-md bg-muted" />
-      </div>
-      <div className="h-72 animate-pulse rounded-lg border bg-card" />
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {Array.from({ length: 6 }, (_, index) => (
-          <div
-            key={index}
-            className="h-64 animate-pulse rounded-lg border bg-card"
-          />
-        ))}
+      <div className="grid gap-4 rounded-xl border bg-card p-5">
+        <Skeleton className="h-6 w-48 max-w-full" />
+        <Skeleton className="h-4 w-72 max-w-full" />
+        <Skeleton className="h-32 w-full" />
       </div>
     </div>
   )

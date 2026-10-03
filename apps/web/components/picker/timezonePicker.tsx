@@ -35,11 +35,14 @@ const COMMON_TIMEZONES = [
 
 export function getTimezoneOptions() {
   const seen = new Set<string>(COMMON_TIMEZONES);
+  const browserTimezone = getBrowserTimezone();
 
   if (typeof Intl !== "undefined" && typeof Intl.supportedValuesOf === "function") {
     const browserTimezones = Intl.supportedValuesOf("timeZone") as string[];
     browserTimezones.forEach((timezone) => seen.add(timezone));
   }
+
+  seen.add(browserTimezone);
 
   return Array.from(seen).sort((a, b) => {
     if (a === "UTC") return -1;
@@ -69,15 +72,19 @@ function subscribeToTimezoneOptions() {
   return () => {};
 }
 
-export default function TimezonePicker() {
-  const dispatch = useAppDispatch();
-  const timezone = useAppSelector(selectTimezone) ?? "UTC";
-  const resolved = useAppSelector(selectTimezoneResolved);
-  const options = useSyncExternalStore(
+export function useTimezoneOptions() {
+  return useSyncExternalStore(
     subscribeToTimezoneOptions,
     getClientTimezoneOptions,
     () => COMMON_TIMEZONES
   );
+}
+
+export default function TimezonePicker() {
+  const dispatch = useAppDispatch();
+  const timezone = useAppSelector(selectTimezone) ?? "UTC";
+  const resolved = useAppSelector(selectTimezoneResolved);
+  const options = useTimezoneOptions();
 
   useEffect(() => {
     if (resolved) return;

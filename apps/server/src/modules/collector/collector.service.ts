@@ -73,7 +73,7 @@ export async function handleCollectEvent(
 
   if (!allowed) {
     console.warn(`Collector: origin mismatch for domain ${domain.domainName}`);
-    // letting it pass here for now because I do not have domain verification yet. this is a to-do
+    return null;
   }
 
   const visitorID = extractRealIp(req.ip || "");

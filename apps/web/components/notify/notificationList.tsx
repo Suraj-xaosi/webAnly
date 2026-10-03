@@ -8,6 +8,7 @@ import {
 import { NotificationItem } from "./notificationItem"
 import { ScrollArea } from "@workspace/ui/components/scroll-area"
 import { Button } from "@workspace/ui/components/button"
+import { Skeleton } from "@workspace/ui/components/skeleton"
 import {
   Card,
   CardAction,
@@ -55,9 +56,14 @@ export function NotificationList() {
         <ScrollArea className="h-96 overflow-hidden">
           <CardContent className="space-y-1 p-2">
             {isLoading && (
-              <CardDescription className="p-3 text-sm text-muted-foreground">
-                Loading...
-              </CardDescription>
+              <div className="grid gap-3 p-3" role="status" aria-busy="true" aria-label="Loading notifications">
+                {[0, 1, 2].map((item) => (
+                  <div key={item} className="grid gap-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-full" />
+                  </div>
+                ))}
+              </div>
             )}
             {isError && (
               <div className="grid gap-2 p-3" role="alert">

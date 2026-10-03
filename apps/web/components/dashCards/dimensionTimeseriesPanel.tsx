@@ -8,6 +8,7 @@ import {
   CardContent,
 } from "@workspace/ui/components/card"
 import { Button } from "@workspace/ui/components/button"
+import { Skeleton } from "@workspace/ui/components/skeleton"
 import { AreaChartGradient } from "@workspace/ui/components/main/areaChartGradient"
 import { useDimensionTimeseries } from "@/hooks/analytics/useDimTimeseries"
 import { useRealtimeDimensionTimeseries } from "@/hooks/realtime/useRealtimeDimensionTimeseries"
@@ -68,8 +69,9 @@ function HistoricalDimensionTimeseriesChart({
 
   if (historical.isLoading) {
     return (
-      <div className="py-8 text-center text-sm text-muted-foreground">
-        Loading...
+      <div className="grid gap-3 py-3" role="status" aria-busy="true" aria-label="Loading historical chart">
+        <Skeleton className="h-4 w-1/3" />
+        <Skeleton className="aspect-video w-full" />
       </div>
     )
   }
@@ -103,8 +105,9 @@ function LiveDimensionTimeseriesChart({
 
   if (realtime.isLoading) {
     return (
-      <div className="py-8 text-center text-sm text-muted-foreground">
-        Loading...
+      <div className="grid gap-3 py-3" role="status" aria-busy="true" aria-label="Loading live chart">
+        <Skeleton className="h-4 w-1/3" />
+        <Skeleton className="aspect-video w-full" />
       </div>
     )
   }

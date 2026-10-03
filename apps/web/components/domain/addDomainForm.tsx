@@ -1,11 +1,11 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { useAddDomain } from "@/hooks/domainCrud/useAddDomain"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
-import { getBrowserTimezone, getTimezoneOptions } from "../picker/timezonePicker"
+import { getBrowserTimezone, useTimezoneOptions } from "../picker/timezonePicker"
 import {
   Select,
   SelectContent,
@@ -45,12 +45,11 @@ export function AddDomainForm() {
   const [defaultTimezone, setDefaultTimezone] = useState("UTC")
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const options = useMemo(() => getTimezoneOptions(), [])
+  const options = useTimezoneOptions()
 
   useEffect(() => {
-    const browserTimezone = getBrowserTimezone()
-    if (options.includes(browserTimezone)) setDefaultTimezone(browserTimezone)
-  }, [options])
+    setDefaultTimezone(getBrowserTimezone())
+  }, [])
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()

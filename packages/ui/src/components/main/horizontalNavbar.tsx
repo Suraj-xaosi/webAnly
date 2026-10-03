@@ -47,7 +47,7 @@ export function HorizontalNavbar({ user, themeSwitcher, notificationBell, onNavi
 
         <button
           onClick={() => setCmdOpen(true)}
-          className="flex flex-1 items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground max-w-md hover:bg-muted transition-colors cursor-pointer"
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground max-w-md hover:bg-muted transition-colors cursor-pointer"
         >
           <Search className="h-3.5 w-3.5 shrink-0" />
           <span className="flex-1 font-heading text-left">Search...</span>
@@ -56,7 +56,7 @@ export function HorizontalNavbar({ user, themeSwitcher, notificationBell, onNavi
           </kbd>
         </button>
 
-        <div className="ml-auto flex items-center gap-1.5">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5">
           <Button
             variant="ghost"
             size="sm"

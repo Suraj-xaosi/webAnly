@@ -87,7 +87,8 @@ export function DomainSwitcher({ domains, activeDomainId, onSelect }: DomainSwit
                 <div className="flex size-6 items-center justify-center rounded-md border">
                   {getDomainInitial(domain.domainName)}
                 </div>
-                <span className="font-heading">{domain.domainName}</span>
+                {/* only here Remove the last 3 characters from the domain name because there are 3 characters added to the end */}
+                <span className="font-heading">{domain.domainName.slice(0, -3)}</span>
                 <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
               </DropdownMenuItem>
             ))}

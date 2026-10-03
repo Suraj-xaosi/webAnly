@@ -29,9 +29,10 @@ export function isOriginAllowed(
 
   if (!candidate) return false; // no usable header at all — reject
 
-  const normalizedStored = storedDomain.toLowerCase().startsWith("www.")
-    ? storedDomain.toLowerCase().slice(4)
-    : storedDomain.toLowerCase();
+  const storedWithoutMarker = storedDomain.toLowerCase().slice(0, -3);// because there are 3 characters added to the end of the domain name, we need to remove them before comparing
+  const normalizedStored = storedWithoutMarker.startsWith("www.")
+    ? storedWithoutMarker.slice(4)
+    : storedWithoutMarker;
 
   return candidate === normalizedStored;
 }

@@ -45,14 +45,14 @@ export default function LiveDashboardPage() {
   }
 
   return (
-    <div className="grid gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="w-fit">
+    <div className="grid min-w-0 gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
           <DomainSwitch />
         </div>
 
         {domainId && (
-          <div className="text-sm text-muted-foreground flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span className="font-medium">{timezone}</span>
             <span>·</span>
             <span>{from}</span>
@@ -129,7 +129,7 @@ function LiveDashboardContent({
         isLive={timeseries.isLive}
       />
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-2">
         {DIMENSIONS.map((dimension) => {
           const result = dimensionMap[dimension];
           return (

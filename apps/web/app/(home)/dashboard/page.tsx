@@ -46,40 +46,37 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 gap-6">
 
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex w-fit items-center gap-2">
+      <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <DomainSwitch />
           <AnalyticsChatLauncher />
         </div>
-        <DateRangePicker
-          value={{ from: new Date(from), to: new Date(to) }}
-          onApply={(range, interval) => {
-            if (range.from && range.to) {
-              // 1. Format the dates into stable strings outside the transition
-              const formattedFrom = format(range.from, "yyyy-MM-dd");
-              const formattedTo = format(range.to, "yyyy-MM-dd");
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <DateRangePicker
+            value={{ from: new Date(from), to: new Date(to) }}
+            onApply={(range, interval) => {
+              if (range.from && range.to) {
+                const formattedFrom = format(range.from, "yyyy-MM-dd");
+                const formattedTo = format(range.to, "yyyy-MM-dd");
 
-              // 2. Pass those ready-made strings into the transition
-              startTransition(() => {
-                dispatch(setDateRange({ 
-                  from: formattedFrom, 
-                  to: formattedTo, 
-                  interval 
-                }));
-              });
-            }
-          }}
-          timezone={timezone}
-        />
-        
-      {isPending && (
-        <p className="text-xs text-muted-foreground">Updating dashboard…</p>
-      )}
-
-        <TimezonePicker />
-
+                startTransition(() => {
+                  dispatch(setDateRange({
+                    from: formattedFrom,
+                    to: formattedTo,
+                    interval,
+                  }));
+                });
+              }
+            }}
+            timezone={timezone}
+          />
+          {isPending && (
+            <p className="text-xs text-muted-foreground">Updating dashboard…</p>
+          )}
+          <TimezonePicker />
+        </div>
       </div>
 
       <TimeseriesCard
@@ -90,7 +87,7 @@ export default function DashboardPage() {
         onRetry={timeseries.refetch}
       />
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-2">
         <ExitPageCard
           data={exitPages.data?.data ?? []}
           isLoading={exitPages.isLoading}

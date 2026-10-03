@@ -6,6 +6,7 @@ import { useDeleteDomain } from "@/hooks/domainCrud/useDeleteDomain"
 import { usePricing } from "@/hooks/razorpayIntegration/usePricing"
 import { useRazorpayCheckout } from "@/hooks/razorpayIntegration/useRazorpayCheckout"
 import { Button } from "@workspace/ui/components/button"
+import { Skeleton } from "@workspace/ui/components/skeleton"
 import {
   Card,
   CardContent,
@@ -255,13 +256,15 @@ export function DomainApiKeySection() {
 
   if (isLoading && !domains) {
     return (
-      <p
-        className="text-sm text-muted-foreground"
-        role="status"
-        aria-busy="true"
-      >
-        Loading domains...
-      </p>
+      <div className="grid gap-4" role="status" aria-busy="true" aria-label="Loading domain keys">
+        {[0, 1].map((item) => (
+          <div key={item} className="grid gap-3 rounded-xl border p-5">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-4 w-56 max-w-full" />
+            <Skeleton className="h-8 w-32" />
+          </div>
+        ))}
+      </div>
     )
   }
 

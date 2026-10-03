@@ -19,10 +19,14 @@ interface SignInDialogProps {
 
 export function SignInDialog({ label, size, variant }: SignInDialogProps) {
   async function handleGithubLogin() {
-    await authClient.signIn.social({
+    const result = await authClient.signIn.social({
       provider: "github",
       callbackURL: "/dashboard",
     })
+
+    if (result.error) {
+      throw new Error(result.error.message || "GitHub sign-in failed.")
+    }
   }
 
   return (
