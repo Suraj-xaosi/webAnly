@@ -11,7 +11,6 @@ import { normalizePath }               from "./functions/normalizepath.js";
 import { isOriginAllowed }             from "./functions/checkOrigin.js";
 import { createHash }                  from "crypto";
 import {
-  checkCollectorIpBan,
   checkCollectorRateLimit,
   type CollectorRateLimitResult,
 } from "./functions/collectorRateLimiter.js";
@@ -47,9 +46,6 @@ export async function handleCollectEvent(
   try {
     domain = await apikeyChecker(body.apikey);
   } catch (err) {
-    const ipBan = await checkCollectorIpBan(extractRealIp(req.ip || ""));
-    if (ipBan) return ipBan;
-
     console.warn(`COLLECTOR: apikey check failed`, err);
     return null;
   }
@@ -59,10 +55,7 @@ export async function handleCollectEvent(
     return null;
   }
 
-  const rateLimit = await checkCollectorRateLimit(
-    body.apikey,
-    extractRealIp(req.ip || "")
-  );
+  const rateLimit = await checkCollectorRateLimit(body.apikey);
   if (rateLimit) return rateLimit;
 
   const allowed = isOriginAllowed(

@@ -100,7 +100,7 @@ export function AddDomainForm() {
           Add a domain
         </CardTitle>
         <CardDescription>
-          You can track up to 2 domains. Each gets its own tracking script and API key.
+           Make sure your domain name is correctly written if not then it will not work .Each gets its own tracking script and API key , api key is not secret just a token.
         </CardDescription>
       </CardHeader>
       <CardContent>
