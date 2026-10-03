@@ -42,7 +42,8 @@ async function start() {
     await startNotificationWorker();
     
     await startSpikeJob(); 
-    await startDomainLifecycleJob();
+    //turnig off domain lifecycle job for now as it is not needed 
+    //await startDomainLifecycleJob();
     
     const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
     httpServer.listen(PORT, () => {

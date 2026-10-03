@@ -4,6 +4,7 @@ import { analyticsErrorResponse } from "@/lib/shared/DBfunctions/helper/analytic
 import { fetchAllPageMapData } from "@/lib/shared/DBfunctions/fetchAllPageMapData"
 import { fetchFlowData } from "@/lib/shared/DBfunctions/fetchFlowData"
 import { ALL_PAGE_MAP_VALUE } from "@/lib/shared/types/analytics"
+import { requireActiveDomainAccess } from "@/lib/shared/DBfunctions/helper/requireActiveDomainAccess"
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,6 +21,8 @@ export async function GET(req: NextRequest) {
         { status: 400 }
       )
     }
+    const accessError = await requireActiveDomainAccess(req, domainId)
+    if (accessError) return accessError
 
     const validationError = validateDateParams(from, to, timezone)
     if (validationError) return validationError

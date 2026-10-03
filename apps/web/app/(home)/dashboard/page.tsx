@@ -32,6 +32,8 @@ export default function DashboardPage() {
     error: domainsError,
     refetch: refetchDomains,
   } = useDomainSelection();
+  const selectedDomain = domains?.find((domain) => domain.id === domainId);
+  const analyticsDomainId = selectedDomain?.state === "ACTIVE" ? domainId : "";
   const from = useAppSelector(selectFrom);
   const to = useAppSelector(selectTo);
   const interval = useAppSelector(selectInterval);
@@ -51,7 +53,7 @@ export default function DashboardPage() {
     pagesError,
     isPagesError,
     setSelectedFlowPage,
-  } = useDashboardAnalytics({ domainId, from, to, interval, timezone });
+  } = useDashboardAnalytics({ domainId: analyticsDomainId, from, to, interval, timezone });
   const selectedPageMetrics = dimensionMap.page.data?.data.find(
     (entry) => entry.name === activeFlowPage
   );
@@ -113,6 +115,13 @@ export default function DashboardPage() {
           <Button asChild size="sm">
             <Link href="/domain#add">Add domain</Link>
           </Button>
+        </div>
+      ) : selectedDomain?.state !== "ACTIVE" ? (
+        <div className="grid justify-items-start gap-3">
+          <DomainSwitch />
+          <div className="rounded-xl border bg-card p-6 text-muted-foreground">
+            This domain is currently deactivated. Reactivate it to view analytics.
+          </div>
         </div>
       ) : (
         <>

@@ -19,38 +19,57 @@ const POLL_INTERVAL_MS = 2500
 const POLL_TIMEOUT_MS = 20_000
 
 export function useRazorpayCheckout() {
-  const scriptReady = useRazorpayScript()
+  const scriptStatus = useRazorpayScript()
+  const scriptReady = scriptStatus === "ready"
   const createOrderMutation = useCreateOrder()
   const queryClient = useQueryClient()
 
   const [status, setStatus] = useState<CheckoutStatus>("idle")
   const [activeDomainId, setActiveDomainId] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const pollForConfirmation = useCallback(
-    (razorpayOrderId: string) => {
+    (razorpayOrderId: string, domainId: string) => {
       setStatus("confirming")
       const startedAt = Date.now()
 
       const check = async () => {
-        const result = await getPaymentStatus(razorpayOrderId)
+        let result
+        try {
+          result = await getPaymentStatus(razorpayOrderId)
+        } catch {
+          setStatus("error")
+          setActiveDomainId(domainId)
+          setErrorMessage("We couldn't confirm the payment status. Please check again before retrying.")
+          return
+        }
 
         if (result.success && result.data.status === "SUCCESS") {
           await queryClient.invalidateQueries({ queryKey: queryKeys.domain() })
           setStatus("idle")
           setActiveDomainId(null)
+          setErrorMessage(null)
           return
         }
 
         if (result.success && result.data.status === "FAILED") {
           setStatus("error")
-          setActiveDomainId(null)
+          setActiveDomainId(domainId)
+          setErrorMessage("The payment was not completed. You can try again.")
           return
         }
 
-        // still PENDING (or lookup failed) — keep polling until timeout
+        if (!result.success) {
+          setStatus("error")
+          setActiveDomainId(domainId)
+          setErrorMessage("We couldn't confirm the payment status. Please check again before retrying.")
+          return
+        }
+
         if (Date.now() - startedAt >= POLL_TIMEOUT_MS) {
-          setStatus("idle")
-          setActiveDomainId(null)
+          setStatus("error")
+          setActiveDomainId(domainId)
+          setErrorMessage("Payment is still awaiting confirmation. Check its status before trying again.")
           return
         }
 
@@ -66,17 +85,31 @@ export function useRazorpayCheckout() {
     async (domain: Domain) => {
       if (!scriptReady) {
         setStatus("error")
+        setActiveDomainId(domain.id)
+        setErrorMessage(
+          scriptStatus === "error"
+            ? "Secure checkout couldn't load. Check your connection or browser extensions, then reload this page."
+            : "Secure checkout is still loading. Please wait a moment and try again."
+        )
         return
       }
 
       setStatus("creating-order")
       setActiveDomainId(domain.id)
+      setErrorMessage(null)
 
+      let order
       try {
-        const order = await createOrderMutation.mutateAsync(domain.id)
+        order = await createOrderMutation.mutateAsync(domain.id)
+      } catch {
+        setStatus("error")
+        setActiveDomainId(domain.id)
+        setErrorMessage("We couldn't create a payment order, so checkout didn't open. Please try again later.")
+        return
+      }
 
-        setStatus("awaiting-payment")
-
+      setStatus("awaiting-payment")
+      try {
         const razorpay = new window.Razorpay({
           key: order.keyId,
           order_id: order.razorpayOrderId,
@@ -85,23 +118,30 @@ export function useRazorpayCheckout() {
           name: "Webanly",
           description: "Domain premium payment",
           handler: () => {
-            pollForConfirmation(order.razorpayOrderId)
+            pollForConfirmation(order.razorpayOrderId, domain.id)
           },
           modal: {
             ondismiss: () => {
               setStatus("idle")
               setActiveDomainId(null)
+              setErrorMessage(null)
             },
           },
         })
 
+        razorpay.on("payment.failed", () => {
+          setStatus("error")
+          setActiveDomainId(domain.id)
+          setErrorMessage("The payment provider couldn't complete the payment. Please try again.")
+        })
         razorpay.open()
       } catch {
         setStatus("error")
-        setActiveDomainId(null)
+        setActiveDomainId(domain.id)
+        setErrorMessage("Secure checkout couldn't be opened. Please try again.")
       }
     },
-    [scriptReady, createOrderMutation, pollForConfirmation]
+    [scriptReady, scriptStatus, createOrderMutation, pollForConfirmation]
   )
 
   return {
@@ -109,5 +149,7 @@ export function useRazorpayCheckout() {
     status,
     activeDomainId,
     scriptReady,
+    scriptStatus,
+    errorMessage,
   }
 }

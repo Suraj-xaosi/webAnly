@@ -3,6 +3,11 @@
 import { useSyncExternalStore } from "react"
 
 const SCRIPT_SRC = "https://checkout.razorpay.com/v1/checkout.js"
+export type RazorpayScriptStatus = "loading" | "ready" | "error"
+
+let scriptStatus: RazorpayScriptStatus = "loading"
+let scriptElement: HTMLScriptElement | null = null
+const listeners = new Set<() => void>()
 
 interface RazorpayCheckoutOptions {
   key: string
@@ -19,6 +24,7 @@ interface RazorpayCheckoutOptions {
 
 interface RazorpayCheckout {
   open: () => void
+  on: (event: "payment.failed", handler: () => void) => void
 }
 
 declare global {
@@ -27,9 +33,6 @@ declare global {
   }
 }
 
-// Loads Razorpay's checkout widget script exactly once, even if this hook
-// is used by multiple components on the same page. Returns true once
-// window.Razorpay is available and the checkout popup can be opened.
 export function useRazorpayScript() {
   return useSyncExternalStore(
     subscribeToRazorpay,
@@ -38,40 +41,46 @@ export function useRazorpayScript() {
   )
 }
 
-function getRazorpaySnapshot() {
-  return typeof window !== "undefined" && !!window.Razorpay
+function getRazorpaySnapshot(): RazorpayScriptStatus {
+  if (typeof window !== "undefined" && window.Razorpay) return "ready"
+  return scriptStatus
 }
 
-function getServerRazorpaySnapshot() {
-  return false
+function getServerRazorpaySnapshot(): RazorpayScriptStatus {
+  return "loading"
 }
 
 function subscribeToRazorpay(onStoreChange: () => void) {
-  if (typeof window === "undefined" || window.Razorpay) return () => {}
+  listeners.add(onStoreChange)
+  if (typeof window === "undefined" || window.Razorpay || scriptElement) {
+    return () => listeners.delete(onStoreChange)
+  }
 
-  let script = document.querySelector<HTMLScriptElement>(
+  scriptElement = document.querySelector<HTMLScriptElement>(
     `script[src="${SCRIPT_SRC}"]`
   )
-  const shouldAppend = !script
-
-  if (!script) {
-    script = document.createElement("script")
-    script.src = SCRIPT_SRC
-    script.async = true
+  if (!scriptElement) {
+    scriptElement = document.createElement("script")
+    scriptElement.src = SCRIPT_SRC
+    scriptElement.async = true
   }
 
-  const handleLoad = () => onStoreChange()
+  const notify = () => listeners.forEach((listener) => listener())
+  const handleLoad = () => {
+    scriptStatus = window.Razorpay ? "ready" : "error"
+    notify()
+  }
   const handleError = () => {
     console.error("Failed to load Razorpay checkout script.")
-    onStoreChange()
+    scriptStatus = "error"
+    notify()
   }
 
-  script.addEventListener("load", handleLoad)
-  script.addEventListener("error", handleError)
-  if (shouldAppend) document.body.appendChild(script)
+  scriptElement.addEventListener("load", handleLoad, { once: true })
+  scriptElement.addEventListener("error", handleError, { once: true })
+  if (!scriptElement.isConnected) document.body.appendChild(scriptElement)
 
   return () => {
-    script?.removeEventListener("load", handleLoad)
-    script?.removeEventListener("error", handleError)
+    listeners.delete(onStoreChange)
   }
 }

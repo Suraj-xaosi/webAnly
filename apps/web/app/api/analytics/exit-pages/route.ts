@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateDateParams } from "@/lib/shared/DBfunctions/helper/TimeFunctions";
 import { fetchExitPagesData } from "@/lib/shared/DBfunctions/fetchExitPagesdata";
 import { analyticsErrorResponse } from "@/lib/shared/DBfunctions/helper/analyticsRouteUtils";
+import { requireActiveDomainAccess } from "@/lib/shared/DBfunctions/helper/requireActiveDomainAccess";
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,6 +15,8 @@ export async function GET(req: NextRequest) {
     if (!domainId) {
       return NextResponse.json({ error: "domainId is required" }, { status: 400 });
     }
+    const accessError = await requireActiveDomainAccess(req, domainId);
+    if (accessError) return accessError;
 
     const validationError = validateDateParams(from, to, timezone);
     if (validationError) return validationError;

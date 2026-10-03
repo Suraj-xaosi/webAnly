@@ -88,7 +88,8 @@ function BillingButton({
   const { badgeLabel, badgeClass, buttonLabel } = getBillingInfo(domain)
 
   const isThisDomainBusy =
-    checkout.activeDomainId === domain.id && checkout.status !== "idle"
+    checkout.activeDomainId === domain.id &&
+    ["creating-order", "awaiting-payment", "confirming"].includes(checkout.status)
 
   const statusText =
     checkout.status === "creating-order"
@@ -124,9 +125,19 @@ function BillingButton({
           : `${buttonLabel}${priceLabel ? ` — ${priceLabel}` : ""}`}
       </Button>
 
+      {checkout.scriptStatus === "loading" && (
+        <p className="text-xs text-muted-foreground">
+          Loading secure checkout…
+        </p>
+      )}
+      {checkout.scriptStatus === "error" && (
+        <p className="text-xs text-destructive" role="alert">
+          Secure checkout couldn&apos;t load. Check your connection or browser extensions, then reload this page.
+        </p>
+      )}
       {checkout.status === "error" && checkout.activeDomainId === domain.id && (
-        <p className="text-xs text-destructive">
-          Something went wrong starting checkout. Please try again.
+        <p className="text-xs text-destructive" role="alert">
+          {checkout.errorMessage ?? "Checkout couldn't be started. Please try again."}
         </p>
       )}
     </div>

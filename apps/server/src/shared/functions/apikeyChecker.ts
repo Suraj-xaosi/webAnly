@@ -1,6 +1,5 @@
 import { prisma } from "@repo/db";
-import { getCache, setCache } from "@repo/redis";
-import { LRUCache } from "lru-cache";
+import { deleteCache, getCache, setCache } from "@repo/redis";
 
 export interface DomainInfo {
   domainId: string;
@@ -11,12 +10,11 @@ export interface DomainInfo {
 }
 
 const CACHE_TTL_SECONDS = 1200; // redis TTL, 20 min
-const LOCAL_TTL_MS = 15_000;    // in-memory TTL, 15s — tune this
 
-const localCache = new LRUCache<string, DomainInfo>({
-  max: 5000,           // cap memory use; tune to your active-domain count
-  ttl: LOCAL_TTL_MS,
-});
+export async function invalidateApikeyCache(apikey: string): Promise<void> {
+  const cacheKey = `apikey:${apikey.trim()}`;
+  await deleteCache(cacheKey);
+}
 
 export async function apikeyChecker(apikey: string): Promise<DomainInfo> {
   const normalizedApiKey = typeof apikey === "string" ? apikey.trim() : "";
@@ -24,18 +22,10 @@ export async function apikeyChecker(apikey: string): Promise<DomainInfo> {
 
   const cacheKey = `apikey:${normalizedApiKey}`;
 
-  // L1: in-process, zero network cost
-  const local = localCache.get(cacheKey);
-  if (local) {
-    if (local.state !== "ACTIVE") throw new Error("Domain is inactive");
-    return local;
-  }
 
-  // L2: redis
   try {
     const cached = await getCache<DomainInfo>(cacheKey);
     if (cached) {
-      localCache.set(cacheKey, cached);
       if (cached.state !== "ACTIVE") throw new Error("Domain is inactive");
       return cached;
     }
@@ -66,7 +56,6 @@ export async function apikeyChecker(apikey: string): Promise<DomainInfo> {
     defaultTimezone: domain.defaultTimezone,
   };
 
-  localCache.set(cacheKey, result);
   try {
     await setCache(cacheKey, result, CACHE_TTL_SECONDS);
   } catch (error) {

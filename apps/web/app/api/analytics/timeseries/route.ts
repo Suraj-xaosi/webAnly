@@ -3,6 +3,7 @@ import { VALID_INTERVALS, type Interval } from "@/lib/shared/DBfunctions/helper/
 import { validateDateParams } from "@/lib/shared/DBfunctions/helper/TimeFunctions";
 import { fetchTimeseriesData } from "@/lib/shared/DBfunctions/fetchTimeseriesData";
 import { analyticsErrorResponse } from "@/lib/shared/DBfunctions/helper/analyticsRouteUtils";
+import { requireActiveDomainAccess } from "@/lib/shared/DBfunctions/helper/requireActiveDomainAccess";
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,6 +18,9 @@ export async function GET(req: NextRequest) {
     if (!domainId) {
       return NextResponse.json({ error: "domainId is required" }, { status: 400 });
     }
+    const accessError = await requireActiveDomainAccess(req, domainId);
+    if (accessError) return accessError;
+
     if (!VALID_INTERVALS.includes(interval)) {
       return NextResponse.json(
         { error: `Invalid interval. Allowed: ${VALID_INTERVALS.join(", ")}` },

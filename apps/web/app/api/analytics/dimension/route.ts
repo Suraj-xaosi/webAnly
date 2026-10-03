@@ -4,6 +4,7 @@ import type { Dimension } from "@/lib/shared/types/analytics";
 import { validateDateParams } from "@/lib/shared/DBfunctions/helper/TimeFunctions";
 import { fetchDimensionData } from "@/lib/shared/DBfunctions/fetchDimensionData";
 import { analyticsErrorResponse } from "@/lib/shared/DBfunctions/helper/analyticsRouteUtils";
+import { requireActiveDomainAccess } from "@/lib/shared/DBfunctions/helper/requireActiveDomainAccess";
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,6 +21,8 @@ export async function GET(req: NextRequest) {
         { status: 400 }
       );
     }
+    const accessError = await requireActiveDomainAccess(req, domainId);
+    if (accessError) return accessError;
 
     if (!DIMENSION_COL_MAP[dimension as Dimension]) {
       return NextResponse.json(

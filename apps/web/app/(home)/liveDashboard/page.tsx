@@ -39,7 +39,10 @@ export default function LiveDashboardPage() {
   const from = useMemo(() => getDateInTimezone(timezone), [timezone])
   const to = from
 
-  const { data: apikey, isPending: apikeyLoading } = useApiKey(domainId)
+  const { data: apikey, isPending: apikeyLoading } = useApiKey(
+    domainId,
+    isDomainActive === true
+  )
   const enabled = !!apikey && !apikeyLoading
 
   if (isDomainActive === false) {
