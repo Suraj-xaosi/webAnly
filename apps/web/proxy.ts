@@ -35,6 +35,9 @@ export async function proxy(request: NextRequest) {
   try {
     const isAuthRequest =
       pathname === "/api/auth" || pathname.startsWith("/api/auth/")
+    const resource = isServerAction
+      ? `action:${request.headers.get("next-action")}`
+      : `api:${pathname}`
     let scope: "user" | "ip" = "ip"
     let identity = getClientIp(request)
 
@@ -53,7 +56,7 @@ export async function proxy(request: NextRequest) {
       )
     }
 
-    const rateLimit = await checkWebRateLimit(scope, identity)
+    const rateLimit = await checkWebRateLimit(scope, identity, resource)
     if (rateLimit.limited) {
       return tooManyRequests(rateLimit.retryAfterSeconds)
     }

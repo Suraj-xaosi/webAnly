@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useSyncExternalStore } from "react"
 import { useAddDomain } from "@/hooks/domainCrud/useAddDomain"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
@@ -38,18 +38,40 @@ function isValidDomain(value: string) {
   return DOMAIN_PATTERN.test(value)
 }
 
+function isValidTimezone(value: string) {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: value })
+    return true
+  } catch {
+    return false
+  }
+}
+
+function subscribeToBrowserTimezone() {
+  return () => {}
+}
+
+function getServerTimezone() {
+  return "UTC"
+}
+
 export function AddDomainForm() {
   const addDomainMutation = useAddDomain()
   const [domainName, setDomainName] = useState("")
   const [expectedVisitors, setExpectedVisitors] = useState("100")
-  const [defaultTimezone, setDefaultTimezone] = useState("UTC")
+  const browserTimezone = useSyncExternalStore(
+    subscribeToBrowserTimezone,
+    getBrowserTimezone,
+    getServerTimezone
+  )
+  const [selectedTimezone, setSelectedTimezone] = useState<string | null>(null)
+  const defaultTimezone = selectedTimezone ?? browserTimezone
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const options = useTimezoneOptions()
-
-  useEffect(() => {
-    setDefaultTimezone(getBrowserTimezone())
-  }, [])
+  const timezoneOptions = options.includes(defaultTimezone)
+    ? options
+    : [...options, defaultTimezone]
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -70,7 +92,9 @@ export function AddDomainForm() {
       return
     }
 
-    const safeTimezone = options.includes(defaultTimezone) ? defaultTimezone : "UTC"
+    const safeTimezone = isValidTimezone(defaultTimezone)
+      ? defaultTimezone
+      : getBrowserTimezone()
 
     addDomainMutation.mutate(
       {
@@ -83,7 +107,7 @@ export function AddDomainForm() {
           setSuccess(true)
           setDomainName("")
           setExpectedVisitors("100")
-          setDefaultTimezone(safeTimezone)
+          setSelectedTimezone(safeTimezone)
         },
         onError: (mutationError) => {
           setError(mutationError.message)
@@ -148,13 +172,13 @@ export function AddDomainForm() {
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="defaultTimezone">Default timezone</Label>
             <div className="flex items-center gap-2">
-              <Select value={defaultTimezone} onValueChange={(value) => setDefaultTimezone(value)}>
+              <Select value={defaultTimezone} onValueChange={setSelectedTimezone}>
                 <SelectTrigger className="w-[220px]">
                   <Clock3 className="size-4 text-muted-foreground" />
                   <SelectValue placeholder="Select timezone" />
                 </SelectTrigger>
                 <SelectContent className="max-h-72">
-                  {options.map((option) => (
+                  {timezoneOptions.map((option) => (
                     <SelectItem key={option} value={option}>
                       {option}
                     </SelectItem>

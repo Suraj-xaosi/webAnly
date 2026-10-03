@@ -25,10 +25,11 @@ export interface RateLimitResult {
 
 export async function checkWebRateLimit(
   scope: "user" | "ip",
-  identity: string
+  identity: string,
+  resource: string
 ): Promise<RateLimitResult> {
   const identityHash = createHash("sha256")
-    .update(`${scope}:${identity}`)
+    .update(`${scope}:${identity}:${resource}`)
     .digest("hex")
 
   const [limited, ttlMs] = (await redis.eval(
