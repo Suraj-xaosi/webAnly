@@ -10,7 +10,7 @@ export async function fetchFlowData(
   to: string,
   timezone: string
 ): Promise<FlowResponse> {
-  const cacheKey = `flow:${domainId}:${page}:${from}:${to}:${timezone}`
+  const cacheKey = `flow:${domainId}:${page}:${from}:${to}:${timezone}:v2`
 
   const cachedResponse = await readCachedResponse<FlowResponse>(cacheKey)
   if (cachedResponse) return await cachedResponse.json()
@@ -30,33 +30,75 @@ export async function fetchFlowData(
 
   const [incomingRows, outgoingRows, exitRows] = await Promise.all([
     prisma.$queryRaw<Row[]>`
+    WITH grouped AS (
+      SELECT
+        NULLIF("previousPage", '') AS name,
+        COUNT(*)::int AS views,
+        COUNT(DISTINCT "visitorId")::int AS visitors
+      FROM "page_visit"
+      WHERE "domainId" = ${domainId}
+        AND "page" = ${page}
+        AND "visitedAt"::timestamptz >= ${lowerBoundSql}
+        AND "visitedAt"::timestamptz < ${upperBoundSql}
+      GROUP BY 1
+    ), ranked AS (
+      SELECT
+        name,
+        views,
+        visitors,
+        ROW_NUMBER() OVER (
+          ORDER BY views DESC, visitors DESC, name ASC NULLS FIRST
+        ) AS position
+      FROM grouped
+    )
+    SELECT name, views, visitors
+    FROM ranked
+    WHERE position <= 9
+    UNION ALL
     SELECT
-      NULLIF("previousPage", '') AS name,
-      COUNT(*)::int AS views,
-      COUNT(DISTINCT "visitorId")::int AS visitors
-    FROM "page_visit"
-    WHERE "domainId" = ${domainId}
-      AND "page" = ${page}
-      AND "visitedAt"::timestamptz >= ${lowerBoundSql}
-      AND "visitedAt"::timestamptz < ${upperBoundSql}
-    GROUP BY 1
-    ORDER BY views DESC, visitors DESC
-    LIMIT 10
+      'Other incoming pages' AS name,
+      SUM(views)::int AS views,
+      SUM(visitors)::int AS visitors
+    FROM ranked
+    WHERE position > 9
+    HAVING COUNT(*) > 0
+    ORDER BY views DESC, visitors DESC, name ASC
     `,
 
     prisma.$queryRaw<Row[]>`
+    WITH grouped AS (
+      SELECT
+        "page" AS name,
+        COUNT(*)::int AS views,
+        COUNT(DISTINCT "visitorId")::int AS visitors
+      FROM "page_visit"
+      WHERE "domainId" = ${domainId}
+        AND "previousPage" = ${page}
+        AND "visitedAt"::timestamptz >= ${lowerBoundSql}
+        AND "visitedAt"::timestamptz < ${upperBoundSql}
+      GROUP BY 1
+    ), ranked AS (
+      SELECT
+        name,
+        views,
+        visitors,
+        ROW_NUMBER() OVER (
+          ORDER BY views DESC, visitors DESC, name ASC
+        ) AS position
+      FROM grouped
+    )
+    SELECT name, views, visitors
+    FROM ranked
+    WHERE position <= 9
+    UNION ALL
     SELECT
-      "page" AS name,
-      COUNT(*)::int AS views,
-      COUNT(DISTINCT "visitorId")::int AS visitors
-    FROM "page_visit"
-    WHERE "domainId" = ${domainId}
-      AND "previousPage" = ${page}
-      AND "visitedAt"::timestamptz >= ${lowerBoundSql}
-      AND "visitedAt"::timestamptz < ${upperBoundSql}
-    GROUP BY 1
-    ORDER BY views DESC, visitors DESC
-    LIMIT 10
+      'Other outgoing pages' AS name,
+      SUM(views)::int AS views,
+      SUM(visitors)::int AS visitors
+    FROM ranked
+    WHERE position > 9
+    HAVING COUNT(*) > 0
+    ORDER BY views DESC, visitors DESC, name ASC
     `,
 
     prisma.$queryRaw<ExitRow[]>`
@@ -72,28 +114,17 @@ export async function fetchFlowData(
     `,
   ])
 
-  function foldRows(rows: Row[], type: "page" | "source", otherName: string): FlowEntry[] {
-    const entries: FlowEntry[] = rows.map((row) => ({
+  function toFlowEntries(rows: Row[], type: "page" | "source"): FlowEntry[] {
+    return rows.map((row) => ({
       name: row.name ?? "Direct / None",
       type: row.name ? type : "source",
       views: row.views,
       visitors: row.visitors,
     }))
-    const kept = entries.slice(0, 9)
-    const rest = entries.slice(9)
-    if (rest.length > 0) {
-      kept.push({
-        name: otherName,
-        type: "other",
-        views: rest.reduce((sum, row) => sum + row.views, 0),
-        visitors: rest.reduce((sum, row) => sum + row.visitors, 0),
-      })
-    }
-    return kept
   }
 
-  const incoming = foldRows(incomingRows, "page", "Other incoming pages")
-  const outgoing = foldRows(outgoingRows, "page", "Other outgoing pages")
+  const incoming = toFlowEntries(incomingRows, "page")
+  const outgoing = toFlowEntries(outgoingRows, "page")
   const exits = exitRows[0]
 
   if (exits && exits.views > 0) {

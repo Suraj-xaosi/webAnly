@@ -16,7 +16,13 @@ import {
   type SankeyLinkProps,
   type SankeyNodeProps,
 } from "recharts"
+import { InfoIcon } from "lucide-react"
 import { PageNetworkGraph } from "@workspace/ui/components/main/pageNetworkGraph"
+import {
+  Tooltip as HelpTooltip,
+  TooltipContent as HelpTooltipContent,
+  TooltipTrigger as HelpTooltipTrigger,
+} from "@workspace/ui/components/tooltip"
 import type { FlowResponse, ApiError } from "@/hooks/analytics/useFlow"
 import { AnalyticsCardState } from "./analyticsCardState"
 import {
@@ -318,7 +324,46 @@ export function PageFlowCard({
   return (
     <Card className="col-span-full">
       <CardHeader className="flex items-center justify-between gap-2">
-        <CardTitle>{isAllPageMap ? "All Page Map" : "Page Flow"}</CardTitle>
+        <div className="flex min-w-0 items-center gap-2">
+          <CardTitle>{isAllPageMap ? "All Page Map" : "Page Flow"}</CardTitle>
+          <HelpTooltip>
+            <HelpTooltipTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={
+                  isAllPageMap
+                    ? "About the All Page Map"
+                    : "About the selected page flow"
+                }
+              >
+                <InfoIcon className="size-4" aria-hidden="true" />
+              </button>
+            </HelpTooltipTrigger>
+            <HelpTooltipContent
+              side="bottom"
+              className="max-w-sm items-start whitespace-normal"
+            >
+              {isAllPageMap ? (
+                <p>
+                  “Other pages” is a group, not an extra page on your site. It
+                  represents transitions whose previous or current page is not
+                  among the pages shown for this date range. For example, a
+                  visit can point back to a page visited before the range
+                  started. The group’s totals combine these visits; they are
+                  not counts for one real page.
+                </p>
+              ) : (
+                <p>
+                  This view shows visits into and out of the selected page.
+                  “Direct / None” means no same-site previous page was
+                  recorded. “Other incoming pages” and “Other outgoing pages”
+                  group lower-ranked paths; they are not individual pages.
+                </p>
+              )}
+            </HelpTooltipContent>
+          </HelpTooltip>
+        </div>
         <div className="flex items-center gap-2">
           <Select
             value={selectedPage || undefined}
