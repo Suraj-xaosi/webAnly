@@ -44,7 +44,7 @@ export function DomainSwitcher({ domains, activeDomainId, onSelect }: DomainSwit
     return null
   }
 
-  const getDomainInitial = (domainName: string) => domainName.charAt(3).toUpperCase()
+  const getDomainInitial = (domainName: string) => domainName.charAt(0).toUpperCase()
 
   const handleSelect = (domain: Domain) => {
     setInternalActiveDomain(domain)
@@ -64,7 +64,7 @@ export function DomainSwitcher({ domains, activeDomainId, onSelect }: DomainSwit
                 {getDomainInitial(activeDomain.domainName)}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-heading font-medium">{activeDomain.domainName}</span>
+                <span className="truncate font-heading font-medium">{activeDomain.domainName.slice(0, -3)}</span>
               </div>
               <ChevronsUpDownIcon className="ml-auto" />
             </SidebarMenuButton>
