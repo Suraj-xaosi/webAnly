@@ -339,7 +339,10 @@ export function PageFlowCard({
                 All Page Map
               </SelectItem>
               {availablePages
-                .filter((page) => page !== ALL_PAGE_MAP_VALUE)
+                .filter(
+                  (page) =>
+                    page !== ALL_PAGE_MAP_VALUE && page.trim().length > 0
+                )
                 .map((page) => (
                   <SelectItem key={page} value={page}>
                     {page}

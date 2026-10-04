@@ -69,9 +69,9 @@ export function AddDomainForm() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const options = useTimezoneOptions()
-  const timezoneOptions = options.includes(defaultTimezone)
-    ? options
-    : [...options, defaultTimezone]
+  const timezoneOptions = [...new Set([...options, defaultTimezone])]
+    .filter((option) => option.trim().length > 0)
+  const timezoneValue = defaultTimezone.trim() ? defaultTimezone : "UTC"
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -172,7 +172,7 @@ export function AddDomainForm() {
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="defaultTimezone">Default timezone</Label>
             <div className="flex items-center gap-2">
-              <Select value={defaultTimezone} onValueChange={setSelectedTimezone}>
+              <Select value={timezoneValue} onValueChange={setSelectedTimezone}>
                 <SelectTrigger className="w-[220px]">
                   <Clock3 className="size-4 text-muted-foreground" />
                   <SelectValue placeholder="Select timezone" />

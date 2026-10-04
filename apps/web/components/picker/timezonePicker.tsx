@@ -85,6 +85,7 @@ export default function TimezonePicker() {
   const timezone = useAppSelector(selectTimezone) ?? "UTC";
   const resolved = useAppSelector(selectTimezoneResolved);
   const options = useTimezoneOptions();
+  const timezoneValue = timezone.trim() ? timezone : "UTC";
 
   useEffect(() => {
     if (resolved) return;
@@ -105,17 +106,19 @@ export default function TimezonePicker() {
 
   return (
     <div className="flex items-center gap-2">
-      <Select value={timezone} onValueChange={(value) => dispatch(setTimezone(value))}>
+      <Select value={timezoneValue} onValueChange={(value) => dispatch(setTimezone(value))}>
         <SelectTrigger className="w-[220px]">
           <Clock3 className="size-4 text-muted-foreground" />
           <SelectValue placeholder="Select timezone" />
         </SelectTrigger>
         <SelectContent className="max-h-72">
-          {options.map((option) => (
-            <SelectItem key={option} value={option}>
-              {option}
-            </SelectItem>
-          ))}
+          {options
+            .filter((option) => option.trim().length > 0)
+            .map((option) => (
+              <SelectItem key={option} value={option}>
+                {option}
+              </SelectItem>
+            ))}
         </SelectContent>
       </Select>
     </div>

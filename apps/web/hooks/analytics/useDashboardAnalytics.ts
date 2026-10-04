@@ -63,7 +63,10 @@ export function useDashboardAnalytics({
   const page = useDimension({ domainId, from, to, dimension: "page", timezone })
   const exitPages = useExitPages({ domainId, from, to, timezone })
   const flowPages = useMemo(
-    () => page.data?.data.map((item) => item.name) ?? [],
+    () =>
+      page.data?.data
+        .map((item) => item.name)
+        .filter((name) => name.trim().length > 0) ?? [],
     [page.data]
   )
   const [selectedFlowPage, setSelectedFlowPage] =

@@ -38,13 +38,15 @@ export async function fetchDimensionData(
     ORDER BY views DESC
   `
 
-  const data = rows.map((row) => ({
-    name: row.name ?? "Unknown",
-    views: row.views,
-    visitors: row.visitors,
-    avgDwell: row.avgDwell ?? 0,
-    viewsPerVisitor: row.visitors > 0 ? +(row.views / row.visitors).toFixed(2) : 0,
-  }))
+  const data = rows
+    .filter((row) => dimension !== "page" || (row.name?.trim().length ?? 0) > 0)
+    .map((row) => ({
+      name: row.name ?? "Unknown",
+      views: row.views,
+      visitors: row.visitors,
+      avgDwell: row.avgDwell ?? 0,
+      viewsPerVisitor: row.visitors > 0 ? +(row.views / row.visitors).toFixed(2) : 0,
+    }))
 
   const responseBody: DimensionResponse = { dimension, from, to, timezone, total: data.length, data }
   await writeCachedResponse(cacheKey, responseBody, to, timezone)
