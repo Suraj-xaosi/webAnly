@@ -26,7 +26,7 @@ export async function fetchAllPageMapData(
   to: string,
   timezone: string
 ): Promise<PageMapResponse> {
-  const cacheKey = `all-page-map:${domainId}:${from}:${to}:${timezone}:v1`
+  const cacheKey = `all-page-map:${domainId}:${from}:${to}:${timezone}:v2`
 
   const cachedResponse = await readCachedResponse<PageMapResponse>(cacheKey)
   if (cachedResponse) return await cachedResponse.json()
@@ -89,11 +89,19 @@ export async function fetchAllPageMapData(
       FROM "page_visit" AS visits
       LEFT JOIN selected_pages AS selected_page
         ON selected_page.id = visits."page"
+      LEFT JOIN selected_pages AS source_page
+        ON source_page.id = visits."previousPage"
       WHERE visits."domainId" = ${domainId}
         AND visits."visitedAt"::timestamptz >= ${lowerBoundSql}
         AND visits."visitedAt"::timestamptz < ${upperBoundSql}
-        AND selected_page.id IS NULL
-        AND visits."page" <> ''
+        AND (
+          selected_page.id IS NULL
+          OR (
+            visits."previousPage" IS NOT NULL
+            AND visits."previousPage" <> ''
+            AND source_page.id IS NULL
+          )
+        )
         AND EXISTS (
           SELECT 1
           FROM ranked_edges
@@ -114,7 +122,7 @@ export async function fetchAllPageMapData(
           SELECT jsonb_agg(
             jsonb_build_object(
               'id', id,
-              'label', id,
+              'label', label,
               'views', views,
               'visitors', visitors,
               'exits', exits

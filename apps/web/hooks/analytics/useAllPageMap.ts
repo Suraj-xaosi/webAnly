@@ -30,7 +30,7 @@ export function useAllPageMap(params: PageMapParams, enabled: boolean) {
     queryKey: queryKeys.analytics.allPageMap(domainId, from, to, timezone),
     queryFn: () => fetchPageMap(params),
     enabled: enabled && Boolean(domainId && from && to),
-    staleTime: 3 * 60 * 1000,
+    staleTime: 30 * 1000,
     gcTime: 10 * 60 * 1000,
   })
 }

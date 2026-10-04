@@ -137,7 +137,7 @@ function BillingButton({
       )}
       {checkout.status === "error" && checkout.activeDomainId === domain.id && (
         <p className="text-xs text-destructive" role="alert">
-          {checkout.errorMessage ?? "Checkout couldn't be started. Please try again."}
+          {checkout.errorMessage ?? "Checkout couldn't be started (no need). Service will be for FREE now  . he he"}
         </p>
       )}
     </div>

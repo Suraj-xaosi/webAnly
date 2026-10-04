@@ -165,6 +165,10 @@ function createGraphLayout(
   nodes: PageNetworkNode[],
   edges: PageNetworkEdge[]
 ): GraphLayout {
+  const nodeIds = new Set(nodes.map((node) => node.id))
+  const validEdges = edges.filter(
+    (edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target)
+  )
   const positionedNodes: PositionedNode[] = nodes.map((node, index) => {
     const angle = (index / Math.max(nodes.length, 1)) * TWO_PI
     const initialRadius = Math.min(220, 70 + nodes.length * 8)
@@ -176,7 +180,7 @@ function createGraphLayout(
     }
   })
 
-  const layoutLinks: SimulationLinkDatum<PositionedNode>[] = edges.map(
+  const layoutLinks: SimulationLinkDatum<PositionedNode>[] = validEdges.map(
     (edge) => ({
       source: edge.source,
       target: edge.target,
@@ -221,7 +225,7 @@ function createGraphLayout(
     positionedNodes.map((node) => [node.id, [] as Attachment[]])
   )
 
-  edges.forEach((edge, index) => {
+  validEdges.forEach((edge, index) => {
     const source = nodeById.get(edge.source)
     const target = nodeById.get(edge.target)
     if (!source || !target) return
@@ -248,9 +252,9 @@ function createGraphLayout(
   }
 
   const edgeKeys = new Set(
-    edges.map((edge) => `${edge.source}\u0000${edge.target}`)
+    validEdges.map((edge) => `${edge.source}\u0000${edge.target}`)
   )
-  const graphEdges = edges.flatMap((edge, index) => {
+  const graphEdges = validEdges.flatMap((edge, index) => {
     const source = nodeById.get(edge.source)
     const start = attachmentPoints.get(`${index}:source`)
     const end = attachmentPoints.get(`${index}:target`)
