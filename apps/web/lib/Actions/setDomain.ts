@@ -35,14 +35,14 @@ export async function setDomain(domainName: string, expectedVisitors: number, de
       return actionErr("User not found.")
     }
 
-    if (user.domains.length >= 2) {
+    /*if (user.domains.length >= 2) {
       return actionErr("You can only add 2 domains.")
-    }
+    }*/
 
-    const existing = await prisma.domain.findUnique({ where: { domainName: sanitizedDomain } })
+    /*const existing = await prisma.domain.findUnique({ where: { domainName: sanitizedDomain } })
     if (existing) {
       return actionErr("This domain is already in use.")
-    }
+    }*/
 
     const threeDigitUid = Math.floor(Math.random() * 900 + 100).toString()
 
