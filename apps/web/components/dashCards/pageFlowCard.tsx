@@ -10,6 +10,14 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@workspace/ui/components/dialog"
+import {
   ResponsiveContainer,
   Sankey,
   Tooltip,
@@ -18,11 +26,6 @@ import {
 } from "recharts"
 import { InfoIcon } from "lucide-react"
 import { PageNetworkGraph } from "@workspace/ui/components/main/pageNetworkGraph"
-import {
-  Tooltip as HelpTooltip,
-  TooltipContent as HelpTooltipContent,
-  TooltipTrigger as HelpTooltipTrigger,
-} from "@workspace/ui/components/tooltip"
 import type { FlowResponse, ApiError } from "@/hooks/analytics/useFlow"
 import { AnalyticsCardState } from "./analyticsCardState"
 import {
@@ -207,13 +210,32 @@ export function PageFlowCard({
     () => (props: SankeyNodeProps) => renderFlowNode(props, metric),
     [metric]
   )
+  const loadingVisualization = isAllPageMap ? (
+    <div className="overflow-x-auto px-4 pb-2">
+      <div className="mx-auto aspect-square w-full min-w-[640px] max-w-[800px]">
+        <AnalyticsCardState
+          isLoading
+          isError={false}
+          loadingClassName="h-full"
+        />
+      </div>
+    </div>
+  ) : (
+    <div className="overflow-x-auto px-4 pb-2">
+      <div className="min-w-[760px]" style={{ height: chartHeight }}>
+        <AnalyticsCardState
+          isLoading
+          isError={false}
+          loadingClassName="h-full"
+        />
+      </div>
+    </div>
+  )
   let visualization: ReactNode
 
   if (isAllPageMap) {
     if (allPageMapLoading && !allPageMapData) {
-      visualization = (
-        <AnalyticsCardState isLoading isError={false} />
-      )
+      visualization = loadingVisualization
     } else if (allPageMapError && !allPageMapData) {
       visualization = (
         <AnalyticsCardState
@@ -244,9 +266,7 @@ export function PageFlowCard({
       )
     }
   } else if (isPagesLoading) {
-    visualization = (
-      <AnalyticsCardState isLoading isError={false} />
-    )
+    visualization = loadingVisualization
   } else if (isPagesError) {
     visualization = (
       <AnalyticsCardState
@@ -263,9 +283,7 @@ export function PageFlowCard({
       </div>
     )
   } else if (isLoading && !data) {
-    visualization = (
-      <AnalyticsCardState isLoading isError={false} />
-    )
+    visualization = loadingVisualization
   } else if (isError && !data) {
     visualization = (
       <AnalyticsCardState
@@ -326,43 +344,48 @@ export function PageFlowCard({
       <CardHeader className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <CardTitle>{isAllPageMap ? "All Page Map" : "Page Flow"}</CardTitle>
-          <HelpTooltip>
-            <HelpTooltipTrigger asChild>
+          <Dialog>
+            <DialogTrigger asChild>
               <button
                 type="button"
-                className="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 aria-label={
                   isAllPageMap
                     ? "About the All Page Map"
                     : "About the selected page flow"
                 }
               >
-                <InfoIcon className="size-4" aria-hidden="true" />
+                <InfoIcon className="size-5" aria-hidden="true" />
               </button>
-            </HelpTooltipTrigger>
-            <HelpTooltipContent
-              side="bottom"
-              className="max-w-sm items-start whitespace-normal"
-            >
-              {isAllPageMap ? (
-                <p>
-                  “Other pages” is a group, not an extra page on your site. It
-                  represents transitions whose previous or current page is not
-                  among the pages shown for this date range. For example, a
-                  visit can point back to a page visited before the range
-                  started. The group’s totals combine these visits; they are
-                  not counts for one real page.
-                </p>
-              ) : (
-                <p>
-                  This view shows visits into and out of the selected page.
-                  “Direct / None” means no same-site previous page was
-                  recorded. “Other incoming pages” and “Other outgoing pages”
-                  group lower-ranked paths; they are not individual pages.
-                </p>
-              )}
-            </HelpTooltipContent>
-          </HelpTooltip>
+            </DialogTrigger>
+            <DialogContent className="max-h-[80vh] overflow-y-auto p-6 sm:max-w-md">
+              <DialogHeader className="pr-8 text-left">
+                <DialogTitle className="text-lg">
+                  {isAllPageMap ? "About the All Page Map" : "About Page Flow"}
+                </DialogTitle>
+                <DialogDescription className="text-base leading-relaxed">
+                  {isAllPageMap ? (
+                    <>
+                      “Other pages” is a group, not an extra page on your site.
+                      It represents transitions whose previous or current page
+                      is not among the pages shown for this date range. For
+                      example, a visit can point back to a page visited before
+                      the range started. The group’s totals combine these
+                      visits; they are not counts for one real page.
+                    </>
+                  ) : (
+                    <>
+                      This view shows visits into and out of the selected page.
+                      “Direct / None” means no same-site previous page was
+                      recorded. “Other incoming pages” and “Other outgoing
+                      pages” group lower-ranked paths; they are not individual
+                      pages.
+                    </>
+                  )}
+                </DialogDescription>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
         </div>
         <div className="flex items-center gap-2">
           <Select

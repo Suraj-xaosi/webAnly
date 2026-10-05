@@ -6,6 +6,7 @@ import { Button } from "@workspace/ui/components/button"
 interface AnalyticsCardStateProps {
   isLoading: boolean
   isError: boolean
+  loadingClassName?: string
   error?: ApiError | null
   hasData?: boolean
   onRetry?: () => void
@@ -14,6 +15,7 @@ interface AnalyticsCardStateProps {
 export function AnalyticsCardState({
   isLoading,
   isError,
+  loadingClassName,
   error,
   hasData = false,
   onRetry,
@@ -21,7 +23,7 @@ export function AnalyticsCardState({
   if (isLoading && !hasData) {
     return (
       <div
-        className="grid min-h-48 content-center gap-3 rounded-md border bg-card p-6"
+        className={`grid min-h-48 content-center gap-3 rounded-md border bg-card p-6 ${loadingClassName ?? ""}`}
         role="status"
         aria-busy="true"
       >
