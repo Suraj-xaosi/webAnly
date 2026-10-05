@@ -1,5 +1,6 @@
 
 import path from 'path';
+import { isIP } from 'node:net';
 import { open, CityResponse, Reader } from 'maxmind';
 
 let lookup: Reader<CityResponse> | null = null;
@@ -16,13 +17,26 @@ function initGeoIP(): Promise<void> {
 }
 
 function isPrivateIp(ip: string): boolean {
+  const normalizedIp = ip.toLowerCase();
+
+  if (isIP(normalizedIp) === 4) {
+    const [first, second] = normalizedIp.split(".").map(Number);
+    return (
+      first === 0 ||
+      first === 10 ||
+      first === 127 ||
+      (first === 169 && second === 254) ||
+      (first === 172 && second !== undefined && second >= 16 && second <= 31) ||
+      (first === 192 && second === 168)
+    );
+  }
+
   return (
-    ip === "0.0.0.0"          ||
-    ip === "::1"              ||
-    ip.startsWith("127.")     ||
-    ip.startsWith("192.168.") ||
-    ip.startsWith("10.")      ||
-    ip.startsWith("172.")
+    normalizedIp === "::" ||
+    normalizedIp === "::1" ||
+    normalizedIp.startsWith("fc") ||
+    normalizedIp.startsWith("fd") ||
+    /^fe[89ab]/.test(normalizedIp)
   );
 }
 /*
@@ -51,7 +65,7 @@ export async function locationFromIp(
   ip: string
 ): Promise<{ city: string; country: string }> {
   if (!ip) return { city: "Unknown", country: "Unknown" };
-  if (isPrivateIp(ip)) return { city: "local", country: "local" };
+  if (isPrivateIp(ip)) return { city: "Unknown", country: "Unknown" };
 
   try {
     await initGeoIP();
