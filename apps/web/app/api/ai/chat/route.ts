@@ -8,7 +8,12 @@ import { checkMessageLength, isOnTopic } from "@/lib/ai/guards"
 import { checkTokenBudget, recordTokenUsage } from "@/lib/ai/tokenBudget"
 import { trimHistory } from "@/lib/ai/trimHistory"
 import { buildAnalyticsAgent } from "@/lib/ai/agent"
-import { HumanMessage, SystemMessage, AIMessage } from "@langchain/core/messages"
+import {
+  HumanMessage,
+  SystemMessage,
+  AIMessage,
+} from "@langchain/core/messages"
+import { getDisplayDomainName } from "@workspace/ui/lib/domainName"
 
 type IncomingUIMessage = {
   role: "user" | "assistant" | "system"
@@ -20,6 +25,31 @@ function extractText(message: IncomingUIMessage): string {
     .filter((part) => part.type === "text" && typeof part.text === "string")
     .map((part) => part.text)
     .join("")
+}
+
+function getRecentConversationHistory(messages: IncomingUIMessage[]) {
+  const exchanges: { user: string; assistant: string[] }[] = []
+  let currentExchange: { user: string; assistant: string[] } | undefined
+
+  for (const message of messages) {
+    const text = extractText(message)
+
+    if (message.role === "user") {
+      if (currentExchange) exchanges.push(currentExchange)
+      currentExchange = text.trim() ? { user: text, assistant: [] } : undefined
+    } else if (message.role === "assistant" && currentExchange && text.trim()) {
+      currentExchange.assistant.push(text)
+    }
+  }
+
+  if (currentExchange) exchanges.push(currentExchange)
+
+  return exchanges
+    .slice(-10)
+    .flatMap(({ user, assistant }) => [
+      new HumanMessage(user),
+      ...assistant.map((text) => new AIMessage(text)),
+    ])
 }
 
 // Return a short canned-text stream for guard failures (not logged in,
@@ -41,7 +71,9 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json()
   } catch {
-    return quickTextResponse("We could not understand the request. Please try again.")
+    return quickTextResponse(
+      "We could not understand the request. Please try again."
+    )
   }
 
   const { domainId, messages } = body
@@ -63,12 +95,14 @@ export async function POST(req: NextRequest) {
       state: true,
       defaultTimezone: true,
     })
-    if (!domain) return quickTextResponse("Domain not found or it does not belong to you.")
+    if (!domain)
+      return quickTextResponse("Domain not found or it does not belong to you.")
+    const displayDomainName = getDisplayDomainName(domain.domainName)
 
     // ── 3. Active check ──────────────────────────────────────
     if (domain.state !== "ACTIVE") {
       return quickTextResponse(
-        `${domain.domainName} is currently deactivated. The assistant only works with active domains.`
+        `${displayDomainName} is currently deactivated. The assistant only works with active domains.`
       )
     }
 
@@ -79,25 +113,26 @@ export async function POST(req: NextRequest) {
     // ── 5. Daily token budget guard ──────────────────────────
     const budget = await checkTokenBudget(domain.id)
     if (!budget.ok) {
-      return quickTextResponse("The AI assistant's limit for today has been reached. Please try again tomorrow.")
+      return quickTextResponse(
+        "The AI assistant's limit for today has been reached. Please try again tomorrow."
+      )
     }
 
     // ── 6. Topic guard ───────────────────────────────────────
     const onTopic = await isOnTopic(latestUserMessage)
     if (!onTopic) {
-      return quickTextResponse("I can only help with questions about your website traffic analytics.")
+      return quickTextResponse(
+        "I can only help with questions about your website traffic analytics."
+      )
     }
 
     // ── 7. Build and trim the conversation ────────────────────
     const today = todayInTimeZone(domain.defaultTimezone)
-    const historyMessages = messages.slice(0, -1).map((m) => {
-      const text = extractText(m)
-      return m.role === "user" ? new HumanMessage(text) : new AIMessage(text)
-    })
+    const historyMessages = getRecentConversationHistory(messages.slice(0, -1))
 
     const rawMessages = [
       new SystemMessage(
-        `Today's date is ${today} (timezone: ${domain.defaultTimezone}). You are the traffic analytics assistant for "${domain.domainName}". Discuss traffic data for this domain only; clearly refuse requests for data from any other domain.`
+        `Today's date is ${today} (timezone: ${domain.defaultTimezone}). You are the traffic analytics assistant for "${displayDomainName}". Discuss traffic data for this domain only; clearly refuse requests for data from any other domain. Answer the user's question directly and concisely. Summarize analytics results with only the key figures needed to answer; do not reproduce raw tool output, JSON, or long lists unless the user explicitly asks to see the detailed data.`
       ),
       ...historyMessages,
       new HumanMessage(latestUserMessage),
@@ -114,12 +149,14 @@ export async function POST(req: NextRequest) {
       { messages: trimmedMessages },
       {
         version: "v2" as const,
-        recursionLimit: 8,      // infinite-loop guard
-        signal: req.signal,      // stop the agent if the client disconnects
+        recursionLimit: 8, // infinite-loop guard
+        signal: req.signal, // stop the agent if the client disconnects
         callbacks: [
           {
             handleLLMEnd(output: any) {
-              const usage = output?.llmOutput?.tokenUsage ?? output?.llmOutput?.estimatedTokenUsage
+              const usage =
+                output?.llmOutput?.tokenUsage ??
+                output?.llmOutput?.estimatedTokenUsage
               if (usage?.totalTokens) totalTokensUsed += usage.totalTokens
             },
           },

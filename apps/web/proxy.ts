@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/betterAuth/auth"
 import { checkWebRateLimit } from "@/lib/rateLimit"
+import { DIMENSION_COL_MAP } from "@/lib/shared/DBfunctions/helper/analyticsConstants"
 
 function getClientIp(request: NextRequest): string | null {
   const realIp = request.headers.get("x-real-ip")?.trim()
@@ -35,9 +36,18 @@ export async function proxy(request: NextRequest) {
   try {
     const isAuthRequest =
       pathname === "/api/auth" || pathname.startsWith("/api/auth/")
-    const resource = isServerAction
+    const baseResource = isServerAction
       ? `action:${request.headers.get("next-action")}`
       : `api:${pathname}`
+    const dimension =
+      pathname === "/api/analytics/dimension"
+        ? request.nextUrl.searchParams.get("dimension")
+        : null
+    const resource =
+      dimension &&
+      Object.prototype.hasOwnProperty.call(DIMENSION_COL_MAP, dimension)
+        ? `${baseResource}:dimension:${dimension}`
+        : baseResource
     let scope: "user" | "ip" = "ip"
     let identity = getClientIp(request)
 

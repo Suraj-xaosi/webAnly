@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useDomain } from "@/hooks/domainCrud/useDomain"
 import { useDeleteDomain } from "@/hooks/domainCrud/useDeleteDomain"
+import { useRotateDomainApiKey } from "@/hooks/domainCrud/useRotateDomainApiKey"
 import { usePricing } from "@/hooks/razorpayIntegration/usePricing"
 import { useRazorpayCheckout } from "@/hooks/razorpayIntegration/useRazorpayCheckout"
 import { Button } from "@workspace/ui/components/button"
@@ -34,8 +35,10 @@ import {
   Trash2Icon,
   Loader2Icon,
   CreditCardIcon,
+  RotateCwIcon,
 } from "lucide-react"
 import { cn } from "@workspace/ui/lib/utils"
+import { getDisplayDomainName } from "@workspace/ui/lib/domainName"
 import type { Domain } from "@/lib/shared/types/domain"
 
 function maskKey(key: string) {
@@ -89,7 +92,9 @@ function BillingButton({
 
   const isThisDomainBusy =
     checkout.activeDomainId === domain.id &&
-    ["creating-order", "awaiting-payment", "confirming"].includes(checkout.status)
+    ["creating-order", "awaiting-payment", "confirming"].includes(
+      checkout.status
+    )
 
   const statusText =
     checkout.status === "creating-order"
@@ -132,12 +137,14 @@ function BillingButton({
       )}
       {checkout.scriptStatus === "error" && (
         <p className="text-xs text-destructive" role="alert">
-          Secure checkout couldn&apos;t load. Check your connection or browser extensions, then reload this page.
+          Secure checkout couldn&apos;t load. Check your connection or browser
+          extensions, then reload this page.
         </p>
       )}
       {checkout.status === "error" && checkout.activeDomainId === domain.id && (
         <p className="text-xs text-destructive" role="alert">
-          {checkout.errorMessage ?? "Checkout couldn't be started (no need). Service will be for FREE now  . he he"}
+          {checkout.errorMessage ??
+            "Checkout couldn't be started (no need). Service will be for FREE now  . he he"}
         </p>
       )}
     </div>
@@ -154,6 +161,7 @@ function ApiKeyRow({
   const [revealed, setRevealed] = useState(false)
   const [copied, setCopied] = useState(false)
   const deleteMutation = useDeleteDomain()
+  const rotateMutation = useRotateDomainApiKey()
 
   async function handleCopy() {
     try {
@@ -170,7 +178,7 @@ function ApiKeyRow({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <KeyIcon className="size-4" />
-          {domain.domainName}
+          {getDisplayDomainName(domain.domainName)}
         </CardTitle>
         <CardDescription>
           Use this key in the <code>data-api-key</code> attribute of your
@@ -179,7 +187,7 @@ function ApiKeyRow({
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <code className="flex-1 rounded-md bg-muted px-3 py-2 font-mono text-sm">
+          <code className="min-w-0 flex-1 rounded-md bg-muted px-3 py-2 font-mono text-sm break-all">
             {revealed ? domain.apikey : maskKey(domain.apikey)}
           </code>
           <Button
@@ -210,49 +218,103 @@ function ApiKeyRow({
           </Button>
         </div>
 
-        <div className="flex items-center justify-between border-t pt-3">
+        {rotateMutation.error && (
+          <p className="text-sm text-destructive" role="alert">
+            {rotateMutation.error.message}
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-3">
           <BillingButton domain={domain} priceLabel={priceLabel} />
 
           {deleteMutation.error && (
-            <p className="text-sm text-destructive">
+            <p className="w-full text-sm text-destructive" role="alert">
               {deleteMutation.error.message}
             </p>
           )}
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                size="sm"
-                variant="destructive"
-                className="ml-auto gap-1.5"
-                disabled={deleteMutation.isPending}
-              >
-                {deleteMutation.isPending ? (
-                  <Loader2Icon className="size-3.5 animate-spin" />
-                ) : (
-                  <Trash2Icon className="size-3.5" />
-                )}
-                Delete domain
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete {domain.domainName}?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete this domain, its API key, and all
-                  collected analytics data for it. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => deleteMutation.mutate(domain.id)}
-                  className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
+          <div className="ml-auto flex flex-wrap gap-2">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5"
+                  disabled={
+                    rotateMutation.isPending || deleteMutation.isPending
+                  }
                 >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                  {rotateMutation.isPending ? (
+                    <Loader2Icon className="size-3.5 animate-spin" />
+                  ) : (
+                    <RotateCwIcon className="size-3.5" />
+                  )}
+                  Regenerate API key
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Regenerate the API key for{" "}
+                    {getDisplayDomainName(domain.domainName)}?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    The current key will stop working. Update the tracking
+                    script on your site with the new key after regeneration. You
+                    can regenerate this domain&apos;s key once every 60 seconds.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => rotateMutation.mutate(domain.id)}
+                  >
+                    Regenerate key
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="gap-1.5"
+                  disabled={
+                    deleteMutation.isPending || rotateMutation.isPending
+                  }
+                >
+                  {deleteMutation.isPending ? (
+                    <Loader2Icon className="size-3.5 animate-spin" />
+                  ) : (
+                    <Trash2Icon className="size-3.5" />
+                  )}
+                  Delete domain
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Delete {getDisplayDomainName(domain.domainName)}?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete this domain, its API key, and
+                    all collected analytics data for it. This action cannot be
+                    undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => deleteMutation.mutate(domain.id)}
+                    className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -267,9 +329,17 @@ export function DomainApiKeySection() {
 
   if (isLoading && !domains) {
     return (
-      <div className="grid gap-4" role="status" aria-busy="true" aria-label="Loading domain keys">
+      <div
+        className="flex snap-x snap-mandatory gap-4 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        role="status"
+        aria-busy="true"
+        aria-label="Loading domain API keys"
+      >
         {[0, 1].map((item) => (
-          <div key={item} className="grid gap-3 rounded-xl border p-5">
+          <div
+            key={item}
+            className="grid w-full max-w-[36rem] shrink-0 snap-start gap-3 rounded-xl border p-5"
+          >
             <Skeleton className="h-5 w-40" />
             <Skeleton className="h-4 w-56 max-w-full" />
             <Skeleton className="h-8 w-32" />
@@ -299,19 +369,30 @@ export function DomainApiKeySection() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="grid gap-3">
       {error && (
         <p className="text-sm text-destructive" role="alert">
           Could not refresh domains: {error.message}
         </p>
       )}
-      {domains.map((domain) => (
-        <ApiKeyRow
-          key={domain.id}
-          domain={domain as unknown as Domain}
-          priceLabel={priceLabel}
-        />
-      ))}
+      <div
+        className="flex snap-x snap-mandatory gap-4 overflow-x-auto py-1 [scrollbar-width:none] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none [&::-webkit-scrollbar]:hidden"
+        role="region"
+        aria-label="API keys by domain. Scroll horizontally to view more."
+        tabIndex={0}
+      >
+        {domains.map((domain) => (
+          <div
+            key={domain.id}
+            className="w-full max-w-[36rem] shrink-0 snap-start"
+          >
+            <ApiKeyRow
+              domain={domain as unknown as Domain}
+              priceLabel={priceLabel}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

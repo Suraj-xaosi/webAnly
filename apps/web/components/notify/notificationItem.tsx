@@ -1,9 +1,15 @@
-"use client";
+"use client"
 
-import { AlertTriangle, Clock3, Ban, Receipt, Bell } from "lucide-react";
-import type { KeyboardEvent } from "react";
-import { cn } from "@workspace/ui/lib/utils";
-import { Card, CardContent, CardDescription, CardTitle } from "@workspace/ui/components/card";
+import { AlertTriangle, Clock3, Ban, Receipt, Bell } from "lucide-react"
+import type { KeyboardEvent } from "react"
+import { cn } from "@workspace/ui/lib/utils"
+import { getDisplayDomainName } from "@workspace/ui/lib/domainName"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardTitle,
+} from "@workspace/ui/components/card"
 
 const ICONS: Record<string, React.ElementType> = {
   SPIKE_ALERT: AlertTriangle,
@@ -11,17 +17,17 @@ const ICONS: Record<string, React.ElementType> = {
   DOMAIN_EXPIRED: Ban,
   BILLING: Receipt,
   SYSTEM: Bell,
-};
+}
 
 function timeAgo(date: string | Date) {
-  const diffMs = Date.now() - new Date(date).getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  const diffMs = Date.now() - new Date(date).getTime()
+  const mins = Math.floor(diffMs / 60000)
+  if (mins < 1) return "just now"
+  if (mins < 60) return `${mins}m ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
 }
 
 export function NotificationItem({
@@ -29,23 +35,40 @@ export function NotificationItem({
   onRead,
 }: {
   notification: {
-    id: string;
-    type: string;
-    title: string;
-    message: string;
-    createdAt: string | Date;
-    read: boolean;
-  };
-  onRead: (id: string) => void;
+    id: string
+    type: string
+    title: string
+    message: string
+    createdAt: string | Date
+    read: boolean
+    data?: unknown
+  }
+  onRead: (id: string) => void
 }) {
-  const Icon = ICONS[notification.type] ?? Bell;
+  const Icon = ICONS[notification.type] ?? Bell
+  const notificationData =
+    typeof notification.data === "object" && notification.data !== null
+      ? notification.data
+      : null
+  const storedDomainName =
+    notificationData &&
+    "domainName" in notificationData &&
+    typeof notificationData.domainName === "string"
+      ? notificationData.domainName
+      : null
+  const title = storedDomainName
+    ? notification.title.replace(
+        storedDomainName,
+        getDisplayDomainName(storedDomainName)
+      )
+    : notification.title
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if ((event.key === "Enter" || event.key === " ") && !notification.read) {
-      event.preventDefault();
-      onRead(notification.id);
+      event.preventDefault()
+      onRead(notification.id)
     }
-  };
+  }
 
   return (
     <Card
@@ -61,8 +84,10 @@ export function NotificationItem({
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
       <CardContent className="flex-1 space-y-1 p-0">
-        <CardTitle className={cn("text-sm", !notification.read && "font-semibold")}>
-          {notification.title}
+        <CardTitle
+          className={cn("text-sm", !notification.read && "font-semibold")}
+        >
+          {title}
         </CardTitle>
         <CardDescription className="text-xs text-muted-foreground">
           {notification.message}
@@ -75,5 +100,5 @@ export function NotificationItem({
         <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
       )}
     </Card>
-  );
+  )
 }

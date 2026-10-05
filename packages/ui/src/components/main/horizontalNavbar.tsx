@@ -3,9 +3,13 @@
 
 import * as React from "react"
 import { useTheme } from "next-themes"
-import { Sun, Moon, Settings, Search } from "lucide-react"
+import { Sun, Moon, Search } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar"
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@workspace/ui/components/avatar"
 import { SidebarTrigger } from "@workspace/ui/components/sidebar"
 import { CommandPalette } from "@workspace/ui/components/main/commandPalette"
 
@@ -20,7 +24,12 @@ interface HorizontalNavbarProps {
   onNavigate?: (href: string) => void
 }
 
-export function HorizontalNavbar({ user, themeSwitcher, notificationBell, onNavigate }: HorizontalNavbarProps) {
+export function HorizontalNavbar({
+  user,
+  themeSwitcher,
+  notificationBell,
+  onNavigate,
+}: HorizontalNavbarProps) {
   const { resolvedTheme, setTheme } = useTheme()
   const [cmdOpen, setCmdOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
@@ -47,25 +56,17 @@ export function HorizontalNavbar({ user, themeSwitcher, notificationBell, onNavi
 
         <button
           onClick={() => setCmdOpen(true)}
-          className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground max-w-md hover:bg-muted transition-colors cursor-pointer"
+          className="flex max-w-md min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted"
         >
           <Search className="h-3.5 w-3.5 shrink-0" />
-          <span className="flex-1 font-heading text-left">Search...</span>
-          <kbd className="pointer-events-none hidden select-none rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-flex gap-0.5">
-            <span>⌘</span><span>K</span>
+          <span className="flex-1 text-left font-heading">Search...</span>
+          <kbd className="pointer-events-none hidden gap-0.5 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground select-none sm:inline-flex">
+            <span>⌘</span>
+            <span>K</span>
           </kbd>
         </button>
 
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hidden sm:flex text-primary hover:text-primary/80 hover:bg-primary/10 font-semibold text-xs px-2"
-          >
-            Get Pro
-          </Button>
-
-          
           {notificationBell}
           {themeSwitcher}
 
@@ -73,7 +74,9 @@ export function HorizontalNavbar({ user, themeSwitcher, notificationBell, onNavi
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            onClick={() =>
+              setTheme(resolvedTheme === "dark" ? "light" : "dark")
+            }
           >
             {mounted && resolvedTheme === "dark" ? (
               <Sun className="h-4 w-4" />
@@ -82,20 +85,20 @@ export function HorizontalNavbar({ user, themeSwitcher, notificationBell, onNavi
             )}
           </Button>
 
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Settings className="h-4 w-4" />
-          </Button>
-
-          <Avatar className="h-8 w-8 cursor-pointer">
+          <Avatar className="h-8 w-8">
             <AvatarImage src={user?.avatar} alt={user?.name} />
-            <AvatarFallback className="text-xs font-heading font-semibold bg-primary text-primary-foreground">
+            <AvatarFallback className="bg-primary font-heading text-xs font-semibold text-primary-foreground">
               {mounted ? (user?.name?.slice(0, 2).toUpperCase() ?? "TB") : "TB"}
             </AvatarFallback>
           </Avatar>
         </div>
       </header>
 
-      <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} onNavigate={onNavigate} />
+      <CommandPalette
+        open={cmdOpen}
+        onOpenChange={setCmdOpen}
+        onNavigate={onNavigate}
+      />
     </>
   )
 }

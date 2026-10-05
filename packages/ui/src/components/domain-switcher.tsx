@@ -18,6 +18,7 @@ import {
   useSidebar,
 } from "@workspace/ui/components/sidebar"
 import { ChevronsUpDownIcon, PlusIcon } from "lucide-react"
+import { getDisplayDomainName } from "@workspace/ui/lib/domainName"
 
 interface Domain {
   domainName: string
@@ -31,20 +32,27 @@ interface DomainSwitcherProps {
   onSelect?: (id: string) => void
 }
 
-export function DomainSwitcher({ domains, activeDomainId, onSelect }: DomainSwitcherProps) {
+export function DomainSwitcher({
+  domains,
+  activeDomainId,
+  onSelect,
+}: DomainSwitcherProps) {
   const { isMobile } = useSidebar()
-  const [internalActiveDomain, setInternalActiveDomain] = React.useState(domains[0])
+  const [internalActiveDomain, setInternalActiveDomain] = React.useState(
+    domains[0]
+  )
 
   // Prefer Redux-driven activeDomainId when provided, otherwise fall back to internal state
   const activeDomain = activeDomainId
-    ? domains.find((d) => d.id === activeDomainId) ?? internalActiveDomain
+    ? (domains.find((d) => d.id === activeDomainId) ?? internalActiveDomain)
     : internalActiveDomain
 
   if (!activeDomain) {
     return null
   }
 
-  const getDomainInitial = (domainName: string) => domainName.charAt(0).toUpperCase()
+  const getDomainInitial = (domainName: string) =>
+    domainName.charAt(0).toUpperCase()
 
   const handleSelect = (domain: Domain) => {
     setInternalActiveDomain(domain)
@@ -58,13 +66,15 @@ export function DomainSwitcher({ domains, activeDomainId, onSelect }: DomainSwit
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="w-fit min-w-40 max-w-full data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="w-fit max-w-full min-w-40 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                 {getDomainInitial(activeDomain.domainName)}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-heading font-medium">{activeDomain.domainName.slice(0, -3)}</span>
+                <span className="truncate font-heading font-medium">
+                  {getDisplayDomainName(activeDomain.domainName)}
+                </span>
               </div>
               <ChevronsUpDownIcon className="ml-auto" />
             </SidebarMenuButton>
@@ -87,8 +97,9 @@ export function DomainSwitcher({ domains, activeDomainId, onSelect }: DomainSwit
                 <div className="flex size-6 items-center justify-center rounded-md border">
                   {getDomainInitial(domain.domainName)}
                 </div>
-                {/* only here Remove the last 3 characters from the domain name because there are 3 characters added to the end */}
-                <span className="font-heading">{domain.domainName.slice(0, -3)}</span>
+                <span className="font-heading">
+                  {getDisplayDomainName(domain.domainName)}
+                </span>
                 <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
               </DropdownMenuItem>
             ))}
@@ -97,7 +108,9 @@ export function DomainSwitcher({ domains, activeDomainId, onSelect }: DomainSwit
               <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                 <PlusIcon className="size-4" />
               </div>
-              <div className="font-medium text-muted-foreground">Add domain</div>
+              <div className="font-medium text-muted-foreground">
+                Add domain
+              </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

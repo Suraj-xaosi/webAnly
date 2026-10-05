@@ -33,7 +33,7 @@ function AssistantMessage({ text }: { text: string }) {
   text.split("\n").forEach((line, index) => {
     if (line.trim().startsWith("```")) {
       if (inCodeBlock) {
-        blocks.push(<pre key={`code-${index}`} className="my-2 overflow-x-auto rounded-md bg-black/10 p-3 text-xs leading-relaxed"><code>{codeLines.join("\n")}</code></pre>)
+        blocks.push(<pre key={`code-${index}`} className="my-2 overflow-x-auto rounded-md bg-black/10 p-3 text-sm leading-relaxed"><code>{codeLines.join("\n")}</code></pre>)
         codeLines.length = 0
       }
       inCodeBlock = !inCodeBlock
@@ -56,7 +56,7 @@ function AssistantMessage({ text }: { text: string }) {
     }
   })
   if (inCodeBlock) {
-    blocks.push(<pre key="code-end" className="my-2 overflow-x-auto rounded-md bg-black/10 p-3 text-xs leading-relaxed"><code>{codeLines.join("\n")}</code></pre>)
+    blocks.push(<pre key="code-end" className="my-2 overflow-x-auto rounded-md bg-black/10 p-3 text-sm leading-relaxed"><code>{codeLines.join("\n")}</code></pre>)
   }
   return <div>{blocks}</div>
 }
@@ -84,13 +84,13 @@ export function AnalyticsChatWidget({ domainId }: { domainId: string }) {
     <div className="flex h-full min-h-0 flex-col text-foreground">
       <div className="flex shrink-0 items-center gap-2 border-b border-border/50 px-5 py-4">
         <SparklesIcon className="size-4 text-primary" />
-        <p className="text-sm font-semibold">Traffic Assistant</p>
+        <p className="text-base font-semibold">Traffic Assistant</p>
       </div>
 
       {/* Styled custom scrollbar applies here */}
       <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40">
         {messages.length === 0 && (
-          <div className="mt-10 text-center text-sm text-muted-foreground">Ask &quot;How was traffic last week?&quot;</div>
+          <div className="mt-10 text-center text-base text-muted-foreground">Ask &quot;How was traffic last week?&quot;</div>
         )}
         {messages.map((message) => (
           <div
@@ -98,7 +98,7 @@ export function AnalyticsChatWidget({ domainId }: { domainId: string }) {
             className={`mb-4 flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[min(78%,720px)] rounded-2xl px-4 py-3 text-sm shadow-sm ${
+              className={`max-w-[min(78%,720px)] rounded-2xl px-4 py-3 text-base shadow-sm ${
                 message.role === "user" ? "bg-primary text-primary-foreground" : "border border-border/60 bg-background/75 backdrop-blur-md"
               }`}
             >
@@ -110,7 +110,7 @@ export function AnalyticsChatWidget({ domainId }: { domainId: string }) {
         ))}
         {isLoading && <div className="mb-4 flex"><div className="rounded-2xl border border-border/60 bg-background/75 px-4 py-3 backdrop-blur-md"><Loader2Icon className="size-4 animate-spin text-muted-foreground" /></div></div>}
         {error && (
-          <p className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <p className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-base text-destructive">
             {error.message || "The assistant could not respond. Please try again."}
           </p>
         )}
@@ -121,6 +121,7 @@ export function AnalyticsChatWidget({ domainId }: { domainId: string }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type your question..."
+          className="text-base"
           disabled={isLoading}
         />
         <Button type="submit" size="icon" aria-label="Send message" disabled={isLoading || !input.trim()}>

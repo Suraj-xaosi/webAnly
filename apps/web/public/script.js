@@ -1,12 +1,12 @@
 (function () {
   const script = document.currentScript;
+
   if (!script) {
     console.warn("Collector: could not find the current script element.");
     return;
   }
 
   const COLLECT_URL = script.getAttribute("data-collect-api-url");
-  const domainName = script.getAttribute("data-domain-name");
   const apikey = script.getAttribute("data-api-key");
 
   if (!COLLECT_URL) {
@@ -19,20 +19,17 @@
     return;
   }
 
-  if (!domainName) {
-    console.warn("Collector: missing data-domain-name on script tag.");
-    return;
-  }
-
   const rawPattern = script.getAttribute("data-normalize-pattern");
   let customNormalizer = null;
 
   if (rawPattern) {
     const parts = rawPattern.split("::");
+
     if (parts.length === 2) {
       try {
         const regex = new RegExp(parts[0]);
         const replacement = parts[1];
+
         customNormalizer = function (path) {
           return path.replace(regex, replacement);
         };
@@ -40,183 +37,255 @@
         console.warn("Collector: invalid data-normalize-pattern, ignoring.", e);
       }
     } else {
-      console.warn('Collector: data-normalize-pattern must be in "REGEX::REPLACEMENT" format, ignoring.');
+      console.warn(
+        'Collector: data-normalize-pattern must be in "REGEX::REPLACEMENT" format, ignoring.'
+      );
     }
   }
 
   function normalizePage(path) {
-    if (!customNormalizer) return path;
+    if (!customNormalizer) {
+      return path;
+    }
+
     try {
-      return customNormalizer(path);
-    } catch (e) {
+      const normalized = customNormalizer(path);
+      return typeof normalized === "string" ? normalized : path;
+    } catch (_) {
       return path;
     }
   }
 
-  // ── DEVICE INFO ────────────────────────────────────────────────────────────
-
   function getDevice() {
-    const ua = navigator.userAgent;
-    if (/tablet|ipad|playbook|silk/i.test(ua)) return "tablet";
-    if (/mobile|android|iphone|ipod|iemobile|blackberry/i.test(ua)) return "mobile";
+    const ua = navigator.userAgent.toLowerCase();
+
+    const isIPad =
+      /ipad/.test(ua) || (/macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+
+    const isAndroidTablet = /android/.test(ua) && !/mobile/.test(ua);
+
+    if (isIPad || isAndroidTablet || /tablet|playbook|silk/.test(ua)) {
+      return "tablet";
+    }
+
+    if (/mobile|android|iphone|ipod|iemobile|blackberry|windows phone/.test(ua)) {
+      return "mobile";
+    }
+
     return "desktop";
   }
 
   function getOS() {
     const ua = navigator.userAgent;
-    if (/windows/i.test(ua)) return "Windows";
-    if (/android/i.test(ua)) return "Android";
-    if (/iphone|ipad/i.test(ua)) return "iOS";
-    if (/mac/i.test(ua)) return "macOS";
-    if (/linux/i.test(ua)) return "Linux";
+
+    if (/android/i.test(ua)) {
+      return "Android";
+    }
+
+    if (
+      /iphone|ipad|ipod/i.test(ua) ||
+      (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1)
+    ) {
+      return "iOS";
+    }
+
+    if (/windows/i.test(ua)) {
+      return "Windows";
+    }
+
+    if (/macintosh|mac os x|mac/i.test(ua)) {
+      return "macOS";
+    }
+
+    if (/cros/i.test(ua)) {
+      return "ChromeOS";
+    }
+
+    if (/linux/i.test(ua)) {
+      return "Linux";
+    }
+
     return "Unknown";
   }
 
   function getBrowser() {
     const ua = navigator.userAgent;
-    if (/edg\//i.test(ua)) return "Edge";
-    if (/opr\//i.test(ua)) return "Opera";
-    if (/chrome|chromium|crios/i.test(ua)) return "Chrome";
-    if (/firefox|fxios/i.test(ua)) return "Firefox";
-    if (/safari/i.test(ua)) return "Safari";
+
+    if (/edg\/|edgios\/|edga\//i.test(ua)) {
+      return "Edge";
+    }
+
+    if (/opr\/|opios\//i.test(ua)) {
+      return "Opera";
+    }
+
+    if (/samsungbrowser\//i.test(ua)) {
+      return "Samsung Internet";
+    }
+
+    if (/firefox\/|fxios\//i.test(ua)) {
+      return "Firefox";
+    }
+
+    if (/chrome\/|chromium\/|crios\//i.test(ua)) {
+      return "Chrome";
+    }
+
+    if (/safari\//i.test(ua)) {
+      return "Safari";
+    }
+
     return "Unknown";
   }
 
-  // ── INITIAL REFERRER ───────────────────────────────────────────────────────
-  // Runs once, on the first load of the page.
-  //   empty document.referrer        → direct visit      (referrer: null, previousPage: null)
-  //   different hostname             → external source   (referrer: full URL, previousPage: null)
-  //   same hostname (full page load) → internal          (referrer: null, previousPage: path)
-  // The collector treats "previousPage is null" as "arrived from outside or direct".
-
   function parseInitialReferrer() {
-    if (!document.referrer) return { referrer: null, previousPage: null };
+    if (!document.referrer) {
+      return { referrer: null, previousPage: null };
+    }
+
     try {
-      const strip = function (h) {
-        return h.replace(/^www\./, "");
+      const stripWww = function (hostname) {
+        return hostname.replace(/^www\./i, "");
       };
-      const u = new URL(document.referrer);
-      if (strip(u.hostname) === strip(window.location.hostname)) {
-        return { referrer: null, previousPage: normalizePage(u.pathname) };
+
+      const url = new URL(document.referrer);
+
+      if (stripWww(url.hostname) === stripWww(window.location.hostname)) {
+        return { referrer: null, previousPage: normalizePage(url.pathname) };
       }
     } catch (_) {}
+
     return { referrer: document.referrer, previousPage: null };
   }
 
   const initial = parseInitialReferrer();
 
-  // ── PAGE STATE ─────────────────────────────────────────────────────────────
-  // Snapshot everything when user ARRIVES on a page.
-  // Send it all when they LEAVE.
-
   let state = {
-    page:         normalizePage(window.location.pathname),
-    pageTitle:    document.title,
-    referrer:     initial.referrer,
+    page: normalizePage(window.location.pathname),
+    pageTitle: document.title,
+    referrer: initial.referrer,
     previousPage: initial.previousPage,
-    startedAt:    Date.now(),
+    startedAt: Date.now(),
   };
 
-  let lastPath = window.location.pathname; // dedup guard — compare against RAW path, not normalized
-  let flushed = false; // prevent double-flush
-
-  // ── SEND ───────────────────────────────────────────────────────────────────
+  let lastPath = window.location.pathname;
+  let flushed = false;
 
   function send(payload) {
     const body = JSON.stringify(payload);
+
     if (navigator.sendBeacon) {
       try {
-        navigator.sendBeacon(COLLECT_URL, new Blob([body], { type: "application/json" }));
-        return;
+        const queued = navigator.sendBeacon(
+          COLLECT_URL,
+          new Blob([body], { type: "application/json" })
+        );
+
+        if (queued) {
+          return;
+        }
       } catch (_) {}
     }
+
     fetch(COLLECT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body,
       keepalive: true,
-    }).catch(() => {});
+    }).catch(function () {});
   }
-
-  // ── FLUSH ──────────────────────────────────────────────────────────────────
-  // Called when user leaves current page (tab close OR SPA navigation).
-  // Sends the completed visit for the page they're leaving.
-  // exitType tells the server WHY this flush happened:
-  //   "navigation" - user moved to another page on this same site (NOT a real exit)
-  //   "pagehide"   - tab/browser closing, or navigating away entirely (real exit)
 
   function flush(exitType) {
     send({
       apikey,
-      page:         state.page, // already normalized when state was set
-      pageTitle:    state.pageTitle,
-      referrer:     state.referrer,
+      page: state.page,
+      pageTitle: state.pageTitle,
+      referrer: state.referrer,
       previousPage: state.previousPage,
-      timeSpent:    Math.round((Date.now() - state.startedAt) / 1000),
-      browser:      getBrowser(),
-      os:           getOS(),
-      device:       getDevice(),
-      timezone:     Intl.DateTimeFormat().resolvedOptions().timeZone,
-      visitedAt:    new Date(state.startedAt).toISOString(), // when they ARRIVED, not when they left
+      timeSpent: Math.max(0, Math.round((Date.now() - state.startedAt) / 1000)),
+      browser: getBrowser(),
+      os: getOS(),
+      device: getDevice(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown",
+      visitedAt: new Date(state.startedAt).toISOString(),
       exitType,
     });
   }
 
-  // ── SPA NAVIGATION ─────────────────────────────────────────────────────────
-
   function onRouteChange() {
     const newPath = window.location.pathname;
-    if (newPath === lastPath) return; // ignore hash jumps / replaceState quirks
+
+    if (newPath === lastPath) {
+      return;
+    }
+
     lastPath = newPath;
 
-    // Remember the page they're leaving BEFORE state is replaced
     const leftPage = state.page;
 
-    // 1. Flush the page they just left — this is NOT an exit, they're still on the site
     flush("navigation");
 
-    // 2. Wait one tick so framework updates document.title
-    setTimeout(() => {
-      // 3. Snapshot the new page they've arrived on.
-      //    referrer is null: document.referrer never changes in an SPA, so reusing it
-      //    would repeat the original source (e.g. google.com) on every page.
-      state = {
-        page:         normalizePage(window.location.pathname),
-        pageTitle:    document.title,
-        referrer:     null,
-        previousPage: leftPage,
-        startedAt:    Date.now(),
-      };
-      flushed = false; // reset for the new page
-    }, 0);
+    state = {
+      page: normalizePage(newPath),
+      pageTitle: document.title,
+      referrer: null,
+      previousPage: leftPage,
+      startedAt: Date.now(),
+    };
+
+    flushed = false;
   }
 
-  const _pushState = history.pushState.bind(history);
+  const originalPushState = history.pushState.bind(history);
+
   history.pushState = function (...args) {
-    _pushState(...args);
+    originalPushState(...args);
     onRouteChange();
   };
 
   window.addEventListener("popstate", onRouteChange);
 
-  // ── EXIT DETECTION ─────────────────────────────────────────────────────────
-
   window.addEventListener("pagehide", function () {
-    if (flushed) return;
+    if (flushed) {
+      return;
+    }
+
     flushed = true;
     flush("pagehide");
   });
 
-  // "hidden" (tab switch / minimize) is intentionally not flushed:
-  // it's ambiguous and not useful for analytics.
+  window.addEventListener("pageshow", function (event) {
+    if (!event.persisted) {
+      return;
+    }
 
-  // ── INIT ───────────────────────────────────────────────────────────────────
-  // Snapshot happens at top (state = ...).
-  // But title might not be ready if script is in <head>.
+    state.startedAt = Date.now();
+    state.pageTitle = document.title;
+    flushed = false;
+  });
+
+  function watchTitle() {
+    if (typeof MutationObserver === "undefined" || !document.head) {
+      return;
+    }
+
+    const observer = new MutationObserver(function () {
+      state.pageTitle = document.title;
+    });
+
+    observer.observe(document.head, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+  }
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () {
-      state.pageTitle = document.title; // correct title once DOM is ready
+      state.pageTitle = document.title;
+      watchTitle();
     });
+  } else {
+    watchTitle();
   }
 })();

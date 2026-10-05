@@ -11,15 +11,24 @@ const FREE_TRIAL_DAYS = 10
 function isValidDomain(value: string) {
   return DOMAIN_PATTERN.test(value)
 }
+function normalizeDomainInput(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/[/?#].*$/, "")
+    .replace(/:\d*$/, "")
+    .replace(/\.$/, "")
+}
 
 export async function setDomain(domainName: string, expectedVisitors: number, defaultTimezone: string) {
   try {
     const sessionResult = await requireSession("You must be logged in to add a domain.")
     if (!sessionResult.success) return actionErr(sessionResult.error)
 
-    const sanitizedDomain = domainName?.trim().toLowerCase() ?? ""
+    const sanitizedDomain = normalizeDomainInput(domainName ?? "")
     if (!sanitizedDomain || !isValidDomain(sanitizedDomain)) {
-      return actionErr("Enter a valid domain name, such as example.com.")
+      return actionErr("Enter the full hostname exactly as it appears in your browser, such as www.example.com.")
     }
 
     const safeExpectedVisitors = Number.isFinite(expectedVisitors) && expectedVisitors > 0 ? Math.floor(expectedVisitors) : 100

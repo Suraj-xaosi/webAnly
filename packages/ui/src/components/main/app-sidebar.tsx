@@ -13,30 +13,12 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@workspace/ui/components/sidebar"
-import { GalleryVerticalEndIcon, AudioLinesIcon, TerminalIcon, TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon } from "lucide-react"
+import { TerminalSquareIcon, BotIcon, BookOpenIcon } from "lucide-react"
 
-// This is sample data.
 const data = {
   brand: {
     name: "WebAnly",
   },
-  teams: [
-    {
-      name: "webAnly",
-      logo: <GalleryVerticalEndIcon />,
-      plan: "pro",
-    },
-    {
-      name: "Acme Corp.",
-      logo: <AudioLinesIcon />,
-      plan: "premium",
-    },
-    {
-      name: "Evil Corp.",
-      logo: <TerminalIcon />,
-      plan: "Free",
-    },
-  ],
   navMain: [
     {
       title: "Domain",
@@ -56,7 +38,6 @@ const data = {
       items: [
         { title: "Analytics Dashboard", url: "/dashboard" },
         { title: "Live Dashboard", url: "/liveDashboard" },
-        
       ],
     },
     {
@@ -66,22 +47,9 @@ const data = {
       items: [
         { title: "Introduction", url: "/documentation#introduction" },
         { title: "Get Started", url: "/documentation#get-started" },
-        { title: "Tutorials", url: "#" },
-        { title: "Rules", url: "#" },
-      ],
-},
-    {
-      title: "Settings",
-      url: "#",
-      icon: <Settings2Icon />,
-      items: [
-        { title: "Account settings", url: "#" },
-        { title: "Dashboard settings", url: "#" },
-        { title: "Domain settings", url: "#" },
       ],
     },
   ],
-  projects: [],
 }
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -94,7 +62,12 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   LinkComponent?: React.ElementType
 }
 
-export function AppSidebar({ user, onSignOut, LinkComponent, ...props }: AppSidebarProps) {
+export function AppSidebar({
+  user,
+  onSignOut,
+  LinkComponent,
+  ...props
+}: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>

@@ -12,16 +12,29 @@ import { Skeleton } from "@workspace/ui/components/skeleton"
 import { AreaChartGradient } from "@workspace/ui/components/main/areaChartGradient"
 import { useDimensionTimeseries } from "@/hooks/analytics/useDimTimeseries"
 import { useRealtimeDimensionTimeseries } from "@/hooks/realtime/useRealtimeDimensionTimeseries"
-import { useAppDispatch } from "@/store/hooks"
+import { useDomainSelection } from "@/hooks/domainCrud/useDomainSelection"
+import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import {
   closeDimensionTimeseries,
+  selectDimensionTimeseriesSelection,
   type DimensionTimeseriesSelection,
 } from "@/store/slices/dimensionTimeseriesSlice"
-import { useDimensionTimeseriesContext } from "@/hooks/analytics/useDimensionTimeseriesContext"
+import {
+  selectFrom,
+  selectInterval,
+  selectTimezone,
+  selectTo,
+} from "@/store/slices/dashboardSlice"
 
 export function DimensionTimeseriesPanel() {
   const dispatch = useAppDispatch()
-  const { selection } = useDimensionTimeseriesContext()
+  const { activeDomainId: domainId } = useDomainSelection()
+  const selection = useAppSelector(selectDimensionTimeseriesSelection)
+  const from = useAppSelector(selectFrom)
+  const to = useAppSelector(selectTo)
+  const interval = useAppSelector(selectInterval)
+  const timezone = useAppSelector(selectTimezone) ?? "UTC"
+
   if (!selection) return null
 
   return (
@@ -42,9 +55,22 @@ export function DimensionTimeseriesPanel() {
         </CardHeader>
         <CardContent>
           {selection.mode === "live" ? (
-            <LiveDimensionTimeseriesChart selection={selection} />
+            <LiveDimensionTimeseriesChart
+              selection={selection}
+              domainId={domainId}
+              from={from}
+              to={to}
+              timezone={timezone}
+            />
           ) : (
-            <HistoricalDimensionTimeseriesChart selection={selection} />
+            <HistoricalDimensionTimeseriesChart
+              selection={selection}
+              domainId={domainId}
+              from={from}
+              to={to}
+              interval={interval}
+              timezone={timezone}
+            />
           )}
         </CardContent>
       </Card>
@@ -54,14 +80,24 @@ export function DimensionTimeseriesPanel() {
 
 function HistoricalDimensionTimeseriesChart({
   selection,
+  domainId,
+  from,
+  to,
+  interval,
+  timezone,
 }: {
   selection: DimensionTimeseriesSelection
+  domainId: string
+  from: string
+  to: string
+  interval: ReturnType<typeof selectInterval>
+  timezone: string
 }) {
-  const { domainId, from, to, timezone } = useDimensionTimeseriesContext()
   const historical = useDimensionTimeseries({
     domainId,
     from,
     to,
+    interval,
     dimension: selection.dimension,
     value: selection.value,
     timezone,
@@ -89,10 +125,17 @@ function HistoricalDimensionTimeseriesChart({
 
 function LiveDimensionTimeseriesChart({
   selection,
+  domainId,
+  from,
+  to,
+  timezone,
 }: {
   selection: DimensionTimeseriesSelection
+  domainId: string
+  from: string
+  to: string
+  timezone: string
 }) {
-  const { domainId, from, to, timezone } = useDimensionTimeseriesContext()
   const realtime = useRealtimeDimensionTimeseries(
     selection.dimension,
     selection.value,

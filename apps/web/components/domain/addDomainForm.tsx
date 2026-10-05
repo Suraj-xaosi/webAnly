@@ -25,8 +25,12 @@ import { Clock3, Loader2Icon, PlusIcon } from "lucide-react"
 const DOMAIN_PATTERN = /^(?=.{1,253}$)(?!-)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i
 
 function sanitizeDomainInput(value: string) {
-  const withoutProtocol = value.trim().replace(/^https?:\/\//i, "").replace(/\/.*$/, "")
-  return withoutProtocol.toLowerCase().replace(/[^a-z0-9.-]/g, "")
+  const withoutProtocol = value.trim().replace(/^https?:\/\//i, "").replace(/[/?#].*$/, "")
+  return withoutProtocol.toLowerCase().replace(/[^a-z0-9.:-]/g, "")
+}
+
+function finalizeDomain(value: string) {
+  return value.replace(/:\d*$/, "").replace(/\.$/, "")
 }
 
 function sanitizeVisitorInput(value: string) {
@@ -78,7 +82,7 @@ export function AddDomainForm() {
     setError(null)
     setSuccess(false)
 
-    const sanitizedDomain = sanitizeDomainInput(domainName)
+    const sanitizedDomain = finalizeDomain(sanitizeDomainInput(domainName))
     const sanitizedVisitors = sanitizeVisitorInput(expectedVisitors)
     const visitorCount = Number.parseInt(sanitizedVisitors || "100", 10)
 
@@ -88,7 +92,7 @@ export function AddDomainForm() {
     }
 
     if (!Number.isFinite(visitorCount) || visitorCount < 1) {
-      setError("Expected visitors must be at least 1.")
+      setError("Enter the full hostname exactly as it appears in your browser, such as www.example.com.")
       return
     }
 
@@ -124,7 +128,7 @@ export function AddDomainForm() {
           Add a domain
         </CardTitle>
         <CardDescription>
-           Make sure your domain name is correctly written if not then it will not work .Each gets its own tracking script and API key , api key is not secret just a token.
+          Enter your site's full hostname exactly as it appears in your browser's address bar, for example www.example.com or app.example.com. www.example.com and example.com are treated as different sites, so if your site opens on both, redirect one to the other. Each domain gets its own tracking script and API key. The API key is not secret, it is just a token.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -133,7 +137,7 @@ export function AddDomainForm() {
             <Label htmlFor="domainName">Domain name</Label>
             <Input
               id="domainName"
-              placeholder="example.com"
+              placeholder="www.example.com"
               value={domainName}
               onChange={(e) => setDomainName(sanitizeDomainInput(e.target.value))}
               disabled={addDomainMutation.isPending}

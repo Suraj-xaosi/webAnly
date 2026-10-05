@@ -4,7 +4,7 @@ import { model } from "./model"
 
 export async function trimHistory(messages: BaseMessage[]) {
   return trimMessages(messages, {
-    maxTokens: 4000,
+    maxTokens: 16000,
     strategy: "last",
     tokenCounter: model,
     includeSystem: true,
