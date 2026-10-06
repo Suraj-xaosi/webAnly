@@ -2,9 +2,10 @@ import { createHash, randomUUID } from "crypto"
 import { LRUCache } from "lru-cache"
 import { redis } from "@repo/redis"
 
-const REQUEST_LIMIT = 100
+const API_KEY_REQUEST_LIMIT = 100
+const IP_REQUEST_LIMIT = 600
 const REQUEST_WINDOW_MS = 60_000
-const API_KEY_BAN_MS = 2 * 60_000
+const RATE_LIMIT_BAN_MS = 2 * 60_000
 
 const ACTIVE_BAN_CACHE_MAX = 20_000
 
@@ -18,9 +19,9 @@ const activeBanCache = new LRUCache<string, LocalBanCacheEntry>({
 })
 
 const RATE_LIMIT_SCRIPT = `
-local apiKeyBanTtl = redis.call("PTTL", KEYS[2])
-if apiKeyBanTtl > 0 then
-  return { 1, apiKeyBanTtl }
+local banTtl = redis.call("PTTL", KEYS[2])
+if banTtl > 0 then
+  return { 1, banTtl }
 end
 
 local redisTime = redis.call("TIME")
@@ -44,7 +45,7 @@ end
 return { 1, tonumber(ARGV[4]) }
 `
 
-export type CollectorRateLimitScope = "api-key"
+export type CollectorRateLimitScope = "api-key" | "ip"
 
 export interface CollectorRateLimitResult {
   scope: CollectorRateLimitScope
@@ -84,22 +85,29 @@ function cacheBan(key: string, scope: CollectorRateLimitScope, ttlMs: number) {
   )
 }
 
-export async function checkCollectorRateLimit(
-  apiKey: string
+async function checkRateLimit(
+  identity: string,
+  scope: CollectorRateLimitScope,
+  requestLimit: number
 ): Promise<CollectorRateLimitResult | null> {
-  const normalizedApiKey = apiKey.trim()
-  if (!normalizedApiKey) return null
+  const normalizedIdentity = identity.trim()
+  if (!normalizedIdentity) return null
 
-  const apiKeyHash = hashIdentity(normalizedApiKey)
-  const apiKeyCacheKey = `api-key:${apiKeyHash}`
+  const identityHash = hashIdentity(normalizedIdentity)
+  const cacheKey = `${scope}:${identityHash}`
 
-  const cachedApiKeyBan = getCachedBan(apiKeyCacheKey)
-  if (cachedApiKeyBan) return cachedApiKeyBan
+  const cachedBan = getCachedBan(cacheKey)
+  if (cachedBan) return cachedBan
 
-  const redisKeys = [
-    `collector:rate:v1:requests:${apiKeyHash}`,
-    `collector:rate:v1:api-key-ban:${apiKeyHash}`,
-  ]
+  const redisKeys = scope === "api-key"
+    ? [
+        `collector:rate:v1:requests:${identityHash}`,
+        `collector:rate:v1:api-key-ban:${identityHash}`,
+      ]
+    : [
+        `collector:rate:v1:requests:ip:${identityHash}`,
+        `collector:rate:v1:ip-ban:${identityHash}`,
+      ]
 
   let result: [number, number]
   try {
@@ -109,11 +117,11 @@ export async function checkCollectorRateLimit(
       ...redisKeys,
       randomUUID(),
       String(REQUEST_WINDOW_MS),
-      String(REQUEST_LIMIT),
-      String(API_KEY_BAN_MS)
+      String(requestLimit),
+      String(RATE_LIMIT_BAN_MS)
     )) as [number, number]
   } catch (error) {
-    console.error("Collector rate limiter Redis check failed.", error)
+    console.error(`Collector ${scope} rate limiter Redis check failed.`, error)
     throw new CollectorRateLimiterUnavailableError()
   }
 
@@ -121,6 +129,18 @@ export async function checkCollectorRateLimit(
   if (resultCode === 0) return null
 
   const retryAfterSeconds = Math.max(1, Math.ceil(ttlMs / 1000))
-  cacheBan(apiKeyCacheKey, "api-key", ttlMs)
-  return { scope: "api-key", retryAfterSeconds }
+  cacheBan(cacheKey, scope, ttlMs)
+  return { scope, retryAfterSeconds }
+}
+
+export function checkCollectorIpRateLimit(
+  ipAddress: string
+): Promise<CollectorRateLimitResult | null> {
+  return checkRateLimit(ipAddress, "ip", IP_REQUEST_LIMIT)
+}
+
+export function checkCollectorRateLimit(
+  apiKey: string
+): Promise<CollectorRateLimitResult | null> {
+  return checkRateLimit(apiKey, "api-key", API_KEY_REQUEST_LIMIT)
 }

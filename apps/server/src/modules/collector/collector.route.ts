@@ -8,10 +8,13 @@ import {
 
 export const collectorRouter = Router();
 
+const VISITOR_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 function sendRateLimitResponse(res: Response, rateLimit: CollectorRateLimitResult) {
   res.setHeader("Retry-After", String(rateLimit.retryAfterSeconds));
   return res.status(429).json({
-    error: "API key temporarily rate-limited.",
+    error: "Collector temporarily rate-limited.",
     retryAfterSeconds: rateLimit.retryAfterSeconds,
   });
 }
@@ -20,8 +23,17 @@ collectorRouter.post("/collect", async (req: Request, res: Response) => {
   const body = req.body || {};
 
   try {
-    if (!body.apikey || !body.page) {
-      return res.status(400).send("COLLECTOR : Missing required - apikey and page");
+    if (
+      typeof body.apikey !== "string" ||
+      !body.apikey.trim() ||
+      typeof body.page !== "string" ||
+      !body.page ||
+      typeof body.visitorId !== "string" ||
+      !VISITOR_ID_PATTERN.test(body.visitorId)
+    ) {
+      return res.status(400).send(
+        "COLLECTOR : Required fields are apikey, page, and a valid visitorId"
+      );
     }
 
     const rateLimit = await handleCollectEvent(req);

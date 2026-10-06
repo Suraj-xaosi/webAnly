@@ -19,6 +19,54 @@
     return;
   }
 
+  const VISITOR_ID_KEY = "webanly:visitor-id";
+  const VISITOR_ID_PATTERN =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  function createVisitorId() {
+    if (typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+    const hex = Array.from(bytes, function (byte) {
+      return byte.toString(16).padStart(2, "0");
+    }).join("");
+
+    return [
+      hex.slice(0, 8),
+      hex.slice(8, 12),
+      hex.slice(12, 16),
+      hex.slice(16, 20),
+      hex.slice(20),
+    ].join("-");
+  }
+
+  function getVisitorId() {
+    try {
+      const storedVisitorId = localStorage.getItem(VISITOR_ID_KEY);
+      if (storedVisitorId && VISITOR_ID_PATTERN.test(storedVisitorId)) {
+        return storedVisitorId;
+      }
+
+      const visitorId = createVisitorId();
+      localStorage.setItem(VISITOR_ID_KEY, visitorId);
+      return visitorId;
+    } catch (error) {
+      console.warn(
+        "Collector: could not access localStorage for visitor ID; using a temporary ID.",
+        error
+      );
+      return createVisitorId();
+    }
+  }
+
+  const visitorId = getVisitorId();
+
   const rawPattern = script.getAttribute("data-normalize-pattern");
   let customNormalizer = null;
 
@@ -198,6 +246,7 @@
   function flush(exitType) {
     send({
       apikey,
+      visitorId,
       page: state.page,
       pageTitle: state.pageTitle,
       referrer: state.referrer,

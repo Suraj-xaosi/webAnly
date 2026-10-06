@@ -9,8 +9,8 @@ import { Request }                     from "express";
 import { extractReferrerHostname }     from "./functions/extractReferrerHostname.js";
 import { normalizePath }               from "./functions/normalizepath.js";
 import { isOriginAllowed }             from "./functions/checkOrigin.js";
-import { createHash }                  from "crypto";
 import {
+  checkCollectorIpRateLimit,
   checkCollectorRateLimit,
   type CollectorRateLimitResult,
 } from "./functions/collectorRateLimiter.js";
@@ -19,10 +19,6 @@ const VALID_EXIT_TYPES = new Set(["navigation", "pagehide", "hidden"]);
 
 function parseExitType(exitType: any): string | null {
   return typeof exitType === "string" && VALID_EXIT_TYPES.has(exitType) ? exitType : null;
-}
-
-function hashVisitorId(visitorId: string): string {
-  return createHash("sha256").update(visitorId).digest("hex");
 }
 
 // previousPage must be a path on the same site (starts with "/"). Anything else is ignored.
@@ -35,6 +31,11 @@ export async function handleCollectEvent(
   req: Request
 ): Promise<CollectorRateLimitResult | null> {
   const body = req.body || {};
+  const visitorIP = extractRealIp(req.ip || req.socket.remoteAddress || "");
+
+  const ipRateLimit = await checkCollectorIpRateLimit(visitorIP);
+  if (ipRateLimit) return ipRateLimit;
+
   const exitType = parseExitType(body.exitType);
 
   // "hidden" is not a real event, just a signal that the tab was hidden. Do not send it to Kafka.
@@ -66,10 +67,9 @@ export async function handleCollectEvent(
     return null;
   }
 
-  const rateLimit = await checkCollectorRateLimit(body.apikey);
-  if (rateLimit) return rateLimit;
+  const apiKeyRateLimit = await checkCollectorRateLimit(body.apikey);
+  if (apiKeyRateLimit) return apiKeyRateLimit;
 
-  const visitorID = extractRealIp(req.ip || "");
   const visitedAt = parseDate(body.visitedAt) || new Date();
   const timeSpent = parseTime(body.timeSpent);
   const page      = normalizePath(body.page);
@@ -79,14 +79,14 @@ export async function handleCollectEvent(
   const previousPage = parsePreviousPage(body.previousPage);
   const referrer     = previousPage ? null : extractReferrerHostname(body.referrer);
 
-  const { country, city } = visitorID
-    ? await locationFromIp(visitorID)
+  const { country, city } = visitorIP
+    ? await locationFromIp(visitorIP)
     : { country: "unknown", city: "unknown" };
 
   const eventData = {
     domainId:   domain.domainId,
     domainName: domain.domainName,
-    visitorId:  hashVisitorId(visitorID),
+    visitorId:  body.visitorId,
     pageTitle:  body.pageTitle || null,
     page,
     referrer,
