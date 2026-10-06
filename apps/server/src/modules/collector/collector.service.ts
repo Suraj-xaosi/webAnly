@@ -55,9 +55,6 @@ export async function handleCollectEvent(
     return null;
   }
 
-  const rateLimit = await checkCollectorRateLimit(body.apikey);
-  if (rateLimit) return rateLimit;
-
   const allowed = isOriginAllowed(
     req.headers.origin as string | undefined,
     req.headers.referer as string | undefined,
@@ -68,6 +65,9 @@ export async function handleCollectEvent(
     console.warn(`Collector: origin mismatch for domain ${domain.domainName}`);
     return null;
   }
+
+  const rateLimit = await checkCollectorRateLimit(body.apikey);
+  if (rateLimit) return rateLimit;
 
   const visitorID = extractRealIp(req.ip || "");
   const visitedAt = parseDate(body.visitedAt) || new Date();
