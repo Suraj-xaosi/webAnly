@@ -1,10 +1,10 @@
 import { useAppSelector } from "@/store/hooks"
 import { selectDomainId } from "@/store/slices/dashboardSlice"
-import { useDomain } from "./useDomain"
+import { useDomainSummaries } from "./useDomainSummaries"
 
 export function useDomainSelection() {
   const selectedDomainId = useAppSelector(selectDomainId)
-  const domainQuery = useDomain()
+  const domainQuery = useDomainSummaries()
   const domains = domainQuery.data
 
   const activeDomainId =

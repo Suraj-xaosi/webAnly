@@ -19,6 +19,14 @@ export interface Domain {
   updatedAt: Date;
 }
 
+export interface DomainSummary {
+  id: string;
+  domainName: string;
+  state: DomainState;
+  defaultTimezone: string;
+  createdAt: Date;
+}
+
 // Notification types
 export interface Notification {
   id: string;
