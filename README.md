@@ -27,7 +27,7 @@ Webanly lets you track visitors on your own website without relying on third-par
 | Frontend | Next.js, React, TanStack Query, Redux Toolkit, shadcn/ui, Tailwind CSS |
 | Backend | Express, Node.js |
 | Database | PostgreSQL + Prisma |
-| Event pipeline | Kafka (KRaft mode) |
+| Event pipeline | Kafka  |
 | Cache / rate tracking | Redis |
 | Realtime updates | WebSockets |
 | Auth | better-auth (GitHub OAuth) |
@@ -36,6 +36,12 @@ Webanly lets you track visitors on your own website without relying on third-par
 | Containerization | Docker, Docker Compose |
 
 ---
+- **if you are thinking it's little bit over engineering then yes you are right . but let me tell you I started this project jan 2025 when I don't even know git with just nextjs and sqllite. later on I keep learning technologies and implementing in this project . i was looking for internship but sadly not got any interview . so I keep upgrading this project . i just don't wanted spin up seprate project  for every major technology i was learning. because of this I learnt to handle ws with react tanstack in Nextjs, I learnt kafka pipelines and got better in prisma with postgresql,modular monolith, etc. 
+
+- **but even though I tried it to be minimal.but here is the minimal and cost effective version should have been.  
+for websocket it should be sse . redis and kafka is not needed on low scale , db should be click house not postgresql. even sse is not needed, background polling was enough for making dashboard live . it has lot of cron job so next is not enough it needs another server for it, but at low scale Nextjs  also can do it . 
+
+
 
 ## How it works
 
