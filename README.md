@@ -1,9 +1,9 @@
 # Webanly
 
-A privacy-friendly web analytics platform with real-time dashboards — built as a TypeScript monorepo.
+A privacy-friendly web analytics platform with real-time dashboards, built as a TypeScript monorepo.
 
-**Live demo:** https://webanly-dashboard.vercel.app/
-**Video demo:** https://youtu.be/3s94YRIDrpw
+**Live demo:** <https://webanly-dashboard.vercel.app/>
+**Video demo:** <https://youtu.be/3s94YRIDrpw>
 
 ---
 
@@ -12,36 +12,44 @@ A privacy-friendly web analytics platform with real-time dashboards — built as
 Webanly lets you track visitors on your own website without relying on third-party analytics tools. Add a domain, drop in one script tag, and get:
 
 - A **live dashboard** showing visitors, page views, and events as they happen
-- **Historical analytics** — traffic over time, top pages, browsers, devices, countries, referrers, exit pages
-- **AI traffic analyst assistant chat bot** — can explain and traffic and any kind of inshights user want to know about their websites traffic data in easy words with AI.
+- **Historical analytics**: traffic over time, top pages, browsers, devices, countries, referrers, and exit pages
+- An **AI traffic analyst chatbot** that explains your traffic data and answers any question about your website's traffic in simple words
 - **Automatic spike alerts** when traffic jumps above your site's normal range
-- **Domain-scoped API keys** so each tracked site is isolated
-- **Timezone-aware reporting** — "today" means today in the visitor's timezone, not the server's
+- **Domain-scoped API keys**, so each tracked site is isolated
+- **Timezone-aware reporting**: "today" means today in the visitor's timezone, not the server's
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | Next.js, React, TanStack Query, Redux Toolkit, shadcn/ui, Tailwind CSS |
-| Backend | Express, Node.js |
-| Database | PostgreSQL + Prisma |
-| Event pipeline | Kafka  |
-| Cache / rate tracking | Redis |
-| Realtime updates | WebSockets |
-| Auth | better-auth (GitHub OAuth) |
-| Geo lookups | MaxMind GeoLite2 |
-| Monorepo tooling | Turborepo, npm workspaces |
-| Containerization | Docker, Docker Compose |
+| Layer                 | Technology                                                             |
+| --------------------- | ---------------------------------------------------------------------- |
+| Frontend              | Next.js, React, TanStack Query, Redux Toolkit, shadcn/ui, Tailwind CSS |
+| Backend               | Express, Node.js                                                       |
+| Database              | PostgreSQL + Prisma                                                    |
+| Event pipeline        | Kafka                                                                  |
+| Cache / rate tracking | Redis                                                                  |
+| Realtime updates      | WebSockets                                                             |
+| Auth                  | better-auth (GitHub OAuth)                                             |
+| Geo lookups           | MaxMind GeoLite2                                                       |
+| Monorepo tooling      | Turborepo, npm workspaces                                              |
+| Containerization      | Docker, Docker Compose                                                 |
 
 ---
-- **if you are thinking it's little bit over engineering then yes you are right . but let me tell you I started this project jan 2025 when I don't even know git with just nextjs and sqllite. later on I keep learning technologies and implementing in this project . i was looking for internship but sadly not got any interview . so I keep upgrading this project . i just don't wanted spin up seprate project  for every major technology i was learning. because of this I learnt to handle ws with react tanstack in Nextjs, I learnt kafka pipelines and got better in prisma with postgresql,modular monolith, etc. 
 
-- **but even though I tried it to be minimal.but here is the minimal and cost effective version should have been.  
-for websocket it should be sse . redis and kafka is not needed on low scale , db should be click house not postgresql. even sse is not needed, background polling was enough for making dashboard live . it has lot of cron job so next is not enough it needs another server for it, but at low scale Nextjs  also can do it . 
+## Why this stack?
 
+You may feel this project is over-engineered, and that is a fair point. I started it in January 2025 with only Next.js and SQLite, and I did not even know Git at that time. As I learned new technologies, I kept adding them here instead of starting a separate project for each one. Because of this, I learned to handle WebSockets with React and TanStack Query in Next.js, built Kafka pipelines, and got better at Prisma with PostgreSQL and the modular monolith pattern. I was looking for an internship but did not get any interviews, so I kept improving this project.
 
+I tried to keep it as simple as possible. Still, here is what a minimal, cost-effective version would look like:
+
+- Use SSE instead of WebSockets.
+- Skip Redis and Kafka, since they are not needed at low scale.
+- Use ClickHouse instead of PostgreSQL for analytics data.
+- Skip even SSE. Background polling is enough to keep the dashboard live.
+- The project has many cron jobs, so Next.js alone is not enough and a separate server is needed. At low scale, Next.js could handle them too.
+
+---
 
 ## How it works
 
@@ -50,8 +58,8 @@ for websocket it should be sse . redis and kafka is not needed on low scale , db
 3. Two things consume from Kafka in parallel:
    - A **worker** that writes events into Postgres for historical queries.
    - A **WebSocket broadcaster** that pushes the event to any dashboard currently connected for that domain, for the live view.
-4. A **spike detector** runs on a schedule, comparing recent traffic against an adaptive expected baseline (the baseline self-adjusts up when traffic grows and down when it's quiet), and fires a notification when there's a real spike.
-5. The dashboard (Next.js) reads historical data via REST endpoints (cached in Redis) and live data via a WebSocket connection, merging both into the same charts.
+4. A **spike detector** runs on a schedule and compares recent traffic against an adaptive expected baseline. The baseline adjusts up when traffic grows and down when it is quiet. It fires a notification when there is a real spike.
+5. The dashboard (Next.js) reads historical data via REST endpoints (cached in Redis) and live data via a WebSocket connection, then merges both into the same charts.
 
 ---
 
@@ -62,15 +70,15 @@ for websocket it should be sse . redis and kafka is not needed on low scale , db
 ```
 webanly/
 ├── apps/
-│   ├── web/            # Next.js frontend (dashboards, auth, domain management)
-│   └── server/          # Express backend — collector API, Kafka workers, WebSocket server
+│   ├── web/                  # Next.js frontend (dashboards, auth, domain management)
+│   └── server/               # Express backend: collector API, Kafka workers, WebSocket server
 ├── packages/
-│   ├── db/               # Prisma schema, migrations, generated client
-│   ├── redis/            # Shared Redis client + cache helpers
-│   ├── ui/                # Shared shadcn/ui component library
-│   ├── types/             # Shared TypeScript contracts and Zod validation schemas
-│   ├── eslint-config/      # Shared lint rules
-│   └── typescript-config/   # Shared tsconfig presets
+│   ├── db/                   # Prisma schema, migrations, generated client
+│   ├── redis/                # Shared Redis client + cache helpers
+│   ├── ui/                   # Shared shadcn/ui component library
+│   ├── types/                # Shared TypeScript contracts and Zod validation schemas
+│   ├── eslint-config/        # Shared lint rules
+│   └── typescript-config/    # Shared tsconfig presets
 ├── docker-compose.yml
 └── turbo.json
 ```
@@ -85,24 +93,26 @@ webanly/
 
 ## Running Locally with Docker (recommended)
 
-This is the easiest way to run the full stack — Postgres, Redis, Kafka, backend, and frontend — with one command.
+This is the easiest way to run the full stack (Postgres, Redis, Kafka, backend, and frontend) with one command.
 
 ### Prerequisites
 
 - Docker + Docker Compose
-- A free [MaxMind](https://www.maxmind.com/en/geolite2/signup) account and license key (used for IP → country lookups)
-- A GitHub OAuth app (for login) — create one at GitHub → Settings → Developer settings → OAuth Apps
+- A free [MaxMind](https://www.maxmind.com/en/geolite2/signup) account and license key (used for IP-to-country lookups)
+- A GitHub OAuth app for login. Create one at GitHub → Settings → Developer settings → OAuth Apps
 
 ### Setup
 
 1. Clone the repo:
-   ```bash
+
+   ```
    git clone <repo-url>
    cd webanly
    ```
 
 2. Create a `.env` file in the repo root:
-   ```bash
+
+   ```
    MAXMIND_LICENSE_KEY=your_maxmind_license_key
    BETTER_AUTH_SECRET=generate_a_random_32_char_secret
    BETTER_AUTH_BASE_URL=http://localhost:3000
@@ -114,23 +124,27 @@ This is the easiest way to run the full stack — Postgres, Redis, Kafka, backen
    ```
 
 3. Build and start everything:
-   ```bash
+
+   ```
    docker compose up --build
    ```
 
-   This spins up Postgres, Redis, and Kafka, runs database migrations automatically, then starts the backend and frontend in the right order.
+   This starts Postgres, Redis, and Kafka, runs database migrations automatically, then starts the backend and frontend in the right order.
 
 4. Open the app:
+
    - Frontend: `http://localhost:3000`
    - Backend/collector: `http://localhost:4000`
 
 5. Stop everything:
-   ```bash
+
+   ```
    docker compose down
    ```
+
    Add `-v` to also wipe the database and Redis data.
 
-> **Note:** The GeoLite2 database file is *not* baked into the Docker image (keeps it lightweight) — it's downloaded automatically the first time the server container starts, using your `MAXMIND_LICENSE_KEY`.
+> **Note:** The GeoLite2 database file is *not* included in the Docker image, to keep it lightweight. It is downloaded automatically the first time the server container starts, using your `MAXMIND_LICENSE_KEY`.
 
 ---
 
@@ -146,7 +160,7 @@ This is the easiest way to run the full stack — Postgres, Redis, Kafka, backen
 
 ### Steps
 
-```bash
+```
 npm install
 
 # Add .env files with your DATABASE_URL, REDIS_URL, Kafka broker address,
@@ -177,24 +191,52 @@ The included Dockerfiles and `docker-compose.yml` can also be used to self-host 
 
 ## Known Limitations
 
-- Domain ownership is varification method is not reay — DNS TXT record verification is a planned enhancement (schema fields for it already exist). so there will be hardcored random prefix and suffix string in domainname.
-- No automated test suite yet.
-- Origin checking on the collector logs a warning on mismatch but currently doesn't block the request, pending full domain verification.
+- Domain ownership verification is not ready yet. DNS TXT record verification is planned, and the schema fields for it already exist. Until then, a hardcoded random prefix and suffix is added to each domain name.
+- There is no automated test suite yet.
+- Origin checking on the collector logs a warning on mismatch but does not block the request yet, pending full domain verification.
+
+---
+
+## Screenshots
+
+
+
+![Webanly screenshot 1](Screenshot%202026-08-22%20140408.png)
+
+
+
+
+![Webanly screenshot 2](Screenshot%202026-08-21%20182703.png)
+
+
+
+
+![Webanly screenshot 3](Screenshot%202026-08-21%20195432.png)
+
+
+
+
+![Webanly screenshot 4](Screenshot%202026-08-21%20195333.png)
+
+
+
+
+![Webanly screenshot 5](Screenshot%202026-09-17%20005924.png)
+
+
+
+
+![Webanly screenshot 6](Screenshot%202026-09-17%20010002.png)
+
+
+
+
+![Webanly screenshot 7](Screenshot%202026-09-17%20010032.png)
+
+
 
 ---
 
 ## License
 
-This project is for portfolio/demonstration purposes.
-
-![alt text](<Screenshot 2026-08-22 140408.png>)
-![alt text](<Screenshot 2026-08-21 182703.png>)
-![alt text](<Screenshot 2026-08-21 182703.png>)
-![alt text](<Screenshot 2026-08-21 195432.png>)
-![alt text](<Screenshot 2026-08-21 195333.png>)
-
-![alt text](<Screenshot 2026-09-17 005924.png>)
-
-![alt text](<Screenshot 2026-09-17 010002.png>)
-
-![alt text](<Screenshot 2026-09-17 010032.png>)
+This project is for portfolio and demonstration purposes.
