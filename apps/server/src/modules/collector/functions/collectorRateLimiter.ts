@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "crypto"
 import { LRUCache } from "lru-cache"
 import { redis } from "@repo/redis"
+import { createHttpError } from "../../../shared/errors.js"
 
 const API_KEY_REQUEST_LIMIT = 100
 const IP_REQUEST_LIMIT = 600
@@ -50,13 +51,6 @@ export type CollectorRateLimitScope = "api-key" | "ip"
 export interface CollectorRateLimitResult {
   scope: CollectorRateLimitScope
   retryAfterSeconds: number
-}
-
-export class CollectorRateLimiterUnavailableError extends Error {
-  constructor() {
-    super("Collector rate limiter is unavailable.")
-    this.name = "CollectorRateLimiterUnavailableError"
-  }
 }
 
 function hashIdentity(value: string) {
@@ -122,7 +116,12 @@ async function checkRateLimit(
     )) as [number, number]
   } catch (error) {
     console.error(`Collector ${scope} rate limiter Redis check failed.`, error)
-    throw new CollectorRateLimiterUnavailableError()
+    throw createHttpError(
+      503,
+      "Collector rate limiter is temporarily unavailable. Retry shortly.",
+      "RATE_LIMITER_UNAVAILABLE",
+      5
+    )
   }
 
   const [resultCode, ttlMs] = result

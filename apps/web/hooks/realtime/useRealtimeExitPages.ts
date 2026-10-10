@@ -3,8 +3,8 @@ import { useExitPages } from "../analytics/useExitPages";
 import { useRealtimeContext } from "@/components/wrapper/RealtimeProvider";
 import { useRealtimeMerge } from "./useRealtimeMerge";
 import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys";
-import type { ExitPagesResponse } from "@/lib/shared/types/analytics";
-import type { WebSocketMessage } from "@/lib/shared/types/realtime";
+import type { ExitPagesResponse } from "@repo/types/analytics";
+import type { WebSocketMessage } from "@repo/types/realtime";
 
 export function useRealtimeExitPages(
   domainId: string,

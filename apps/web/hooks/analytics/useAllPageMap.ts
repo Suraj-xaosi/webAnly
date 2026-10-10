@@ -3,8 +3,8 @@ import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys"
 import {
   ALL_PAGE_MAP_VALUE,
   type PageMapResponse,
-} from "@/lib/shared/types/analytics"
-import type { ApiError } from "@/lib/shared/types/api"
+} from "@repo/types/analytics"
+import type { ApiError } from "@repo/types/api"
 
 interface PageMapParams {
   domainId: string

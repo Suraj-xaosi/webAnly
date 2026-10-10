@@ -1,4 +1,4 @@
-import type { FlowEntry, FlowResponse } from "@/lib/shared/types/analytics"
+import type { FlowEntry, FlowResponse } from "@repo/types/analytics"
 
 export type FlowMetric = "views" | "visitors"
 export type FlowNodeRole = "incoming" | "selected" | "outgoing" | "exit"

@@ -1,7 +1,12 @@
 ﻿import { fetchApiData, useApiQuery, normalizeApiError } from "@/lib/shared/tanstackFunctions/api";
 import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys"
-import {Dimension, DimensionPoint, DimensionResponse, DimensionParams} from "@/lib/shared/types/analytics"; 
-import type { ApiError } from "@/lib/shared/types/api";
+import type {
+  Dimension,
+  DimensionPoint,
+  DimensionResponse,
+  DimensionParams,
+} from "@repo/types/analytics"
+import type { ApiError } from "@repo/types/api";
 
 
 async function fetchDimension(params: DimensionParams): Promise<DimensionResponse> {
@@ -46,5 +51,5 @@ export async function prefetchDimension(
   });
 }
 
-export type { Dimension, DimensionPoint, DimensionResponse, DimensionParams } from "@/lib/shared/types/analytics";
-export type { ApiError } from "@/lib/shared/types/api";
+export type { Dimension, DimensionPoint, DimensionResponse, DimensionParams } from "@repo/types/analytics";
+export type { ApiError } from "@repo/types/api";

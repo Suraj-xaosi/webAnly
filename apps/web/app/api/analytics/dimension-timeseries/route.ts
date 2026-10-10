@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DIMENSION_COL_MAP, VALID_INTERVALS, type Interval } from "@/lib/shared/DBfunctions/helper/analyticsConstants";
-import type { Dimension } from "@/lib/shared/types/analytics";
+import type { Dimension } from "@repo/types/analytics";
 import { validateDateParams } from "@/lib/shared/DBfunctions/helper/TimeFunctions";
 import { fetchDimensionTimeseriesData } from "@/lib/shared/DBfunctions/fetchDimensionTimeseriesData";
 import { analyticsErrorResponse } from "@/lib/shared/DBfunctions/helper/analyticsRouteUtils";

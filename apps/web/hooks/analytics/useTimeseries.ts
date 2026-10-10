@@ -1,7 +1,7 @@
 ﻿import { fetchApiData, useApiQuery, normalizeApiError } from "@/lib/shared/tanstackFunctions/api";
 import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys"; 
-import type { TimeseriesResponse, TimeseriesParams } from "@/lib/shared/types/analytics";
-import type { ApiError } from "@/lib/shared/types/api";
+import type { TimeseriesResponse, TimeseriesParams } from "@repo/types/analytics";
+import type { ApiError } from "@repo/types/api";
 
 
 async function fetchTimeseries(params: TimeseriesParams): Promise<TimeseriesResponse> {
@@ -47,5 +47,5 @@ export function normalizeAxiosError(error: unknown): ApiError {
   return normalizeApiError(error);
 }
 
-export type { TimeseriesPoint, TimeseriesResponse, TimeseriesParams, Interval } from "@/lib/shared/types/analytics";
-export type { ApiError } from "@/lib/shared/types/api";
+export type { TimeseriesPoint, TimeseriesResponse, TimeseriesParams, Interval } from "@repo/types/analytics";
+export type { ApiError } from "@repo/types/api";

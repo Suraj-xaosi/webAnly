@@ -3,8 +3,8 @@ import { useTimeseries } from "../analytics/useTimeseries";
 import { useRealtimeContext } from "@/components/wrapper/RealtimeProvider";
 import { useRealtimeMerge } from "./useRealtimeMerge";
 import { getHourBucketLabel, mergeHourlyPoint } from "./timeseriesUtils";
-import type { RealtimeTimeseriesResult, WebSocketMessage } from "@/lib/shared/types/realtime";
-import type { TimeseriesResponse} from "@/lib/shared/types/analytics"
+import type { RealtimeTimeseriesResult, WebSocketMessage } from "@repo/types/realtime";
+import type { TimeseriesResponse} from "@repo/types/analytics"
 
 
 

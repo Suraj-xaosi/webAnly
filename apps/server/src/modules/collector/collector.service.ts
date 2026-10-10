@@ -1,5 +1,5 @@
 import { producer }                    from "../../shared/config/kafka/kafkaClient.js";
-import { DomainInfo, apikeyChecker }   from "../../shared/functions/apikeyChecker.js";
+import { apikeyChecker }               from "../../shared/functions/apikeyChecker.js";
 import { KAFKA_TOPICS }                from "../../shared/config/kafka.js";
 import parseTime                       from "./functions/parseTimeSpent.js";
 import parseDate                       from "./functions/parseDate.js";
@@ -14,23 +14,23 @@ import {
   checkCollectorRateLimit,
   type CollectorRateLimitResult,
 } from "./functions/collectorRateLimiter.js";
+import type { CollectorEventInput } from "@repo/types/validation";
 
 const VALID_EXIT_TYPES = new Set(["navigation", "pagehide", "hidden"]);
 
-function parseExitType(exitType: any): string | null {
+function parseExitType(exitType: unknown): string | null {
   return typeof exitType === "string" && VALID_EXIT_TYPES.has(exitType) ? exitType : null;
 }
 
-// previousPage must be a path on the same site (starts with "/"). Anything else is ignored.
-function parsePreviousPage(value: any): string | null {
+function parsePreviousPage(value: unknown): string | null {
   if (typeof value !== "string" || !value.startsWith("/")) return null;
   return normalizePath(value.slice(0, 500));
 }
 
 export async function handleCollectEvent(
-  req: Request
+  req: Request,
+  body: CollectorEventInput
 ): Promise<CollectorRateLimitResult | null> {
-  const body = req.body || {};
   const visitorIP = extractRealIp(req.ip || req.socket.remoteAddress || "");
 
   const ipRateLimit = await checkCollectorIpRateLimit(visitorIP);
@@ -38,23 +38,11 @@ export async function handleCollectEvent(
 
   const exitType = parseExitType(body.exitType);
 
-  // "hidden" is not a real event, just a signal that the tab was hidden. Do not send it to Kafka.
   if (exitType === "hidden") {
     return null;
   }
 
-  let domain: DomainInfo;
-  try {
-    domain = await apikeyChecker(body.apikey);
-  } catch (err) {
-    console.warn(`COLLECTOR: apikey check failed`, err);
-    return null;
-  }
-
-  if (domain.state !== "ACTIVE") {
-    console.log(`COLLECTOR : this ${domain.domainName} is inactive`);
-    return null;
-  }
+  const domain = await apikeyChecker(body.apikey);
 
   const allowed = isOriginAllowed(
     req.headers.origin as string | undefined,
@@ -70,12 +58,10 @@ export async function handleCollectEvent(
   const apiKeyRateLimit = await checkCollectorRateLimit(body.apikey);
   if (apiKeyRateLimit) return apiKeyRateLimit;
 
-  const visitedAt = parseDate(body.visitedAt) || new Date();
+  const visitedAt = parseDate(body.visitedAt);
   const timeSpent = parseTime(body.timeSpent);
   const page      = normalizePath(body.page);
 
-  // previousPage set  → internal navigation, so there is no external referrer (null)
-  // previousPage null → arrived from outside or directly, so the referrer is a hostname or "direct"
   const previousPage = parsePreviousPage(body.previousPage);
   const referrer     = previousPage ? null : extractReferrerHostname(body.referrer);
 

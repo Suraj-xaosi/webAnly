@@ -1,18 +1,20 @@
-// Dimension Analytics
-export type Dimension =
-  | "page"
-  | "browser"
-  | "device"
-  | "country"
-  | "city"
-  | "os"
-  | "referrer"
+export const ANALYTICS_DIMENSIONS = [
+  "page",
+  "browser",
+  "device",
+  "country",
+  "city",
+  "os",
+  "referrer",
+] as const
+
+export type Dimension = (typeof ANALYTICS_DIMENSIONS)[number]
 
 export interface DimensionPoint {
   name: string
   views: number
   visitors: number
-  avgDwell: number // seconds
+  avgDwell: number
   viewsPerVisitor: number
 }
 
@@ -27,20 +29,19 @@ export interface DimensionResponse {
 
 export interface DimensionParams {
   domainId: string
-  from: string // "YYYY-MM-DD"
-  to: string // "YYYY-MM-DD"
+  from: string
+  to: string
   timezone?: string
   dimension: Dimension
-  limit?: number // default 100, max 500
+  limit?: number
   domainName?: string
 }
 
-// Exit Pages Analytics
 export interface ExitPagePoint {
   name: string
   views: number
   exits: number
-  exitRate: number // percentage, 0-100
+  exitRate: number
 }
 
 export interface ExitPagesResponse {
@@ -110,8 +111,15 @@ export interface PageMapResponse {
   edges: PageMapEdge[]
 }
 
-// Timeseries Analytics
-export type Interval = "hour" | "dayname" | "day" | "week" | "month"
+export const ANALYTICS_INTERVALS = [
+  "hour",
+  "dayname",
+  "day",
+  "week",
+  "month",
+] as const
+
+export type Interval = (typeof ANALYTICS_INTERVALS)[number]
 
 export interface TimeseriesPoint {
   date: string
@@ -129,13 +137,12 @@ export interface TimeseriesResponse {
 
 export interface TimeseriesParams {
   domainId: string
-  from: string // "YYYY-MM-DD"
-  to: string // "YYYY-MM-DD"
+  from: string
+  to: string
   interval?: Interval
   timezone?: string
 }
 
-// Dimension timeseries selection for the detail panel
 export interface DimensionTimeseriesParams {
   domainId: string
   from: string

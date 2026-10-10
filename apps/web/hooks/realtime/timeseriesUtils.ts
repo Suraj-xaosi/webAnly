@@ -1,4 +1,4 @@
-import type { TimeseriesPoint } from "@/lib/shared/types/analytics";
+import type { TimeseriesPoint } from "@repo/types/analytics";
 
 export function getHourBucketLabel(dateValue: string | number, timezone: string): string {
   const date = new Date(dateValue);

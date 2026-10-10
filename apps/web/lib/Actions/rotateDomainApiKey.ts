@@ -5,7 +5,7 @@ import { prisma } from "@repo/db"
 import { deleteCache, redis } from "@repo/redis"
 import { requireSession } from "./requireSession"
 import { findOwnedDomain } from "./findOwnedDomain"
-import { actionErr, actionOk } from "@/lib/shared/types/actionResult"
+import { actionErr, actionOk } from "@repo/types/actionResult"
 
 const ROTATION_COOLDOWN_SECONDS = 60
 

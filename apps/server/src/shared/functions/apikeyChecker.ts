@@ -1,5 +1,6 @@
 import { prisma } from "@repo/db";
 import { deleteCache, getCache, setCache } from "@repo/redis";
+import { createHttpError, isHttpError } from "../errors.js";
 
 export interface DomainInfo {
   domainId: string;
@@ -9,7 +10,7 @@ export interface DomainInfo {
   defaultTimezone: string;
 }
 
-const CACHE_TTL_SECONDS = 1200; // redis TTL, 20 min
+const CACHE_TTL_SECONDS = 1200;
 
 export async function invalidateApikeyCache(apikey: string): Promise<void> {
   const cacheKey = `apikey:${apikey.trim()}`;
@@ -18,22 +19,24 @@ export async function invalidateApikeyCache(apikey: string): Promise<void> {
 
 export async function apikeyChecker(apikey: string): Promise<DomainInfo> {
   const normalizedApiKey = typeof apikey === "string" ? apikey.trim() : "";
-  if (!normalizedApiKey) throw new Error("Invalid API key format");
+  if (!normalizedApiKey) {
+    throw createHttpError(401, "Invalid API key.", "INVALID_API_KEY");
+  }
 
   const cacheKey = `apikey:${normalizedApiKey}`;
-
-
   try {
     const cached = await getCache<DomainInfo>(cacheKey);
     if (cached) {
-      if (cached.state !== "ACTIVE") throw new Error("Domain is inactive");
+      if (cached.state !== "ACTIVE") {
+        throw createHttpError(403, "Domain is inactive.", "DOMAIN_INACTIVE");
+      }
       return cached;
     }
   } catch (error) {
+    if (isHttpError(error)) throw error;
     console.warn("API key cache lookup failed", error);
   }
 
-  // L3: db
   let domain;
   try {
     domain = await prisma.domain.findUnique({
@@ -42,11 +45,15 @@ export async function apikeyChecker(apikey: string): Promise<DomainInfo> {
     });
   } catch (error) {
     console.error("Failed to reach database while checking API key", error);
-    throw new Error("Failed to reach database");
+    throw createHttpError(503, "Unable to validate API key.", "API_KEY_LOOKUP_FAILED");
   }
 
-  if (!domain) throw new Error("Invalid API key");
-  if (domain.state !== "ACTIVE") throw new Error("Domain is inactive");
+  if (!domain) {
+    throw createHttpError(401, "Invalid API key.", "INVALID_API_KEY");
+  }
+  if (domain.state !== "ACTIVE") {
+    throw createHttpError(403, "Domain is inactive.", "DOMAIN_INACTIVE");
+  }
 
   const result: DomainInfo = {
     domainId: domain.id,

@@ -16,6 +16,10 @@
       "types": "./dist/analytics.d.ts",
       "import": "./dist/analytics.js"
     },
+    "./actionResult": {
+      "types": "./dist/actionResult.d.ts",
+      "import": "./dist/actionResult.js"
+    },
     "./api": {
       "types": "./dist/api.d.ts",
       "import": "./dist/api.js"
@@ -31,6 +35,14 @@
     "./server": {
       "types": "./dist/server.d.ts",
       "import": "./dist/server.js"
+    },
+    "./validation": {
+      "types": "./dist/validation/index.d.ts",
+      "import": "./dist/validation/index.js"
     }
+  },
+  "dependencies": {
+    "@repo/db": "*",
+    "zod": "^4.6.5"
   }
 }

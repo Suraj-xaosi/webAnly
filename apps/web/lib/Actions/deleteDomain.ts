@@ -4,7 +4,7 @@ import { prisma } from "@repo/db";
 import { deleteCache } from "@repo/redis";
 import { requireSession } from "./requireSession";
 import { findOwnedDomain } from "./findOwnedDomain";
-import { actionErr, actionOk } from "@/lib/shared/types/actionResult"
+import { actionErr, actionOk } from "@repo/types/actionResult"
 
 export async function deleteDomain(id: string) {
   try {

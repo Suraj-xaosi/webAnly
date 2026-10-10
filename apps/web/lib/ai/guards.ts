@@ -1,5 +1,5 @@
 import "server-only"
-import { z } from "zod"
+import { analyticsClassifierSchema } from "@repo/types/validation"
 import { HumanMessage, SystemMessage } from "@langchain/core/messages"
 import { fastModel } from "./model"
 
@@ -20,17 +20,9 @@ export function checkMessageLength(userMessage: string): { ok: boolean; error?: 
   return { ok: true }
 }
 
-const classifierSchema = z.object({
-  isAnalyticsRelated: z
-    .boolean()
-    .describe(
-      "True if the question is about website analytics data such as traffic, visitors, page views, browsers, devices, countries, referrers, trends, or exit pages. False if it is about coding, essays, recipes, or anything else."
-    ),
-})
-
 export async function isOnTopic(userMessage: string): Promise<boolean> {
   try {
-    const classifier = fastModel.withStructuredOutput(classifierSchema)
+    const classifier = fastModel.withStructuredOutput(analyticsClassifierSchema)
     const result = await classifier.invoke([
       new SystemMessage(
         "You are a classifier. Decide only whether the question is related to website traffic analytics. Do not provide advice or perform any other task."
@@ -40,8 +32,6 @@ export async function isOnTopic(userMessage: string): Promise<boolean> {
     return result.isAnalyticsRelated
   } catch (err) {
     console.error("[ai-guards] topic classifier failed:", err)
-    // Keep the feature available if the classifier fails; the main agent can
-    // handle off-topic requests through its system prompt.
     return true
   }
 }

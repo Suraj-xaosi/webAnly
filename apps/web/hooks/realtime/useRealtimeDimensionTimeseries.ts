@@ -3,8 +3,8 @@ import { useDimensionTimeseries } from "../analytics/useDimTimeseries";
 import { useRealtimeContext } from "@/components/wrapper/RealtimeProvider";
 import { useRealtimeMerge } from "./useRealtimeMerge";
 import { getHourBucketLabel, mergeHourlyPoint } from "./timeseriesUtils";
-import type { WebSocketMessage } from "@/lib/shared/types/realtime";
-import type { Dimension, DimensionTimeseriesResponse } from "@/lib/shared/types/analytics";
+import type { WebSocketMessage } from "@repo/types/realtime";
+import type { Dimension, DimensionTimeseriesResponse } from "@repo/types/analytics";
 
 export interface RealtimeDimensionTimeseriesResult {
   data: DimensionTimeseriesResponse["data"];

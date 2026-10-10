@@ -31,7 +31,7 @@ import { AnalyticsCardState } from "./analyticsCardState"
 import {
   ALL_PAGE_MAP_VALUE,
   type PageMapResponse,
-} from "@/lib/shared/types/analytics"
+} from "@repo/types/analytics"
 import {
   buildPageFlowChartData,
   type FlowMetric,

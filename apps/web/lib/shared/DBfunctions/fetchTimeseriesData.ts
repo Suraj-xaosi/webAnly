@@ -2,7 +2,7 @@ import "server-only"
 import { prisma } from "@repo/db"
 import { DAY_NAMES, MONTH_NAMES, TRUNC_FOR, type Interval } from "./helper/analyticsConstants"
 import { getAnalyticsDateBounds, readCachedResponse, writeCachedResponse } from "./helper/analyticsRouteUtils"
-import type { TimeseriesResponse } from "@/lib/shared/types/analytics"
+import type { TimeseriesResponse } from "@repo/types/analytics"
 
 export async function fetchTimeseriesData(
   domainId: string,
@@ -14,7 +14,7 @@ export async function fetchTimeseriesData(
   const cacheKey = `timeseries:${domainId}:${interval}:${from}:${to}:${timezone}`
 
   const cachedResponse = await readCachedResponse<TimeseriesResponse>(cacheKey)
-  if (cachedResponse) return await cachedResponse.json()
+  if (cachedResponse) return cachedResponse
 
   const { lowerBoundSql, upperBoundSql } = getAnalyticsDateBounds(from, to, timezone)
 

@@ -6,7 +6,7 @@ import { useCreateOrder } from "./useCreateOrder"
 import { useRazorpayScript } from "./userRazorpayScript"
 import { getPaymentStatus } from "@/lib/Actions/getPaymmentStatus"
 import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys"
-import type { Domain } from "@/lib/shared/types/domain"
+import type { Domain } from "@repo/types/domain"
 
 export type CheckoutStatus =
   | "idle"

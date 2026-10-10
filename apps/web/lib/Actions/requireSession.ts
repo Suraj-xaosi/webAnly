@@ -1,7 +1,7 @@
 "use server"
 import { auth } from "@/lib/betterAuth/auth"
 import { headers } from "next/headers"
-import { actionErr, actionOk, type ActionResult } from "@/lib/shared/types/actionResult"
+import { actionErr, actionOk, type ActionResult } from "@repo/types/actionResult"
 
 type Session = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>
 

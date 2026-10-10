@@ -4,6 +4,7 @@ dotenv.config();
 import express          from "express";
 import { createServer } from "http";
 import cors             from "cors";
+import helmet           from "helmet";
 
 
 import { producer }                           from "./shared/config/kafka/kafkaClient.js";
@@ -13,7 +14,7 @@ import { startWebSocketConsumer }             from "./modules/websocket/index.js
 import { startAnalyticsWorker, }              from "./modules/eventDumping/index.js";
 import { startSpikeJob }                      from "./modules/spkies/index.js";
 import { startNotificationWorker }            from "./modules/notifications/index.js";
-import { startDomainLifecycleJob } from "./modules/domainLifeCycle/index.js";
+import { errorHandler } from "./shared/middleware/errors.js";
 
 
 
@@ -22,10 +23,16 @@ const app        = express();
 const httpServer = createServer(app);
 
 app.set("trust proxy", 1);
-app.use(express.json());
-app.use(cors({ origin: true, credentials: true }));
+app.use(helmet());
+app.use(cors({
+  origin: true,
+  methods: ["POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"],
+}));
+app.use(express.json({ limit: "32kb" }));
 
 app.use("/", collectorRouter);
+app.use(errorHandler);
 initWebSocketServer(httpServer);
 
 async function start() {
@@ -42,9 +49,6 @@ async function start() {
     await startNotificationWorker();
     
     await startSpikeJob(); 
-    //turnig off domain lifecycle job for now as it is not needed 
-    //await startDomainLifecycleJob();
-    
     const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
     httpServer.listen(PORT, () => {
       console.log(` SERVER START : Server running on port ${PORT}`);

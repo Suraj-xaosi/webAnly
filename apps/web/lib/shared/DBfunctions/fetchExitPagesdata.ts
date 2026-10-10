@@ -1,7 +1,7 @@
 import "server-only"
 import { prisma } from "@repo/db"
 import { getAnalyticsDateBounds, readCachedResponse, writeCachedResponse } from "./helper/analyticsRouteUtils"
-import type { ExitPagesResponse } from "@/lib/shared/types/analytics"
+import type { ExitPagesResponse } from "@repo/types/analytics"
 
 export async function fetchExitPagesData(
   domainId: string,
@@ -12,7 +12,7 @@ export async function fetchExitPagesData(
   const cacheKey = `exit-pages:${domainId}:${from}:${to}:${timezone}`
 
   const cachedResponse = await readCachedResponse<ExitPagesResponse>(cacheKey)
-  if (cachedResponse) return await cachedResponse.json()
+  if (cachedResponse) return cachedResponse
 
   const { lowerBoundSql, upperBoundSql } = getAnalyticsDateBounds(from, to, timezone)
 
@@ -32,9 +32,7 @@ export async function fetchExitPagesData(
     ORDER BY exits DESC
   `
 
-  const data = rows
-    .filter((row) => row.exits > 0)
-    .map((row) => ({
+  const data = rows.map((row) => ({
       name: row.name,
       views: row.views,
       exits: row.exits,

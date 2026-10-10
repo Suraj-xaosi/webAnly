@@ -1,6 +1,6 @@
 "use client"
 
-import type { ApiError } from "@/lib/shared/types/api"
+import type { ApiError } from "@repo/types/api"
 import { Button } from "@workspace/ui/components/button"
 
 interface AnalyticsCardStateProps {

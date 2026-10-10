@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
-import type { Dimension } from "@/lib/shared/types/analytics"
+import type { Dimension } from "@repo/types/analytics"
 import { setDomainId } from "./dashboardSlice"
 import type { RootState } from "../store"
 

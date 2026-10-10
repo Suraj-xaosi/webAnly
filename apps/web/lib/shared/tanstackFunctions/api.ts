@@ -6,7 +6,7 @@ import {
   type UseMutationOptions,
   type UseQueryOptions,
 } from "@tanstack/react-query";
-import type { ApiError } from "@/lib/shared/types/api";
+import type { ApiError } from "@repo/types/api";
 
 export type { ApiError };
 

@@ -1,7 +1,7 @@
 ﻿import { fetchApiData, useApiQuery, normalizeApiError } from "@/lib/shared/tanstackFunctions/api";
 import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys"; 
-import type { ExitPagesResponse, ExitPagesParams} from "@/lib/shared/types/analytics";
-import type { ApiError } from "@/lib/shared/types/api";
+import type { ExitPagesResponse, ExitPagesParams} from "@repo/types/analytics";
+import type { ApiError } from "@repo/types/api";
 
 
 
@@ -29,5 +29,5 @@ export function useExitPages(params: ExitPagesParams) {
   });
 }
 
-export type { ExitPagePoint, ExitPagesResponse, ExitPagesParams } from "@/lib/shared/types/analytics";
-export type { ApiError } from "@/lib/shared/types/api";
+export type { ExitPagePoint, ExitPagesResponse, ExitPagesParams } from "@repo/types/analytics";
+export type { ApiError } from "@repo/types/api";

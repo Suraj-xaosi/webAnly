@@ -1,6 +1,6 @@
 import "server-only"
 import { tool } from "@langchain/core/tools"
-import { z } from "zod"
+import { timeseriesToolInputSchema } from "@repo/types/validation"
 import { fetchTimeseriesData } from "@/lib/shared/DBfunctions/fetchTimeseriesData"
 
 export function createTimeseriesTool(domainId: string, timezone: string) {
@@ -19,10 +19,7 @@ export function createTimeseriesTool(domainId: string, timezone: string) {
       name: "get_timeseries",
       description:
         "Returns the daily trend of views and visitors, or the hourly trend for a single day, for a date range. Use it for questions such as 'How was traffic?' or 'Show me the trend.'.",
-      schema: z.object({
-        from: z.string().describe("Start date, format YYYY-MM-DD"),
-        to: z.string().describe("End date, format YYYY-MM-DD"),
-      }),
+      schema: timeseriesToolInputSchema,
     }
   )
 }

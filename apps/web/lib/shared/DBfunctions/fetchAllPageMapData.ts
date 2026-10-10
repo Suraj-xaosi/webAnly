@@ -9,7 +9,7 @@ import type {
   PageMapEdge,
   PageMapNode,
   PageMapResponse,
-} from "@/lib/shared/types/analytics"
+} from "@repo/types/analytics"
 
 const MAX_PAGE_MAP_NODES = 14
 const MAX_PAGE_MAP_EDGES = 40
@@ -29,7 +29,7 @@ export async function fetchAllPageMapData(
   const cacheKey = `all-page-map:${domainId}:${from}:${to}:${timezone}:v2`
 
   const cachedResponse = await readCachedResponse<PageMapResponse>(cacheKey)
-  if (cachedResponse) return await cachedResponse.json()
+  if (cachedResponse) return cachedResponse
 
   const { lowerBoundSql, upperBoundSql } = getAnalyticsDateBounds(
     from,

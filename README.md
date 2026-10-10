@@ -62,12 +62,18 @@ webanly/
 │   ├── db/               # Prisma schema, migrations, generated client
 │   ├── redis/            # Shared Redis client + cache helpers
 │   ├── ui/                # Shared shadcn/ui component library
-│   ├── types/             # Shared TypeScript types
+│   ├── types/             # Shared TypeScript contracts and Zod validation schemas
 │   ├── eslint-config/      # Shared lint rules
 │   └── typescript-config/   # Shared tsconfig presets
 ├── docker-compose.yml
 └── turbo.json
 ```
+
+### Code organization
+
+- `packages/types` owns shared TypeScript contracts and runtime Zod schemas. Keep schemas used by multiple apps here and export them from a focused package entry point.
+- Keep Express middleware and HTTP-specific behavior in `apps/server`. Routes validate requests, async failures go to the central error handler, and service functions handle application logic.
+- Keep Next.js route handlers, server actions, and UI-specific behavior in the web app. Do not put framework middleware in the shared types package.
 
 ---
 

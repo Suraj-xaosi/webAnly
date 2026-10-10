@@ -7,9 +7,8 @@ import {
   todayInTimeZone,
 } from "./TimeFunctions";
 
-export async function readCachedResponse<T>(cacheKey: string): Promise<NextResponse | null> {
-  const cached = await getCache<T>(cacheKey);
-  return cached ? NextResponse.json(cached) : null;
+export function readCachedResponse<T>(cacheKey: string): Promise<T | null> {
+  return getCache<T>(cacheKey);
 }
 
 export async function writeCachedResponse<T extends object>(

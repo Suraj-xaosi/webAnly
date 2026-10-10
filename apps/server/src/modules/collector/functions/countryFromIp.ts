@@ -39,28 +39,6 @@ function isPrivateIp(ip: string): boolean {
     /^fe[89ab]/.test(normalizedIp)
   );
 }
-/*
-// not required anymore 
-
-export default async function countryFromIp(ip: string): Promise<string> {
-  if (!ip) return "Unknown";
-  if (isPrivateIp(ip)) return "local";
-
-  try {
-    await initGeoIP();
-    if (!lookup) return "Unknown";
-
-    const result = lookup.get(ip);
-    return result?.country?.names?.en ?? "Unknown";
-
-  } catch (error) {
-    console.error(`Error looking up country for IP ${ip}:`, error);
-    return "Unknown";
-  }
-}
-*/
-
-
 export async function locationFromIp(
   ip: string
 ): Promise<{ city: string; country: string }> {
@@ -76,7 +54,6 @@ export async function locationFromIp(
       city: result?.city?.names?.en ?? "Unknown",
       country: result?.country?.names?.en ?? "Unknown",
     };
-
   } catch (error) {
     console.error(`Error looking up location for IP ${ip}:`, error);
     return { city: "Unknown", country: "Unknown" };

@@ -2,7 +2,7 @@
 
 import { prisma } from "@repo/db"
 import { requireSession } from "./requireSession"
-import { actionErr, actionOk } from "@/lib/shared/types/actionResult"
+import { actionErr, actionOk } from "@repo/types/actionResult"
 
 export async function getPaymentStatus(razorpayOrderId: string) {
   try {

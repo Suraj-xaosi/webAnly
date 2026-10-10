@@ -1,17 +1,7 @@
 import "server-only"
 import { tool } from "@langchain/core/tools"
-import { z } from "zod"
+import { pageFlowToolInputSchema } from "@repo/types/validation"
 import { fetchFlowData } from "@/lib/shared/DBfunctions/fetchFlowData"
-
-const dateRangeSchema = z
-  .object({
-    from: z.iso.date().describe("Start date, format YYYY-MM-DD"),
-    to: z.iso.date().describe("End date, format YYYY-MM-DD"),
-  })
-  .refine(({ from, to }) => from <= to, {
-    message: "'from' must be before or equal to 'to'",
-    path: ["to"],
-  })
 
 export function createPageFlowTool(domainId: string, timezone: string) {
   return tool(
@@ -30,9 +20,7 @@ export function createPageFlowTool(domainId: string, timezone: string) {
       name: "get_page_flow",
       description:
         "Returns the pages and sources visitors came from before viewing a page, the pages they visited next, and exits from that page. Use it to answer navigation questions about one specific page.",
-      schema: dateRangeSchema.extend({
-        page: z.string().min(1).describe("The exact page path to analyze"),
-      }),
+      schema: pageFlowToolInputSchema,
     }
   )
 }

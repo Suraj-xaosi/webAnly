@@ -1,5 +1,10 @@
-export const VALID_INTERVALS = ["hour", "dayname", "day", "week", "month"] as const;
-export type Interval = (typeof VALID_INTERVALS)[number];
+import {
+  ANALYTICS_INTERVALS,
+  type Interval,
+} from "@repo/types/analytics"
+
+export const VALID_INTERVALS = ANALYTICS_INTERVALS
+export type { Interval }
 
 export const TRUNC_FOR: Record<Exclude<Interval, "week">, string> = {
   hour: "hour",

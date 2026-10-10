@@ -1,8 +1,8 @@
 import "server-only"
 import { tool } from "@langchain/core/tools"
-import { z } from "zod"
+import { dimensionToolInputSchema } from "@repo/types/validation"
 import { fetchDimensionData } from "@/lib/shared/DBfunctions/fetchDimensionData"
-import type { Dimension } from "@/lib/shared/types/analytics"
+import type { Dimension } from "@repo/types/analytics"
 
 // Each dimension has a practical result limit: referrers and cities can be
 // unbounded, while pages, browsers, and operating systems are naturally smaller.
@@ -41,13 +41,7 @@ export function createDimensionTool(domainId: string, timezone: string) {
       name: "get_dimension_breakdown",
       description:
         "Returns a traffic breakdown for the currently selected domain by dimension (page, browser, device, country, city, OS, or referrer) for a date range. It can only return data for this domain.",
-      schema: z.object({
-        dimension: z
-          .enum(["page", "browser", "device", "country", "city", "os", "referrer"])
-          .describe("The dimension to break down"),
-        from: z.string().describe("Start date, format YYYY-MM-DD"),
-        to: z.string().describe("End date, format YYYY-MM-DD"),
-      }),
+      schema: dimensionToolInputSchema,
     }
   )
 }

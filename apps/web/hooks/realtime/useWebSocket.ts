@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from "react";
-import type { WebSocketMessage } from "@/lib/shared/types/realtime";
+import type { WebSocketMessage } from "@repo/types/realtime";
 import { publicEnv } from "@/lib/env/client";
 
 export type { WebSocketMessage };

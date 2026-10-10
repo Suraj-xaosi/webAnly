@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@repo/db"
-import { actionErr, actionOk } from "@/lib/shared/types/actionResult"
+import { actionErr, actionOk } from "@repo/types/actionResult"
 
 // Fallback used only if the PricingConfig singleton row hasn't been seeded yet.
 // INR paise — 4000 = ₹40. Keep in sync with the intended default price.

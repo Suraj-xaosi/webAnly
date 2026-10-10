@@ -3,8 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useDimension } from "../analytics/useDimension";
 import { useRealtimeContext } from "@/components/wrapper/RealtimeProvider";
 import { useRealtimeMerge } from "./useRealtimeMerge";
-import type { RealtimeDimensionResult, WebSocketMessage } from "@/lib/shared/types/realtime";
-import type { Dimension, DimensionResponse} from "@/lib/shared/types/analytics"
+import type { RealtimeDimensionResult, WebSocketMessage } from "@repo/types/realtime";
+import type { Dimension, DimensionResponse} from "@repo/types/analytics"
 
 
 export function useRealtimeDimension(

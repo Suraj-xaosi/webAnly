@@ -1,6 +1,6 @@
 import "server-only"
 import { tool } from "@langchain/core/tools"
-import { z } from "zod"
+import { exitPagesToolInputSchema } from "@repo/types/validation"
 import { fetchExitPagesData } from "@/lib/shared/DBfunctions/fetchExitPagesdata"
 
 const EXIT_PAGES_RESULT_LIMIT = 30
@@ -29,10 +29,7 @@ export function createExitPagesTool(domainId: string, timezone: string) {
       name: "get_exit_pages",
       description:
         "Returns the pages where visitors leave the site (exit pages) for a date range. Use it for questions such as 'Which pages do visitors leave from?'.",
-      schema: z.object({
-        from: z.string().describe("Start date, format YYYY-MM-DD"),
-        to: z.string().describe("End date, format YYYY-MM-DD"),
-      }),
+      schema: exitPagesToolInputSchema,
     }
   )
 }

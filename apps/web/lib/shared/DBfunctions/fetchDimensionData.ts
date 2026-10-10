@@ -2,7 +2,7 @@ import "server-only"
 import { prisma, Prisma } from "@repo/db"
 import { DIMENSION_COL_MAP } from "./helper/analyticsConstants"
 import { getAnalyticsDateBounds, readCachedResponse, writeCachedResponse } from "./helper/analyticsRouteUtils"
-import type { Dimension, DimensionResponse } from "@/lib/shared/types/analytics"
+import type { Dimension, DimensionResponse } from "@repo/types/analytics"
 
 export async function fetchDimensionData(
   domainId: string,
@@ -14,7 +14,7 @@ export async function fetchDimensionData(
   const cacheKey = `dimension:${domainId}:${dimension}:${from}:${to}:${timezone}`
 
   const cachedResponse = await readCachedResponse<DimensionResponse>(cacheKey)
-  if (cachedResponse) return await cachedResponse.json()
+  if (cachedResponse) return cachedResponse
 
   const col = DIMENSION_COL_MAP[dimension]
   const colId = Prisma.raw(`"${col}"`)

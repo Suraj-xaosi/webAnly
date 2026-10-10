@@ -2,7 +2,7 @@
 
 import { prisma } from "@repo/db"
 import { requireSession } from "./requireSession"
-import { actionErr, actionOk } from "@/lib/shared/types/actionResult"
+import { actionErr, actionOk } from "@repo/types/actionResult"
 
 const DOMAIN_PATTERN = /^(?=.{1,253}$)(?!-)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i
 

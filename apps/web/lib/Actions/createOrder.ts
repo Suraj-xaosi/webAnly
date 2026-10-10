@@ -5,7 +5,7 @@ import { requireSession } from "./requireSession"
 import { getPricing } from "./getPricing"
 import { razorpay } from "@/lib/razorpayIntegration/razorPay"
 import { env } from "@/lib/env/server"
-import { actionErr, actionOk } from "@/lib/shared/types/actionResult"
+import { actionErr, actionOk } from "@repo/types/actionResult"
 import { findOwnedDomain } from "./findOwnedDomain"
 
 // If a PENDING payment for this domain already exists and is younger than

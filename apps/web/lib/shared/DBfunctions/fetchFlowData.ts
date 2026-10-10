@@ -1,7 +1,7 @@
 import "server-only"
 import { prisma } from "@repo/db"
 import { getAnalyticsDateBounds, readCachedResponse, writeCachedResponse } from "./helper/analyticsRouteUtils"
-import type { FlowEntry, FlowResponse } from "@/lib/shared/types/analytics"
+import type { FlowEntry, FlowResponse } from "@repo/types/analytics"
 
 export async function fetchFlowData(
   domainId: string,
@@ -13,7 +13,7 @@ export async function fetchFlowData(
   const cacheKey = `flow:${domainId}:${page}:${from}:${to}:${timezone}:v2`
 
   const cachedResponse = await readCachedResponse<FlowResponse>(cacheKey)
-  if (cachedResponse) return await cachedResponse.json()
+  if (cachedResponse) return cachedResponse
 
   const { lowerBoundSql, upperBoundSql } = getAnalyticsDateBounds(from, to, timezone)
 

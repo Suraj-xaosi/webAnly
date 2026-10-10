@@ -1,9 +1,9 @@
-export default function parseDate(dateString: any): Date {
+export default function parseDate(dateString: unknown): Date {
   let date: Date;
   if (dateString) {
     if (typeof dateString === "string" || typeof dateString === "number") {
       const d = new Date(dateString);
-      date = isNaN(d.getTime()) ? new Date() : d;
+      date = Number.isNaN(d.getTime()) ? new Date() : d;
     } else {
       date = new Date();
     }

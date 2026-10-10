@@ -39,7 +39,7 @@ import {
 } from "lucide-react"
 import { cn } from "@workspace/ui/lib/utils"
 import { getDisplayDomainName } from "@workspace/ui/lib/domainName"
-import type { Domain } from "@/lib/shared/types/domain"
+import type { Domain } from "@repo/types/domain"
 
 function maskKey(key: string) {
   if (key.length <= 8) return "•".repeat(key.length)
