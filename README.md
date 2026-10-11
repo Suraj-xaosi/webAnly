@@ -226,7 +226,7 @@ The included Dockerfiles and `docker-compose.yml` can also be used to self-host 
 
 ## Why this stack?
 
-You may feel this project is over-engineered, and that is a fair point. I started it in January 2025 with only Next.js and SQLite, and I did not even know Git at that time. As I learned new technologies, I kept adding them here instead of starting a separate project for each one. Because of this, I learned to handle WebSockets with React and TanStack Query in Next.js, built Kafka pipelines, and got better at Prisma with PostgreSQL and the modular monolith pattern. I was looking for an internship but did not get any interviews, so I kept improving this project.
+You may feel this project is over-engineered, and that is a fair point. I started it in January 2025 with only Next.js and SQLite, and  As I learned new technologies, I kept adding them here instead of starting a separate project for each one. Because of this, I learned to handle WebSockets with React and TanStack Query in Next.js, built Kafka pipelines, and got better at Prisma with PostgreSQL and the modular monolith pattern. I was looking for an internship but did not get any interviews, so I kept improving this project.
 
 I tried to keep it as simple as possible. Still, here is what a minimal, cost-effective version would look like:
 
