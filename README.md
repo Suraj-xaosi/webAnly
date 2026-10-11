@@ -230,7 +230,7 @@ You may feel this project is over-engineered, and that is a fair point. I starte
 
 I tried to keep it as simple as possible. Still, here is what a minimal, cost-effective version would look like:
 
--  SSE instead of WebSockets. because live event data is flowing server to client only . bidirectional not needed here so. 
+-  SSE instead of WebSockets. because live event data is flowing server to client only . bidirectional connection not needed here so. 
 - no need for Redis and Kafka, since they are not needed at low scale.
 - ClickHouse instead of PostgreSQL for analytics data. 
 - Skip even SSE. Background polling is enough to keep the dashboard live.
