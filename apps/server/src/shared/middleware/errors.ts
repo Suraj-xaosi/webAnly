@@ -7,7 +7,26 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, next) => {
     return
   }
 
+  const errorType =
+    typeof error === "object" && error !== null && "type" in error
+      ? error.type
+      : undefined
+
+  // body-parser errors also carry statusCode, so check BEFORE isHttpError
+  if (errorType === "entity.too.large") {
+    res.status(413).json({ error: "Request body is too large." })
+    return
+  }
+
+  if (errorType === "entity.parse.failed") {
+    res.status(400).json({ error: "Request body must contain valid JSON." })
+    return
+  }
+
   if (isHttpError(error)) {
+    if (error.statusCode >= 500) {
+      console.error("SERVER: http error", error)
+    }
     if (error.retryAfterSeconds) {
       res.setHeader("Retry-After", String(error.retryAfterSeconds))
     }
@@ -15,25 +34,6 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, next) => {
       error: error.message,
       ...(error.code ? { code: error.code } : {}),
     })
-    return
-  }
-
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "type" in error &&
-    error.type === "entity.too.large"
-  ) {
-    res.status(413).json({ error: "Request body is too large." })
-    return
-  }
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "type" in error &&
-    error.type === "entity.parse.failed"
-  ) {
-    res.status(400).json({ error: "Request body must contain valid JSON." })
     return
   }
 

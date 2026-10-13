@@ -8,20 +8,15 @@ import { env } from "@/lib/env/server"
 import { actionErr, actionOk } from "@repo/types/actionResult"
 import { findOwnedDomain } from "./findOwnedDomain"
 
-// If a PENDING payment for this domain already exists and is younger than
-// this, we reuse it instead of creating a second payable order. This is
-// what stops a double-click (or a retried request) from producing two
-// separate orders for the same domain — and doubles as simple rate
-// limiting, since repeat clicks within the window never hit Razorpay again.
-const EXISTING_PENDING_REUSE_WINDOW_MS = 15 * 60 * 1000 // 15 minutes
-
 export async function createOrder(domainId: string) {
   try {
     if (!domainId || domainId.trim().length === 0) {
       return actionErr("Domain ID cannot be empty.")
     }
 
-    const sessionResult = await requireSession("You must be logged in to buy or extend a domain.")
+    const sessionResult = await requireSession(
+      "You must be logged in to buy or extend a domain."
+    )
     if (!sessionResult.success) return actionErr(sessionResult.error)
 
     const domain = await findOwnedDomain(domainId, sessionResult.data.user.id, {
@@ -34,30 +29,19 @@ export async function createOrder(domainId: string) {
       return actionErr("Domain not found.")
     }
 
-    // Reuse a still-fresh PENDING payment for this domain if one exists,
-    // rather than letting every click mint a brand new Razorpay order.
+    // Reuse the pending order regardless of age. An old order may still be
+    // payable, so marking it failed based only on its age could discard a
+    // later captured payment.
     const existingPending = await prisma.payment.findFirst({
       where: { domainId: domain.id, status: "PENDING" },
       orderBy: { createdAt: "desc" },
     })
 
     if (existingPending) {
-      const age = Date.now() - existingPending.createdAt.getTime()
-
-      if (age < EXISTING_PENDING_REUSE_WINDOW_MS) {
-        return actionOk({
-          razorpayOrderId: existingPending.razorpayOrderId,
-          amount: existingPending.amount,
-          keyId: env.RAZORPAY_KEY_ID,
-        })
-      }
-
-      // Old enough to be considered abandoned. Mark it FAILED so it can
-      // never later resolve to SUCCESS and clash with the new order we're
-      // about to create below.
-      await prisma.payment.update({
-        where: { id: existingPending.id },
-        data: { status: "FAILED", failureReason: "Superseded by a new payment attempt." },
+      return actionOk({
+        razorpayOrderId: existingPending.razorpayOrderId,
+        amount: existingPending.amount,
+        keyId: env.RAZORPAY_KEY_ID,
       })
     }
 
@@ -65,8 +49,6 @@ export async function createOrder(domainId: string) {
     // the actual domain mutation from live state at settlement time, since
     // this snapshot can go stale if the domain's state changes before the
     // user actually pays.
-    const purpose: PaymentPurpose = domain.state === "DEACTIVATED" ? "REACTIVATE" : "EXTEND"
-
     const pricingResult = await getPricing()
     if (!pricingResult.success) return actionErr(pricingResult.error)
     const amount = pricingResult.data.paidDomainPrice
@@ -77,20 +59,49 @@ export async function createOrder(domainId: string) {
       receipt: `dom_${domainId}_${Date.now()}`,
     })
 
-    await prisma.payment.create({
-      data: {
-        userId: sessionResult.data.user.id,
-        domainId: domain.id,
-        purpose,
-        amount,
-        razorpayOrderId: order.id,
-        status: "PENDING",
-      },
+    const pendingPayment = await prisma.$transaction(async (tx) => {
+      // Recheck ownership and deletion while holding the same row lock used
+      // by domain deletion. This closes the lookup-to-order creation race.
+      const domains = await tx.$queryRaw<
+        { id: string; state: "ACTIVE" | "DEACTIVATED" }[]
+      >`SELECT "id", "state"
+        FROM "domain"
+        WHERE "id" = ${domain.id}
+          AND "userId" = ${sessionResult.data.user.id}
+        FOR UPDATE`
+      const lockedDomain = domains[0]
+
+      if (!lockedDomain) return null
+
+      const existing = await tx.payment.findFirst({
+        where: { domainId: domain.id, status: "PENDING" },
+        orderBy: { createdAt: "desc" },
+      })
+      if (existing) return existing
+
+      const purpose: PaymentPurpose =
+        lockedDomain.state === "DEACTIVATED" ? "REACTIVATE" : "EXTEND"
+
+      return tx.payment.create({
+        data: {
+          userId: sessionResult.data.user.id,
+          domainId: domain.id,
+          pendingDomainId: domain.id,
+          purpose,
+          amount,
+          razorpayOrderId: order.id,
+          status: "PENDING",
+        },
+      })
     })
 
+    if (!pendingPayment) {
+      return actionErr("Domain not found or no longer available.")
+    }
+
     return actionOk({
-      razorpayOrderId: order.id,
-      amount,
+      razorpayOrderId: pendingPayment.razorpayOrderId,
+      amount: pendingPayment.amount,
       keyId: env.RAZORPAY_KEY_ID,
     })
   } catch (err) {

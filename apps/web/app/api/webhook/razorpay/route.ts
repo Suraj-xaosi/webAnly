@@ -28,79 +28,113 @@ export async function POST(req: NextRequest) {
 
     const body = JSON.parse(rawBody)
     const event = body.event as string
+
+    if (event !== "payment.captured" && event !== "payment.failed") {
+      return NextResponse.json({ received: true })
+    }
+
     const paymentEntity = body.payload?.payment?.entity
 
-    if (!paymentEntity?.order_id) {
+    if (
+      typeof paymentEntity?.order_id !== "string" ||
+      typeof paymentEntity?.id !== "string"
+    ) {
       return NextResponse.json({ error: "Malformed payload" }, { status: 400 })
     }
 
-    const razorpayOrderId = paymentEntity.order_id as string
-    const razorpayPaymentId = paymentEntity.id as string
+    const razorpayOrderId = paymentEntity.order_id
+    const razorpayPaymentId = paymentEntity.id
 
     const payment = await prisma.payment.findUnique({
       where: { razorpayOrderId },
     })
 
     if (!payment) {
-      console.error("Razorpay webhook: no matching Payment for order", razorpayOrderId)
+      console.error(
+        "Razorpay webhook: no matching Payment for order",
+        razorpayOrderId
+      )
       return NextResponse.json({ error: "Payment not found" }, { status: 404 })
     }
 
-    // Idempotency guard — Razorpay may send the same webhook more than once.
-    // Once this Payment is already resolved, never re-run the Domain mutation.
-    if (payment.status !== "PENDING") {
-      return NextResponse.json({ received: true })
-    }
-
     if (event === "payment.captured") {
+      if (
+        paymentEntity.amount !== payment.amount ||
+        paymentEntity.currency !== "INR"
+      ) {
+        console.error(
+          "Razorpay webhook: captured amount/currency mismatch",
+          razorpayOrderId
+        )
+        return NextResponse.json(
+          { error: "Payment amount or currency mismatch" },
+          { status: 400 }
+        )
+      }
+
       await prisma.$transaction(async (tx) => {
-        await tx.payment.update({
-          where: { id: payment.id },
+        // Serialize separate successful orders for the same domain so one
+        // extension cannot overwrite another's endsAt update.
+        const domains = await tx.$queryRaw<
+          {
+            id: string
+            state: "ACTIVE" | "DEACTIVATED"
+            endsAt: Date
+          }[]
+        >`SELECT "id", "state", "endsAt"
+          FROM "domain"
+          WHERE "id" = ${payment.domainId}
+          FOR UPDATE`
+        const domain = domains[0]
+
+        if (!domain) return
+
+        // This conditional transition is the idempotency gate: only one
+        // delivery can move this payment from PENDING to SUCCESS.
+        const claimed = await tx.payment.updateMany({
+          where: { id: payment.id, status: "PENDING" },
           data: {
             status: "SUCCESS",
+            pendingDomainId: null,
             razorpayPaymentId,
             razorpaySignature: signature,
+            failureReason: null,
           },
         })
 
-        const domain = await tx.domain.findUnique({ where: { id: payment.domainId } })
-        if (!domain) return
-
-        // IMPORTANT: we deliberately do NOT branch on payment.purpose here.
-        // purpose was decided at order-creation time, but a domain's real
-        // state can change in the gap between "order created" and "webhook
-        // arrives" — e.g. the domain lifecycle cron could deactivate it
-        // while the user was sitting on the checkout screen. Branching on
-        // stale intent could leave a paid domain stuck DEACTIVATED. Instead
-        // we always re-check the domain's CURRENT state at the moment the
-        // payment actually settles, and decide the mutation from that.
-        if (domain.state === "DEACTIVATED") {
-          await tx.domain.update({
-            where: { id: domain.id },
-            data: {
-              type: "PAID",
-              state: "ACTIVE",
-              endsAt: new Date(Date.now() + THIRTY_DAYS_MS),
-            },
-          })
-        } else {
-          // Currently ACTIVE (FREE or PAID) → extend, adding 30 days on top
-          // of whatever endsAt currently is.
-          await tx.domain.update({
-            where: { id: domain.id },
-            data: {
-              type: "PAID",
-              endsAt: new Date(domain.endsAt.getTime() + THIRTY_DAYS_MS),
-            },
-          })
+        if (claimed.count !== 1) {
+          return
         }
+
+        // Re-check live state when money settles. The expiry job may not yet
+        // have changed state even though endsAt is already in the past.
+        const now = new Date()
+        const startsFromNow =
+          domain.state === "DEACTIVATED" ||
+          domain.endsAt.getTime() <= now.getTime()
+
+        await tx.domain.update({
+          where: { id: domain.id },
+          data: {
+            type: "PAID",
+            state: "ACTIVE",
+            endsAt: new Date(
+              (startsFromNow ? now.getTime() : domain.endsAt.getTime()) +
+                THIRTY_DAYS_MS
+            ),
+          },
+        })
       })
     } else if (event === "payment.failed") {
-      await prisma.payment.update({
-        where: { id: payment.id },
+      // This event means one payment attempt failed, not necessarily that
+      // the order can never succeed; another attempt may still be captured.
+      await prisma.payment.updateMany({
+        where: { id: payment.id, status: "PENDING" },
         data: {
-          status: "FAILED",
-          failureReason: paymentEntity.error_description ?? "Payment failed",
+          failureReason:
+            typeof paymentEntity.error_description === "string"
+              ? paymentEntity.error_description
+              : "Payment attempt failed",
         },
       })
     }
@@ -108,6 +142,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true })
   } catch (err) {
     console.error("Razorpay webhook error:", err)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    )
   }
 }

@@ -178,6 +178,7 @@ model Payment {
   user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   domainId          String
   domain            Domain         @relation(fields: [domainId], references: [id],onDelete: Cascade)
+  pendingDomainId   String?        @unique
   purpose           PaymentPurpose
   amount            Int            // INR paise (snapshot at time of payment)
   razorpayOrderId   String         @unique
