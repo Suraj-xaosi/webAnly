@@ -5,6 +5,28 @@ import { redis }                    from "@repo/redis";
 import { DOMAIN_ACTIVITY_SET_KEY }  from "../../shared/config/rediskeys.js";
 
 const consumer = createConsumer(KAFKA_GROUPS.ANALYTICS_WORKERS);
+const DB_RETRY_BACKOFF_MS = 1_000;
+
+async function persistEventWithOneRetry(eventData: Parameters<typeof dumpInDB>[0]) {
+  try {
+    await dumpInDB(eventData);
+  } catch (firstError) {
+    console.error(
+      `EVENT DUMPING WORKER: Database write failed; retrying once in ${DB_RETRY_BACKOFF_MS}ms`,
+      firstError
+    );
+    await new Promise((resolve) => setTimeout(resolve, DB_RETRY_BACKOFF_MS));
+
+    try {
+      await dumpInDB(eventData);
+    } catch (retryError) {
+      throw new AggregateError(
+        [firstError, retryError],
+        "EVENT DUMPING WORKER: Database write failed after one retry"
+      );
+    }
+  }
+}
 
 export async function startAnalyticsWorker() {
   await consumer.connect();
@@ -33,8 +55,7 @@ export async function startAnalyticsWorker() {
         return;
       }
 
-      // Store event in database
-      await dumpInDB(eventData);
+      await persistEventWithOneRetry(eventData);
 
       // Mark domain as active for spike detection 
       try {

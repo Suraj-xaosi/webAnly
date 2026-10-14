@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react"
-import { useDimension, type Dimension } from "./useDimension"
+import type { Dimension } from "./useDimension"
+import { useDimensions } from "./useDimensions"
 import { useExitPages } from "./useExitPages"
 import { useFlow } from "./useFlow"
 import { useTimeseries } from "./useTimeseries"
@@ -30,48 +31,34 @@ export function useDashboardAnalytics({
   timezone?: string
 }) {
   const timeseries = useTimeseries({ domainId, from, to, interval, timezone })
-  const browser = useDimension({
-    domainId,
-    from,
-    to,
-    dimension: "browser",
-    timezone,
+  const dimensionQuery = useDimensions({ domainId, from, to, timezone })
+  const dimensionResult = (dimension: Dimension) => ({
+    data: dimensionQuery.data?.[dimension],
+    isLoading: dimensionQuery.isLoading,
+    isError: dimensionQuery.isError,
+    error: dimensionQuery.error,
+    refetch: dimensionQuery.refetch,
   })
-  const country = useDimension({
-    domainId,
-    from,
-    to,
-    dimension: "country",
-    timezone,
-  })
-  const city = useDimension({ domainId, from, to, dimension: "city", timezone })
-  const device = useDimension({
-    domainId,
-    from,
-    to,
-    dimension: "device",
-    timezone,
-  })
-  const os = useDimension({ domainId, from, to, dimension: "os", timezone })
-  const referrer = useDimension({
-    domainId,
-    from,
-    to,
-    dimension: "referrer",
-    timezone,
-  })
-  const page = useDimension({ domainId, from, to, dimension: "page", timezone })
+  const dimensionMap = {
+    browser: dimensionResult("browser"),
+    country: dimensionResult("country"),
+    city: dimensionResult("city"),
+    device: dimensionResult("device"),
+    os: dimensionResult("os"),
+    referrer: dimensionResult("referrer"),
+    page: dimensionResult("page"),
+  }
   const exitPages = useExitPages({ domainId, from, to, timezone })
   const flowPages = useMemo(
     () =>
-      page.data?.data
+      dimensionMap.page.data?.data
         .map((item) => item.name)
         .filter((name) => name.trim().length > 0) ?? [],
-    [page.data]
+    [dimensionMap.page.data]
   )
   const [selectedFlowPage, setSelectedFlowPage] =
     useState<string>(ALL_PAGE_MAP_VALUE)
-  const pagesAreLoading = page.isFetching
+  const pagesAreLoading = dimensionQuery.isFetching
   const isAllPageMap = selectedFlowPage === ALL_PAGE_MAP_VALUE
   const activeFlowPage = isAllPageMap
     ? ALL_PAGE_MAP_VALUE
@@ -92,7 +79,6 @@ export function useDashboardAnalytics({
     isAllPageMap
   )
 
-  const dimensionMap = { browser, country, city, device, os, referrer, page }
   const setSelectedFlowPageIfAvailable = useCallback(
     (nextPage: string) => {
       if (nextPage === ALL_PAGE_MAP_VALUE || flowPages.includes(nextPage)) {
@@ -113,8 +99,8 @@ export function useDashboardAnalytics({
     allPageMap,
     isAllPageMap,
     pagesAreLoading,
-    pagesError: page.error,
-    isPagesError: page.isError,
+    pagesError: dimensionQuery.error,
+    isPagesError: dimensionQuery.isError,
     setSelectedFlowPage: setSelectedFlowPageIfAvailable,
   }
 }

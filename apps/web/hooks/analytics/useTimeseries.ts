@@ -47,5 +47,5 @@ export function normalizeAxiosError(error: unknown): ApiError {
   return normalizeApiError(error);
 }
 
-export type { TimeseriesPoint, TimeseriesResponse, TimeseriesParams, Interval } from "@repo/types/analytics";
+export type { TimeseriesPoint, TimeseriesResponse, TimeseriesSummary, TimeseriesParams, Interval } from "@repo/types/analytics";
 export type { ApiError } from "@repo/types/api";

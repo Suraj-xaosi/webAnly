@@ -93,14 +93,15 @@ export async function handleCollectEvent(
     messages: [{ key: domain.domainId, value: JSON.stringify(eventData) }],
   });
 
-  const socketEventData = {
-    ...eventData,
-    defaultTimezone: domain.defaultTimezone,
-  };
-
   await producer.send({
     topic: KAFKA_TOPICS.SOCKET_EVENTS,
-    messages: [{ key: domain.domainId, value: JSON.stringify(socketEventData) }],
+    messages: [{
+      key: domain.domainId,
+      value: JSON.stringify({
+        ...eventData,
+        defaultTimezone: domain.defaultTimezone,
+      }),
+    }],
   });
 
   return null;

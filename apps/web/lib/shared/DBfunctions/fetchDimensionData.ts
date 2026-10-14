@@ -2,7 +2,29 @@ import "server-only"
 import { prisma, Prisma } from "@repo/db"
 import { DIMENSION_COL_MAP } from "./helper/analyticsConstants"
 import { getAnalyticsDateBounds, readCachedResponse, writeCachedResponse } from "./helper/analyticsRouteUtils"
-import type { Dimension, DimensionResponse } from "@repo/types/analytics"
+import {
+  ANALYTICS_DIMENSIONS,
+  type Dimension,
+  type DimensionResponse,
+  type DimensionsResponse,
+} from "@repo/types/analytics"
+
+export async function fetchAllDimensionData(
+  domainId: string,
+  from: string,
+  to: string,
+  timezone: string
+): Promise<DimensionsResponse> {
+  const responses = await Promise.all(
+    ANALYTICS_DIMENSIONS.map((dimension) =>
+      fetchDimensionData(domainId, dimension, from, to, timezone)
+    )
+  )
+
+  return Object.fromEntries(
+    responses.map((response) => [response.dimension, response])
+  ) as DimensionsResponse
+}
 
 export async function fetchDimensionData(
   domainId: string,

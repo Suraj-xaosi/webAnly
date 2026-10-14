@@ -1,11 +1,12 @@
 "use client"
 import { AreaChartGradient } from "@workspace/ui/components/main/areaChartGradient";
-import type { TimeseriesPoint, ApiError } from "@/hooks/analytics/useTimeseries";
+import type { TimeseriesPoint, TimeseriesSummary, ApiError } from "@/hooks/analytics/useTimeseries";
 import { Badge } from "@workspace/ui/components/badge";
 import { AnalyticsCardState } from "./analyticsCardState";
 
 interface TimeseriesCardProps {
   data: TimeseriesPoint[];
+  summary?: TimeseriesSummary;
   isLoading: boolean;
   isError: boolean;
   error?: ApiError | null;
@@ -13,7 +14,7 @@ interface TimeseriesCardProps {
   onRetry?: () => void;
 }
 
-export function TimeseriesCard({ data, isLoading, isError, error, isLive, onRetry }: TimeseriesCardProps) {
+export function TimeseriesCard({ data, summary, isLoading, isError, error, isLive, onRetry }: TimeseriesCardProps) {
   if (isLoading || (isError && data.length === 0)) {
     return <AnalyticsCardState isLoading={isLoading} isError={isError} error={error} onRetry={onRetry} />;
   }
@@ -32,7 +33,7 @@ export function TimeseriesCard({ data, isLoading, isError, error, isLive, onRetr
           Live
         </Badge>
       )}
-      <AreaChartGradient data={data} />
+      <AreaChartGradient data={data} summary={summary} />
     </div>
   );
 }

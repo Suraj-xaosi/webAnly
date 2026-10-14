@@ -162,6 +162,7 @@ export default function DashboardClient() {
 
           <TimeseriesCard
             data={timeseries.data?.data ?? []}
+            summary={timeseries.data?.summary}
             isLoading={timeseries.isLoading}
             isError={timeseries.isError}
             error={timeseries.error}

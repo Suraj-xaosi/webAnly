@@ -6,6 +6,13 @@ export const queryKeys = {
   notifications: () => ["notifications"] as const,
   domainAccess: (domainId: string) => ["domain-access", domainId] as const,
   analytics: {
+    dimensions: (
+      domainId: string,
+      from: string,
+      to: string,
+      timezone?: string
+    ) => ["dimensions", domainId, from, to, timezone] as const,
+
     dimension: (
       domainId: string,
       from: string,

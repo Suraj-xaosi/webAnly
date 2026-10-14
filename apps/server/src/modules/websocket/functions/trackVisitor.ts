@@ -1,21 +1,26 @@
+import { DateTime } from "luxon";
+import { prisma } from "@repo/db";
 import { redis } from "@repo/redis";
 import {
   TRACKED_DIMENSIONS,
-  TrackedDimension,
-  getZonedNow,
-  getLocalDateString,
-  getLocalHourString,
+  type TrackedDimension,
   buildHourKey,
   buildDayKey,
   buildDimensionKey,
-  secondsUntilLocalMidnight,
-  secondsUntilNextLocalHour,
   isTrackableValue,
 } from "./visitorRedisKeys.js";
 
-const DOMAIN_WIDE_HOUR = "domain-hour";
-const DOMAIN_WIDE_DAY = "domain-day";
-type EntryKind = typeof DOMAIN_WIDE_HOUR | typeof DOMAIN_WIDE_DAY | TrackedDimension;
+type Entry = {
+  kind: "hour" | "day" | TrackedDimension;
+  key: string;
+  value?: string;
+  ttl: number;
+};
+
+type ExistingVisits = Record<TrackedDimension, boolean> & {
+  hour: boolean;
+  day: boolean;
+};
 
 export interface VisitorNewnessResult {
   isNewVisitor: boolean;
@@ -23,86 +28,194 @@ export interface VisitorNewnessResult {
   isNewVisitorFor: Partial<Record<TrackedDimension, boolean>>;
 }
 
-/**
- * OPTIMIZED vs the original one-pipeline version.
- *
- * Old: every event → 1 pipeline → up to 16 commands (8x SADD + 8x EXPIRE
- * NX), no matter what. EXPIRE ran even on repeat visits where the key
- * already existed (NX made it a safe no-op, but Redis still had to
- * process the command).
- *
- * New: 2 phases.
- *   Phase 1 — SADD only, single round trip (up to 8 commands).
- *   Phase 2 — EXPIRE, ONLY for the specific keys where SADD actually
- *   added a new member this call, AND only if at least one such key
- *   exists (otherwise phase 2 is skipped entirely — zero extra commands,
- *   zero extra round trip).
- *
- * Repeat pageviews / same-session events (the majority of traffic) never
- * touch phase 2 at all. Net effect: roughly half the Redis commands in
- * steady state, same external behavior, same TTL correctness (NX still
- * guards against clobbering an existing TTL).
- */
+function getZonedVisitTime(visitedAt: Date, timezone: string): DateTime {
+  const eventTime = DateTime.fromJSDate(visitedAt, { zone: "utc" }).setZone(timezone);
+  return eventTime.isValid ? eventTime : DateTime.fromJSDate(visitedAt, { zone: "utc" });
+}
+
+function secondsUntil(end: DateTime, visitedAt: DateTime): number {
+  return Math.max(0, Math.ceil(end.diff(visitedAt, "seconds").seconds));
+}
+
+async function getExistingVisits(
+  domainId: string,
+  visitorId: string,
+  startOfDay: Date,
+  endOfDay: Date,
+  localHour: number,
+  timezone: string,
+  visitedAt: Date,
+  dimensionValues: Partial<Record<TrackedDimension, unknown>>
+): Promise<ExistingVisits> {
+  const [existing] = await prisma.$queryRaw<ExistingVisits[]>`
+    SELECT
+      COALESCE(BOOL_OR(
+        EXTRACT(HOUR FROM ("visitedAt"::timestamptz AT TIME ZONE ${timezone}))::int = ${localHour}
+      ), FALSE) AS hour,
+      COUNT(*) > 0 AS day,
+      COALESCE(BOOL_OR("page" = ${dimensionValues.page}), FALSE) AS page,
+      COALESCE(BOOL_OR("referrer" = ${dimensionValues.referrer}), FALSE) AS referrer,
+      COALESCE(BOOL_OR("browser" = ${dimensionValues.browser}), FALSE) AS browser,
+      COALESCE(BOOL_OR("os" = ${dimensionValues.os}), FALSE) AS os,
+      COALESCE(BOOL_OR("device" = ${dimensionValues.device}), FALSE) AS device,
+      COALESCE(BOOL_OR("country" = ${dimensionValues.country}), FALSE) AS country,
+      COALESCE(BOOL_OR("city" = ${dimensionValues.city}), FALSE) AS city
+    FROM "page_visit"
+    WHERE "domainId" = ${domainId}
+      AND "visitorId" = ${visitorId}
+      AND "visitedAt"::timestamptz >= ${startOfDay}
+      AND "visitedAt"::timestamptz < ${endOfDay}
+      AND "visitedAt"::timestamptz < ${visitedAt}
+  `;
+
+  return existing ?? {
+    hour: false,
+    day: false,
+    page: false,
+    referrer: false,
+    browser: false,
+    os: false,
+    device: false,
+    country: false,
+    city: false,
+  };
+}
+
 export async function checkVisitorNewness(
   domainId: string,
   visitorId: string,
   timezone: string,
+  visitedAt: Date,
   dimensionValues: Partial<Record<TrackedDimension, unknown>>
 ): Promise<VisitorNewnessResult> {
   if (!visitorId) {
-    return { isNewVisitor: false, isNewVisitorToday: false, isNewVisitorFor: {} };
+    return {
+      isNewVisitor: false,
+      isNewVisitorToday: false,
+      isNewVisitorFor: {},
+    };
   }
 
-  const zonedNow = getZonedNow(timezone);
-  const dateStr = getLocalDateString(zonedNow);
-  const hourStr = getLocalHourString(zonedNow);
-  const dayTtl = secondsUntilLocalMidnight(zonedNow);
-  const hourTtl = secondsUntilNextLocalHour(zonedNow);
-
-  const entries: { kind: EntryKind; key: string; ttl: number }[] = [
-    { kind: DOMAIN_WIDE_HOUR, key: buildHourKey(domainId, dateStr, hourStr), ttl: hourTtl },
-    { kind: DOMAIN_WIDE_DAY, key: buildDayKey(domainId, dateStr), ttl: dayTtl },
+  const eventTime = getZonedVisitTime(visitedAt, timezone);
+  const eventTimezone = eventTime.zoneName ?? "UTC";
+  const startOfDay = eventTime.startOf("day");
+  const startOfHour = eventTime.startOf("hour");
+  const dayEnd = startOfDay.plus({ days: 1 });
+  let hourEnd = startOfHour.plus({ hours: 1 });
+  while (hourEnd.toFormat("yyyy-MM-dd HH") === startOfHour.toFormat("yyyy-MM-dd HH")) {
+    hourEnd = hourEnd.plus({ hours: 1 });
+  }
+  const now = DateTime.now();
+  const entries: Entry[] = [
+    {
+      kind: "hour",
+      key: buildHourKey(
+        domainId,
+        eventTimezone,
+        startOfDay.toFormat("yyyy-MM-dd"),
+        eventTime.toFormat("HH")
+      ),
+      ttl: secondsUntil(hourEnd, now),
+    },
+    {
+      kind: "day",
+      key: buildDayKey(domainId, eventTimezone, startOfDay.toFormat("yyyy-MM-dd")),
+      ttl: secondsUntil(dayEnd, now),
+    },
   ];
 
   for (const dimension of TRACKED_DIMENSIONS) {
     const value = dimensionValues[dimension];
-    if (!isTrackableValue(value)) continue; // skip null/"Unknown" — no point tracking noise
-    entries.push({ kind: dimension, key: buildDimensionKey(domainId, dateStr, dimension, value), ttl: dayTtl });
+    if (!isTrackableValue(value)) continue;
+    entries.push({
+      kind: dimension,
+      key: buildDimensionKey(
+        domainId,
+        eventTimezone,
+        startOfDay.toFormat("yyyy-MM-dd"),
+        dimension,
+        value
+      ),
+      value,
+      ttl: secondsUntil(dayEnd, now),
+    });
   }
 
-  // ── Phase 1: SADD only ──────────────────────────────────────────────
-  const saddPipeline = redis.pipeline();
-  for (const entry of entries) saddPipeline.sadd(entry.key, visitorId);
-  const saddResults = await saddPipeline.exec();
+  const redisSeen = new Map<string, boolean>();
+  let redisAvailable = true;
+  try {
+    const pipeline = redis.pipeline();
+    entries.forEach((entry) => {
+      if (entry.ttl > 0) pipeline.sismember(entry.key, visitorId);
+    });
+    const results = await pipeline.exec();
+    if (!results) throw new Error("Redis membership pipeline returned no results");
 
-  if (!saddResults) {
-    // Pipeline failed entirely (e.g. Redis connection drop) — fail safe as
-    // "not new" rather than crash the consumer or block message delivery.
-    return { isNewVisitor: false, isNewVisitorToday: false, isNewVisitorFor: {} };
+    let resultIndex = 0;
+    for (const entry of entries) {
+      if (entry.ttl <= 0) {
+        redisSeen.set(entry.key, false);
+        continue;
+      }
+      const result = results[resultIndex++];
+      if (!result || result[0]) throw result?.[0] ?? new Error("Missing Redis membership result");
+      redisSeen.set(entry.key, result[1] === 1);
+    }
+  } catch (error) {
+    redisAvailable = false;
+    console.error("VISITOR TRACKING: Redis lookup failed; checking the database", error);
   }
+
+  const needsDatabase =
+    !redisAvailable || entries.some((entry) => !redisSeen.get(entry.key));
+  let existing: ExistingVisits | undefined;
+  if (needsDatabase) {
+    existing = await getExistingVisits(
+      domainId,
+      visitorId,
+      startOfDay.toJSDate(),
+      dayEnd.toJSDate(),
+      eventTime.hour,
+      eventTime.zoneName ?? "UTC",
+      visitedAt,
+      dimensionValues
+    );
+  }
+
+  const hasSeen = (entry: Entry) => {
+    if (redisAvailable && redisSeen.get(entry.key)) return true;
+    if (!existing) return false;
+    if (entry.kind === "hour" || entry.kind === "day") {
+      return existing[entry.kind];
+    }
+    return Boolean(entry.value && existing[entry.kind]);
+  };
 
   const isNewVisitorFor: Partial<Record<TrackedDimension, boolean>> = {};
-  let isNewVisitor = false;
-  let isNewVisitorToday = false;
-  const newlyAdded: typeof entries = [];
-
-  entries.forEach((entry, i) => {
-    const result = saddResults[i]; // ioredis: [error, value]
-    const added = result && !result[0] ? result[1] === 1 : false;
-
-    if (added) newlyAdded.push(entry);
-
-    if (entry.kind === DOMAIN_WIDE_HOUR) isNewVisitor = added;
-    else if (entry.kind === DOMAIN_WIDE_DAY) isNewVisitorToday = added;
-    else isNewVisitorFor[entry.kind] = added;
-  });
-
-  // ── Phase 2: EXPIRE, only for keys that got a new member, only if any exist ──
-  if (newlyAdded.length > 0) {
-    const expirePipeline = redis.pipeline();
-    for (const entry of newlyAdded) expirePipeline.expire(entry.key, entry.ttl, "NX");
-    await expirePipeline.exec();
+  for (const entry of entries) {
+    if (entry.kind !== "hour" && entry.kind !== "day") {
+      isNewVisitorFor[entry.kind] = !hasSeen(entry);
+    }
   }
 
-  return { isNewVisitor, isNewVisitorToday, isNewVisitorFor };
+  try {
+    const pipeline = redis.pipeline();
+    for (const entry of entries) {
+      if (entry.ttl <= 0) continue;
+      pipeline.sadd(entry.key, visitorId);
+      pipeline.expire(entry.key, entry.ttl, "NX");
+    }
+    const results = await pipeline.exec();
+    if (!results) throw new Error("Redis update pipeline returned no results");
+    const failedResult = results.find((result) => !result || result[0]);
+    if (failedResult) throw failedResult[0] ?? new Error("Missing Redis update result");
+  } catch (error) {
+    console.error("VISITOR TRACKING: Redis update failed; database remains authoritative", error);
+  }
+
+  return {
+    isNewVisitor: !hasSeen(entries[0]!),
+    isNewVisitorToday: !hasSeen(entries[1]!),
+    isNewVisitorFor,
+  };
 }

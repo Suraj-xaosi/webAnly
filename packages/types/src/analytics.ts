@@ -27,6 +27,8 @@ export interface DimensionResponse {
   timezone?: string
 }
 
+export type DimensionsResponse = Record<Dimension, DimensionResponse>
+
 export interface DimensionParams {
   domainId: string
   from: string
@@ -127,11 +129,18 @@ export interface TimeseriesPoint {
   visitors: number
 }
 
+export interface TimeseriesSummary {
+  views: number
+  visitors: number
+  exits: number
+}
+
 export interface TimeseriesResponse {
   interval: Interval
   from: string
   to: string
   timezone?: string
+  summary?: TimeseriesSummary
   data: TimeseriesPoint[]
 }
 

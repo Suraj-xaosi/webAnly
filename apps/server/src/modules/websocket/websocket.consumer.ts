@@ -3,7 +3,6 @@ import { createConsumer } from "../../shared/config/kafka/kafkaClient.js";
 import { domainClients }  from "./websocket.server.js";
 import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../shared/config/kafka.js";
 import { checkVisitorNewness } from "./functions/trackVisitor.js";
-import { isDomainReady }  from "./functions/domainLifecycle.js";
 
 const consumer = createConsumer(KAFKA_GROUPS.WEBSOCKET_CONSUMERS);
 
@@ -19,38 +18,44 @@ export async function startWebSocketConsumer() {
       if (!message.value) return;
 
       const event = JSON.parse(message.value.toString());
-      const domainId = event.domainId as string;
+      const socketMessage =
+        event.type === "new_event" && event.data
+          ? event
+          : { type: "new_event", data: event };
+      const eventData = socketMessage.data;
+      const domainId = eventData?.domainId;
+      if (typeof domainId !== "string") {
+        console.warn("WEBSOCKET CONSUMER: Event is missing domainId");
+        return;
+      }
 
-      // ONLY DO ANY WORK — Redis included — IF THERE ARE CONNECTED CLIENTS.
-      // This is the gate that makes the whole domainLifecycle system worth it.
+      const visitedAt = new Date(eventData.visitedAt);
+      if (Number.isNaN(visitedAt.getTime())) {
+        console.error("WEBSOCKET CONSUMER: Event has invalid visitedAt");
+        return;
+      }
+
+      const visitorNewness = await checkVisitorNewness(
+        domainId,
+        eventData.visitorId,
+        eventData.defaultTimezone || eventData.timezone || "UTC",
+        visitedAt,
+        {
+          page: eventData.page,
+          referrer: eventData.referrer,
+          browser: eventData.browser,
+          os: eventData.os,
+          device: eventData.device,
+          country: eventData.country,
+          city: eventData.city,
+        }
+      );
+      socketMessage.data = { ...eventData, ...visitorNewness };
+
       const clients = domainClients.get(domainId);
       if (!clients || clients.size === 0) return;
 
-      let data: Record<string, unknown>;
-
-      if (isDomainReady(domainId)) {
-        const { isNewVisitor, isNewVisitorToday, isNewVisitorFor } = await checkVisitorNewness(
-          domainId,
-          event.visitorId,
-          event.defaultTimezone,
-          {
-            page: event.page,
-            referrer: event.referrer,
-            browser: event.browser,
-            os: event.os,
-            device: event.device,
-            country: event.country,
-          }
-        );
-        data = { ...event, isNewVisitor, isNewVisitorToday, isNewVisitorFor };
-      } else {
-        // Seeding still in progress for this domain — send unknown rather
-        // than guessing wrong. Frontend should treat null as "unknown",
-        // not "false".
-        data = { ...event, isNewVisitor: null, isNewVisitorToday: null, isNewVisitorFor: null };
-      }
-
-      const payload = JSON.stringify({ type: "new_event", data });
+      const payload = JSON.stringify(socketMessage);
 
       for (const ws of clients) {
         if (ws.readyState === WebSocket.OPEN) {

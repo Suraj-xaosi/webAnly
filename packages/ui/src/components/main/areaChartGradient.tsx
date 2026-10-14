@@ -34,13 +34,34 @@ const chartConfig = {
 
 interface AreaChartGradientProps {
   data: TimeseriesPoint[];
+  summary?: {
+    views: number;
+    visitors: number;
+    exits: number;
+  };
 }
 
-export function AreaChartGradient({ data }: AreaChartGradientProps) {
+export function AreaChartGradient({ data, summary }: AreaChartGradientProps) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>TimeSeries Data </CardTitle>
+        {summary && (
+          <div className="grid grid-cols-3 gap-3 pt-2 sm:max-w-md">
+            <div>
+              <p className="text-xs text-muted-foreground">Total visitors</p>
+              <p className="font-semibold tabular-nums">{summary.visitors.toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Total exited visitors</p>
+              <p className="font-semibold tabular-nums">{summary.exits.toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Total views</p>
+              <p className="font-semibold tabular-nums">{summary.views.toLocaleString()}</p>
+            </div>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>

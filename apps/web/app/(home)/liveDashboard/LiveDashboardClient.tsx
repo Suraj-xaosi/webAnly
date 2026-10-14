@@ -1,11 +1,11 @@
 "use client"
 
-import { useMemo } from "react"
+import { useCallback, useSyncExternalStore } from "react"
 import { useAppSelector } from "@/store/hooks"
 import { useDomainSelection } from "@/hooks/domainCrud/useDomainSelection"
 import { selectDimensionTimeseriesSelection } from "@/store/slices/dimensionTimeseriesSlice";
 import { useRealtimeTimeseries } from "@/hooks/realtime/useRealtimeTimeseries"
-import { useRealtimeDimension } from "@/hooks/realtime/useRealtimeDimension"
+import { useRealtimeDimensions } from "@/hooks/realtime/useRealtimeDimensions"
 import { RealtimeProvider } from "@/components/wrapper/RealtimeProvider"
 import { TimeseriesCard } from "@/components/dashCards/timeseriesCard"
 import { DimensionCard } from "@/components/dashCards/dimensionCard"
@@ -25,6 +25,23 @@ function getDateInTimezone(timezone: string) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date())
 }
 
+function useLiveDate(timezone: string) {
+  const subscribe = useCallback((onStoreChange: () => void) => {
+    const interval = window.setInterval(onStoreChange, 30_000)
+    window.addEventListener("focus", onStoreChange)
+    document.addEventListener("visibilitychange", onStoreChange)
+
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener("focus", onStoreChange)
+      document.removeEventListener("visibilitychange", onStoreChange)
+    }
+  }, [])
+  const getSnapshot = useCallback(() => getDateInTimezone(timezone), [timezone])
+
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
+}
+
 export default function LiveDashboardClient() {
   const { activeDomainId: domainId } = useDomainSelection()
 
@@ -36,7 +53,7 @@ export default function LiveDashboardClient() {
       : domainAccess.data?.active ?? null
   const timezone = domainAccess.data?.timezone ?? "UTC"
 
-  const from = useMemo(() => getDateInTimezone(timezone), [timezone])
+  const from = useLiveDate(timezone)
   const to = from
 
   const { data: apikey, isPending: apikeyLoading } = useApiKey(
@@ -110,32 +127,23 @@ function LiveDashboardContent({
 }) {
   const timeseries = useRealtimeTimeseries(domainId, from, to, apikey, enabled, timezone)
 
-  const browser = useRealtimeDimension("browser", domainId, from, to, apikey, enabled, timezone)
-  const country = useRealtimeDimension("country", domainId, from, to, apikey, enabled, timezone)
-  const city = useRealtimeDimension("city", domainId, from, to, apikey, enabled, timezone)
-  const device = useRealtimeDimension("device", domainId, from, to, apikey, enabled, timezone)
-  const os = useRealtimeDimension("os", domainId, from, to, apikey, enabled, timezone)
-  const referrer = useRealtimeDimension("referrer", domainId, from, to, apikey, enabled, timezone)
-  const page = useRealtimeDimension("page", domainId, from, to, apikey, enabled, timezone)
+  const dimensions = useRealtimeDimensions(domainId, from, to, enabled, timezone)
   const exitPages = useRealtimeExitPages(
     domainId,
     from,
     to,
     timezone,
     enabled,
-    page.data
+    dimensions.page.data
   )
 
-  const dimensionMap = useMemo(
-    () => ({ browser, country, city, device, os, referrer, page }),
-    [browser, country, city, device, os, referrer, page]
-  )
   const dimensionTimeseriesSelection = useAppSelector(selectDimensionTimeseriesSelection)
 
   return (
     <>
       <TimeseriesCard
         data={timeseries.data}
+        summary={timeseries.summary}
         isLoading={timeseries.isLoading}
         isError={timeseries.isError}
         error={timeseries.error}
@@ -151,7 +159,7 @@ function LiveDashboardContent({
           onRetry={exitPages.refetch}
         />
         {DIMENSIONS.map((dimension) => {
-          const result = dimensionMap[dimension];
+          const result = dimensions[dimension];
           return (
             <DimensionCard
               key={dimension}

@@ -1,4 +1,4 @@
-import type { DimensionPoint, TimeseriesPoint } from "./analytics.js"
+import type { DimensionPoint, TimeseriesPoint, TimeseriesSummary } from "./analytics.js"
 import type { ApiError } from "./api.js"
 
 export interface WebSocketMessage {
@@ -16,6 +16,7 @@ export interface RealtimeDimensionResult {
 
 export interface RealtimeTimeseriesResult {
   data: TimeseriesPoint[]
+  summary?: TimeseriesSummary
   isLoading: boolean
   isError: boolean
   error?: ApiError | null

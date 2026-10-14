@@ -11,12 +11,23 @@ export async function fetchTimeseriesData(
   timezone: string,
   interval: Interval = from === to ? "hour" : "day"
 ): Promise<TimeseriesResponse> {
-  const cacheKey = `timeseries:${domainId}:${interval}:${from}:${to}:${timezone}`
+  const cacheKey = `timeseries:v2:${domainId}:${interval}:${from}:${to}:${timezone}`
 
   const cachedResponse = await readCachedResponse<TimeseriesResponse>(cacheKey)
   if (cachedResponse) return cachedResponse
 
   const { lowerBoundSql, upperBoundSql } = getAnalyticsDateBounds(from, to, timezone)
+  type SummaryRow = { views: number; visitors: number; exits: number }
+  const [summaryRow] = await prisma.$queryRaw<SummaryRow[]>`
+    SELECT
+      COUNT(*)::int AS views,
+      COUNT(DISTINCT "visitorId")::int AS visitors,
+      COUNT(*) FILTER (WHERE "exitType" = 'pagehide')::int AS exits
+    FROM "page_visit"
+    WHERE "domainId" = ${domainId}
+      AND "visitedAt"::timestamptz >= ${lowerBoundSql}
+      AND "visitedAt"::timestamptz < ${upperBoundSql}
+  `
 
   let data: { date: string; views: number; visitors: number }[]
 
@@ -78,7 +89,14 @@ export async function fetchTimeseriesData(
     })
   }
 
-  const responseBody: TimeseriesResponse = { interval, from, to, timezone, data }
+  const responseBody: TimeseriesResponse = {
+    interval,
+    from,
+    to,
+    timezone,
+    summary: summaryRow ?? { views: 0, visitors: 0, exits: 0 },
+    data,
+  }
   await writeCachedResponse(cacheKey, responseBody, to, timezone)
   return responseBody
 }

@@ -29,7 +29,15 @@ export function useRealtimeDimension(
     queryClient,
     queryKey,
     subscribe,
-    merge: (previous, message) => mergeWebSocketEvent(previous, message, dimension),
+    merge: (previous, message) =>
+      mergeDimensionWebSocketEvent(
+        previous,
+        message,
+        dimension,
+        from,
+        to,
+        timezone ?? "UTC"
+      ),
   });
 
   return {
@@ -47,14 +55,28 @@ function getDimensionValue(eventData: Record<string, any>, dimension: Dimension)
   return value == null ? "Unknown" : String(value);
 }
 
-function mergeWebSocketEvent(
+export function mergeDimensionWebSocketEvent(
   previous: DimensionResponse | undefined,
   message: WebSocketMessage,
-  dimension: Dimension
+  dimension: Dimension,
+  from: string,
+  to: string,
+  timezone: string
 ): DimensionResponse | undefined {
   if (message.type !== "new_event" || !message.data) return;
 
   const eventData = message.data as Record<string, any>;
+  const eventTimestamp = eventData.visitedAt || eventData.timestamp;
+  if (!eventTimestamp) return previous;
+
+  const parsedTimestamp = new Date(eventTimestamp);
+  if (Number.isNaN(parsedTimestamp.getTime())) return previous;
+
+  const eventDate = new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(
+    parsedTimestamp
+  );
+  if (eventDate < from || eventDate > to) return previous;
+
   const dimensionKey = getDimensionValue(eventData, dimension);
   if (!dimensionKey || dimensionKey === "null") return;
 
@@ -84,6 +106,7 @@ function mergeWebSocketEvent(
         from: previous?.from ?? "",
         to: previous?.to ?? "",
         total: previous?.total ?? data.length,
+        timezone: previous?.timezone,
         data: data.map((point) => (point.name === dimensionKey ? updatedPoint : point)),
       };
     }
@@ -93,6 +116,7 @@ function mergeWebSocketEvent(
       from: previous?.from ?? "",
       to: previous?.to ?? "",
       total: previous?.total ?? data.length + 1,
+      timezone: previous?.timezone,
       data: [...data, {
         name: dimensionKey,
         views: 1,
