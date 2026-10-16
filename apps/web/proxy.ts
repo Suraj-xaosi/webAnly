@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/betterAuth/auth"
 import { checkWebRateLimit } from "@/lib/rateLimit"
-import { DIMENSION_COL_MAP } from "@/lib/shared/DBfunctions/helper/analyticsConstants"
 
 function getClientIp(request: NextRequest): string | null {
   const candidateHeaders = [
@@ -72,16 +71,6 @@ export async function proxy(request: NextRequest) {
     const baseResource = isServerAction
       ? `action:${request.headers.get("next-action") ?? "unknown"}`
       : `api:${pathname}`
-    const dimension =
-      pathname === "/api/analytics/dimension"
-        ? request.nextUrl.searchParams.get("dimension")
-        : null
-    const resource =
-      dimension &&
-      Object.prototype.hasOwnProperty.call(DIMENSION_COL_MAP, dimension)
-        ? `${baseResource}:dimension:${dimension}`
-        : baseResource
-
     let scope: "user" | "ip" = "ip"
     let identity = getClientIp(request)
 
@@ -98,7 +87,7 @@ export async function proxy(request: NextRequest) {
       identity = session.user.id
     }
 
-    const rateLimit = await checkWebRateLimit(scope, identity, resource)
+    const rateLimit = await checkWebRateLimit(scope, identity, baseResource)
     if (rateLimit.limited) {
       return tooManyRequests(rateLimit.retryAfterSeconds)
     }

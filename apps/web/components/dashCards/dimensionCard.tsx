@@ -14,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
-import type { Dimension, DimensionPoint, ApiError } from "@/hooks/analytics/useDimension";
+import type { Dimension, DimensionPoint } from "@repo/types/analytics";
+import type { ApiError } from "@repo/types/api";
 import { Badge } from "@workspace/ui/components/badge";
 import { useAppDispatch } from "@/store/hooks";
 import { openDimensionTimeseries } from "@/store/slices/dimensionTimeseriesSlice";

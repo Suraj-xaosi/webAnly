@@ -29,16 +29,6 @@ export interface DimensionResponse {
 
 export type DimensionsResponse = Record<Dimension, DimensionResponse>
 
-export interface DimensionParams {
-  domainId: string
-  from: string
-  to: string
-  timezone?: string
-  dimension: Dimension
-  limit?: number
-  domainName?: string
-}
-
 export interface ExitPagePoint {
   name: string
   views: number

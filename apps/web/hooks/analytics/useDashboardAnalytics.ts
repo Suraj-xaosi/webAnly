@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react"
-import type { Dimension } from "./useDimension"
+import type { Dimension } from "@repo/types/analytics"
 import { useDimensions } from "./useDimensions"
 import { useExitPages } from "./useExitPages"
 import { useFlow } from "./useFlow"

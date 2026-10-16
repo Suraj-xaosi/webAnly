@@ -13,24 +13,6 @@ export const queryKeys = {
       timezone?: string
     ) => ["dimensions", domainId, from, to, timezone] as const,
 
-    dimension: (
-      domainId: string,
-      from: string,
-      to: string,
-      dimension: string,
-      limit?: number,
-      timezone?: string
-    ) =>
-      [
-        "dimension",
-        domainId,
-        from,
-        to,
-        dimension,
-        limit ?? 100,
-        timezone,
-      ] as const,
-
     exitPages: (
       domainId: string,
       from: string,

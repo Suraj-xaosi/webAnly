@@ -15,7 +15,7 @@ import { Card, CardContent } from "@workspace/ui/components/card"
 import DomainSwitch from "@/components/picker/domainSwitch"
 import { useApiKey } from "@/hooks/useApikey"
 import { useDomainAccess } from "@/hooks/domainCrud/useDomainAcess"
-import type { Dimension } from "@/hooks/analytics/useDimension"
+import type { Dimension } from "@repo/types/analytics"
 import { DimensionTimeseriesPanel } from "@/components/dashCards/dimensionTimeseriesPanel";
 import { useRealtimeExitPages } from "@/hooks/realtime/useRealtimeExitPages"
 
