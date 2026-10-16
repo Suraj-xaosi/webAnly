@@ -52,7 +52,7 @@ export function DomainSwitcher({
   }
 
   const getDomainInitial = (domainName: string) =>
-    domainName.charAt(0).toUpperCase()
+    domainName.charAt(4).toUpperCase()
 
   const handleSelect = (domain: Domain) => {
     setInternalActiveDomain(domain)

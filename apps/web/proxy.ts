@@ -4,12 +4,41 @@ import { checkWebRateLimit } from "@/lib/rateLimit"
 import { DIMENSION_COL_MAP } from "@/lib/shared/DBfunctions/helper/analyticsConstants"
 
 function getClientIp(request: NextRequest): string | null {
-  const realIp = request.headers.get("x-real-ip")?.trim()
-  if (realIp) return realIp
+  const candidateHeaders = [
+    "x-real-ip",
+    "x-client-ip",
+    "cf-connecting-ip",
+    "x-forwarded-for",
+  ]
 
-  const forwardedFor = request.headers.get("x-forwarded-for")
-  const forwardedIp = forwardedFor?.split(",").at(-1)?.trim()
-  return forwardedIp || null
+  for (const headerName of candidateHeaders) {
+    const rawHeader = request.headers.get(headerName)
+    if (!rawHeader) continue
+
+    const rawValues = headerName === "x-forwarded-for"
+      ? rawHeader.split(",")
+      : [rawHeader]
+
+    const ip = rawValues
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .at(-1)
+
+    if (ip) return ip
+  }
+
+  const forwarded = request.headers.get("forwarded")
+  if (!forwarded) return null
+
+  const forwardedFor = forwarded
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.toLowerCase().startsWith("for="))
+
+  if (!forwardedFor) return null
+
+  const forValue = forwardedFor.split("=").at(1)?.replace(/"/g, "").trim()
+  return forValue || null
 }
 
 function tooManyRequests(retryAfterSeconds: number) {
@@ -27,17 +56,21 @@ export async function proxy(request: NextRequest) {
   const isApiRequest = pathname.startsWith("/api/")
   const isServerAction =
     request.method === "POST" && request.headers.has("next-action")
+
   if (!isApiRequest && !isServerAction) return NextResponse.next()
 
-  if (pathname === "/api/webhook" || pathname.startsWith("/api/webhook/")) {
+  if (
+    pathname === "/api/webhook" ||
+    pathname.startsWith("/api/webhook/") ||
+    pathname === "/api/auth" ||
+    pathname.startsWith("/api/auth/")
+  ) {
     return NextResponse.next()
   }
 
   try {
-    const isAuthRequest =
-      pathname === "/api/auth" || pathname.startsWith("/api/auth/")
     const baseResource = isServerAction
-      ? `action:${request.headers.get("next-action")}`
+      ? `action:${request.headers.get("next-action") ?? "unknown"}`
       : `api:${pathname}`
     const dimension =
       pathname === "/api/analytics/dimension"
@@ -48,22 +81,21 @@ export async function proxy(request: NextRequest) {
       Object.prototype.hasOwnProperty.call(DIMENSION_COL_MAP, dimension)
         ? `${baseResource}:dimension:${dimension}`
         : baseResource
+
     let scope: "user" | "ip" = "ip"
     let identity = getClientIp(request)
-
-    if (!isAuthRequest) {
-      const session = await auth.api.getSession({ headers: request.headers })
-      if (session?.user.id) {
-        scope = "user"
-        identity = session.user.id
-      }
-    }
 
     if (!identity) {
       return NextResponse.json(
         { error: "Unable to determine client identity for rate limiting." },
         { status: 503 }
       )
+    }
+
+    const session = await auth.api.getSession({ headers: request.headers })
+    if (session?.user.id) {
+      scope = "user"
+      identity = session.user.id
     }
 
     const rateLimit = await checkWebRateLimit(scope, identity, resource)

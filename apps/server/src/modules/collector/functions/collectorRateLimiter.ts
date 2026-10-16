@@ -1,30 +1,12 @@
 import { createHash, randomUUID } from "crypto"
-import { LRUCache } from "lru-cache"
 import { redis } from "@repo/redis"
 import { createHttpError } from "../../../shared/errors.js"
 
-const API_KEY_REQUEST_LIMIT = 100
-const IP_REQUEST_LIMIT = 600
+const API_KEY_REQUEST_LIMIT = 50
+const IP_REQUEST_LIMIT = 300
 const REQUEST_WINDOW_MS = 60_000
-const RATE_LIMIT_BAN_MS = 2 * 60_000
-
-const ACTIVE_BAN_CACHE_MAX = 20_000
-
-interface LocalBanCacheEntry {
-  scope: CollectorRateLimitScope
-  expiresAt: number
-}
-
-const activeBanCache = new LRUCache<string, LocalBanCacheEntry>({
-  max: ACTIVE_BAN_CACHE_MAX,
-})
 
 const RATE_LIMIT_SCRIPT = `
-local banTtl = redis.call("PTTL", KEYS[2])
-if banTtl > 0 then
-  return { 1, banTtl }
-end
-
 local redisTime = redis.call("TIME")
 local now = tonumber(redisTime[1]) * 1000 + math.floor(tonumber(redisTime[2]) / 1000)
 local requestWindowMs = tonumber(ARGV[2])
@@ -38,14 +20,13 @@ if requestCount <= tonumber(ARGV[3]) then
   return { 0, 0 }
 end
 
-local newBan = redis.call("SET", KEYS[2], "1", "PX", ARGV[4], "NX")
-if not newBan then
-  return { 1, redis.call("PTTL", KEYS[2]) }
+local ttl = redis.call("PTTL", KEYS[1])
+if ttl <= 0 then
+  ttl = requestWindowMs
 end
 
-return { 1, tonumber(ARGV[4]) }
+return { 1, ttl }
 `
-
 export type CollectorRateLimitScope = "api-key" | "ip"
 
 export interface CollectorRateLimitResult {
@@ -57,28 +38,6 @@ function hashIdentity(value: string) {
   return createHash("sha256").update(value).digest("hex")
 }
 
-function getCachedBan(key: string): CollectorRateLimitResult | null {
-  const entry = activeBanCache.get(key)
-  if (!entry) return null
-
-  return {
-    scope: entry.scope,
-    retryAfterSeconds: Math.max(
-      1,
-      Math.ceil((entry.expiresAt - Date.now()) / 1000)
-    ),
-  }
-}
-
-function cacheBan(key: string, scope: CollectorRateLimitScope, ttlMs: number) {
-  const safeTtl = Math.max(ttlMs, 1)
-  activeBanCache.set(
-    key,
-    { scope, expiresAt: Date.now() + safeTtl },
-    { ttl: safeTtl }
-  )
-}
-
 async function checkRateLimit(
   identity: string,
   scope: CollectorRateLimitScope,
@@ -88,32 +47,27 @@ async function checkRateLimit(
   if (!normalizedIdentity) return null
 
   const identityHash = hashIdentity(normalizedIdentity)
-  const cacheKey = `${scope}:${identityHash}`
+  const redisKey = scope === "api-key"
+    ? `collector:rate:v1:requests:${identityHash}`
+    : `collector:rate:v1:requests:ip:${identityHash}`
 
-  const cachedBan = getCachedBan(cacheKey)
-  if (cachedBan) return cachedBan
-
-  const redisKeys = scope === "api-key"
-    ? [
-        `collector:rate:v1:requests:${identityHash}`,
-        `collector:rate:v1:api-key-ban:${identityHash}`,
-      ]
-    : [
-        `collector:rate:v1:requests:ip:${identityHash}`,
-        `collector:rate:v1:ip-ban:${identityHash}`,
-      ]
-
-  let result: [number, number]
   try {
-    result = (await redis.eval(
+    const result = (await redis.eval(
       RATE_LIMIT_SCRIPT,
-      2,
-      ...redisKeys,
+      1,
+      redisKey,
       randomUUID(),
       String(REQUEST_WINDOW_MS),
-      String(requestLimit),
-      String(RATE_LIMIT_BAN_MS)
+      String(requestLimit)
     )) as [number, number]
+
+    const [resultCode, ttlMs] = result
+    if (resultCode === 0) return null
+
+    return {
+      scope,
+      retryAfterSeconds: Math.max(1, Math.ceil(ttlMs / 1000)),
+    }
   } catch (error) {
     console.error(`Collector ${scope} rate limiter Redis check failed.`, error)
     throw createHttpError(
@@ -123,13 +77,6 @@ async function checkRateLimit(
       5
     )
   }
-
-  const [resultCode, ttlMs] = result
-  if (resultCode === 0) return null
-
-  const retryAfterSeconds = Math.max(1, Math.ceil(ttlMs / 1000))
-  cacheBan(cacheKey, scope, ttlMs)
-  return { scope, retryAfterSeconds }
 }
 
 export function checkCollectorIpRateLimit(
