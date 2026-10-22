@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/server.ts"],"version":"5.9.3"}
+{"root":["./src/actionresult.ts","./src/analytics.ts","./src/api.ts","./src/domain.ts","./src/index.ts","./src/realtime.ts","./src/validation/ai.ts","./src/validation/collector.ts","./src/validation/index.ts"],"version":"5.9.3"}

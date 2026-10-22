@@ -32,10 +32,6 @@
       "types": "./dist/realtime.d.ts",
       "import": "./dist/realtime.js"
     },
-    "./server": {
-      "types": "./dist/server.d.ts",
-      "import": "./dist/server.js"
-    },
     "./validation": {
       "types": "./dist/validation/index.d.ts",
       "import": "./dist/validation/index.js"
