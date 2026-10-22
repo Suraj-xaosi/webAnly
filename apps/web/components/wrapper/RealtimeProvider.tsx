@@ -14,17 +14,16 @@ const RealtimeContext = createContext<RealtimeContextValue | null>(null)
 
 interface RealtimeProviderProps {
   domainId: string
-  apikey: string
   children: ReactNode
 }
 
-export function RealtimeProvider({ domainId, apikey, children }: RealtimeProviderProps) {
+export function RealtimeProvider({ domainId, children }: RealtimeProviderProps) {
 
 
   const listenersRef = useRef<Set<MessageListener>>(new Set())
 
 
-  const { isConnected } = useWebSocket(domainId, apikey, (message) => {
+  const { isConnected } = useWebSocket(domainId, (message) => {
     listenersRef.current.forEach((listener) => listener(message))
   })
 

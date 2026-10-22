@@ -1,7 +1,7 @@
 import "server-only"
 import { redis } from "@repo/redis"
 
-const DAILY_TOKEN_LIMIT = 50_000 // per domain, per din — apni marzi se tune karo
+const DAILY_TOKEN_LIMIT = 1000 // per domain, per din — apni marzi se tune karo
 
 function getTodayKey(domainId: string) {
   const today = new Date().toISOString().split("T")[0]

@@ -3,7 +3,7 @@ import { analyticsClassifierSchema } from "@repo/types/validation"
 import { HumanMessage, SystemMessage } from "@langchain/core/messages"
 import { fastModel } from "./model"
 
-const MAX_MESSAGE_LENGTH = 500
+const MAX_MESSAGE_LENGTH = 1000
 
 export function checkMessageLength(userMessage: string): { ok: boolean; error?: string } {
   const trimmed = userMessage.trim()

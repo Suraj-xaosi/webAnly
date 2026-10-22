@@ -7,13 +7,13 @@ import type { Dimension } from "@repo/types/analytics"
 // Each dimension has a practical result limit: referrers and cities can be
 // unbounded, while pages, browsers, and operating systems are naturally smaller.
 const DIMENSION_RESULT_LIMIT: Record<Dimension, number> = {
-  page: 50,
-  country: 50,
+  page: 20,
+  country: 20,
   browser: 15,
   os: 15,
-  device: 5,
-  city: 30,
-  referrer: 30,
+  device: 7,
+  city: 20,
+  referrer: 10,
 }
 
 export function createDimensionTool(domainId: string, timezone: string) {

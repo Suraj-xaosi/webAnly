@@ -48,6 +48,8 @@ Webanly lets you track visitors on your own website without relying on third-par
 4. A **spike detector** runs on a schedule and compares recent traffic against an adaptive expected baseline. The baseline adjusts up when traffic grows and down when it is quiet. It fires a notification when there is a real spike.
 5. The dashboard (Next.js) reads historical data via REST endpoints (cached in Redis) and live data via a WebSocket connection, then merges both into the same charts.
 
+Dashboard WebSocket connections use one-time Redis tickets. The web app issues a 60-second ticket only for an authenticated user who owns an active domain; the WebSocket server consumes it once and binds the connection to that domain. Configure `NEXT_PUBLIC_APP_URL` (or `BETTER_AUTH_URL`) to the dashboard's origin so ticket requests are restricted to that origin. The API key remains for analytics collection and is not used to authenticate dashboard sockets.
+
 ---
 
 ## Project Structure
@@ -104,6 +106,7 @@ This is the easiest way to run the full stack (Postgres, Redis, Kafka, backend, 
    BETTER_AUTH_SECRET=generate_a_random_32_char_secret
    BETTER_AUTH_BASE_URL=http://localhost:3000
    BETTER_AUTH_URL=http://localhost:3000
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
    GITHUB_CLIENT_ID=your_github_oauth_client_id
    GITHUB_CLIENT_SECRET=your_github_oauth_client_secret
    NEXT_PUBLIC_WSS_URL=ws://localhost:4000

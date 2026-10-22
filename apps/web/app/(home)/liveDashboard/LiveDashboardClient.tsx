@@ -95,7 +95,7 @@ export default function LiveDashboardClient() {
           </CardContent>
         </Card>
       ) : (
-        <RealtimeProvider domainId={domainId} apikey={apikey ?? ""}>
+        <RealtimeProvider domainId={domainId}>
           <LiveDashboardContent
             domainId={domainId}
             from={from}

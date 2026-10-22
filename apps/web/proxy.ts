@@ -3,41 +3,11 @@ import { auth } from "@/lib/betterAuth/auth"
 import { checkWebRateLimit } from "@/lib/rateLimit"
 
 function getClientIp(request: NextRequest): string | null {
-  const candidateHeaders = [
-    "x-real-ip",
-    "x-client-ip",
-    "cf-connecting-ip",
-    "x-forwarded-for",
-  ]
+  const realIp = request.headers.get("x-real-ip")?.trim()
+  if (realIp) return realIp
 
-  for (const headerName of candidateHeaders) {
-    const rawHeader = request.headers.get(headerName)
-    if (!rawHeader) continue
-
-    const rawValues = headerName === "x-forwarded-for"
-      ? rawHeader.split(",")
-      : [rawHeader]
-
-    const ip = rawValues
-      .map((value) => value.trim())
-      .filter(Boolean)
-      .at(-1)
-
-    if (ip) return ip
-  }
-
-  const forwarded = request.headers.get("forwarded")
-  if (!forwarded) return null
-
-  const forwardedFor = forwarded
-    .split(";")
-    .map((part) => part.trim())
-    .find((part) => part.toLowerCase().startsWith("for="))
-
-  if (!forwardedFor) return null
-
-  const forValue = forwardedFor.split("=").at(1)?.replace(/"/g, "").trim()
-  return forValue || null
+  const forwardedFor = request.headers.get("x-forwarded-for")
+  return forwardedFor?.split(",").at(-1)?.trim() || null
 }
 
 function tooManyRequests(retryAfterSeconds: number) {
@@ -52,11 +22,12 @@ function tooManyRequests(retryAfterSeconds: number) {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const isApiRequest = pathname.startsWith("/api/")
   const isServerAction =
     request.method === "POST" && request.headers.has("next-action")
 
-  if (!isApiRequest && !isServerAction) return NextResponse.next()
+  if (!pathname.startsWith("/api/") && !isServerAction) {
+    return NextResponse.next()
+  }
 
   if (
     pathname === "/api/webhook" ||
@@ -68,12 +39,8 @@ export async function proxy(request: NextRequest) {
   }
 
   try {
-    const baseResource = isServerAction
-      ? `action:${request.headers.get("next-action") ?? "unknown"}`
-      : `api:${pathname}`
-    let scope: "user" | "ip" = "ip"
-    let identity = getClientIp(request)
-
+    const session = await auth.api.getSession({ headers: request.headers })
+    const identity = session?.user.id ?? getClientIp(request)
     if (!identity) {
       return NextResponse.json(
         { error: "Unable to determine client identity for rate limiting." },
@@ -81,13 +48,11 @@ export async function proxy(request: NextRequest) {
       )
     }
 
-    const session = await auth.api.getSession({ headers: request.headers })
-    if (session?.user.id) {
-      scope = "user"
-      identity = session.user.id
-    }
-
-    const rateLimit = await checkWebRateLimit(scope, identity, baseResource)
+    const scope = session?.user.id ? "user" : "ip"
+    const resource = isServerAction
+      ? `action:${request.headers.get("next-action") ?? "unknown"}`
+      : `api:${pathname}`
+    const rateLimit = await checkWebRateLimit(scope, identity, resource)
     if (rateLimit.limited) {
       return tooManyRequests(rateLimit.retryAfterSeconds)
     }

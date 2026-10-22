@@ -9,7 +9,6 @@ const MAX_BACKOFF_MS = 30_000; // 30 second
 
 export function useWebSocket(
   domainId: string,
-  apikey: string,
   onMessage?: (message: WebSocketMessage) => void,
   wsServerUrl?: string
 ) {
@@ -18,65 +17,92 @@ export function useWebSocket(
   const onMessageRef = useRef(onMessage);
   onMessageRef.current = onMessage;
 
-  // Naye refs — reconnect logic ke liye
   const reconnectAttemptRef = useRef(0);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const shouldReconnectRef = useRef(true); // cleanup ke waqt false, taaki unmount ke baad reconnect na ho
 
   useEffect(() => {
-    if (!domainId || !apikey) {
-      console.warn("useWebSocket: domainId and apikey required");
+    if (!domainId) {
+      console.warn("useWebSocket: domainId required");
       return;
     }
 
-    shouldReconnectRef.current = true;
+    let active = true;
 
-    function connect() {
-      let wsUrl: string = wsServerUrl || publicEnv.NEXT_PUBLIC_WSS_URL || "ws://localhost:4000";
-      wsUrl = `${wsUrl}?apikey=${apikey}&domainId=${domainId}`;
-
-      const ws = new WebSocket(wsUrl);
-
-      ws.onopen = () => {
-        setIsConnected(true);
-        reconnectAttemptRef.current = 0; // success — backoff reset karo
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const message: WebSocketMessage = JSON.parse(event.data);
-          onMessageRef.current?.(message);
-        } catch (err) {
-          console.error("Failed to parse WS message:", err);
-        }
-      };
-
-      ws.onerror = () => {
-        setIsConnected(false);
-      };
-
-      ws.onclose = () => {
-        setIsConnected(false);
-
-        // Sirf tab reconnect karo jab component abhi bhi mounted hai
-        if (!shouldReconnectRef.current) return;
-
-        const attempt = reconnectAttemptRef.current;
-        const backoff = Math.min(1000 * 2 ** attempt, MAX_BACKOFF_MS); // 1s, 2s, 4s, 8s... 30s tak cap
-        reconnectAttemptRef.current = attempt + 1;
-
-        reconnectTimeoutRef.current = setTimeout(connect, backoff);
-      };
-
-      wsRef.current = ws;
+    function scheduleReconnect() {
+      if (!active) return;
+      const attempt = reconnectAttemptRef.current;
+      const backoff = Math.min(1000 * 2 ** attempt, MAX_BACKOFF_MS);
+      reconnectAttemptRef.current = attempt + 1;
+      reconnectTimeoutRef.current = setTimeout(() => void connect(), backoff);
     }
 
-    connect();
+    async function connect() {
+      try {
+        const response = await fetch("/api/realtime/ws-ticket", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ domainId }),
+        });
+        if (!response.ok) {
+          throw new Error(`WebSocket ticket request failed (${response.status})`);
+        }
+
+        const result: unknown = await response.json();
+        if (
+          !result ||
+          typeof result !== "object" ||
+          !("ticket" in result) ||
+          typeof result.ticket !== "string"
+        ) {
+          throw new Error("WebSocket ticket response was invalid");
+        }
+        if (!active) return;
+
+        const wsUrl = new URL(
+          wsServerUrl || publicEnv.NEXT_PUBLIC_WSS_URL || "ws://localhost:4000"
+        );
+        wsUrl.searchParams.set("ticket", result.ticket);
+        const ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          setIsConnected(true);
+          reconnectAttemptRef.current = 0;
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const message: WebSocketMessage = JSON.parse(event.data);
+            onMessageRef.current?.(message);
+          } catch (err) {
+            console.error("Failed to parse WS message:", err);
+          }
+        };
+
+        ws.onerror = () => {
+          setIsConnected(false);
+        };
+
+        ws.onclose = () => {
+          setIsConnected(false);
+          scheduleReconnect();
+        };
+
+        wsRef.current = ws;
+      } catch (err) {
+        if (!active) return;
+        console.error("Failed to establish WebSocket connection:", err);
+        setIsConnected(false);
+        scheduleReconnect();
+      }
+    }
+
+    void connect();
 
     return () => {
-      shouldReconnectRef.current = false; // pending reconnect timers ko cancel karne ka signal
+      active = false;
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
       }
 
       const ws = wsRef.current;
@@ -92,7 +118,7 @@ export function useWebSocket(
       }
       setIsConnected(false);
     };
-  }, [domainId, apikey, wsServerUrl]);
+  }, [domainId, wsServerUrl]);
 
   return { isConnected, ws: wsRef.current };
 }
