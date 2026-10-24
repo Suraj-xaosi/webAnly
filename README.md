@@ -26,9 +26,8 @@ Webanly lets you track visitors on your own website without relying on third-par
 | --------------------- | ---------------------------------------------------------------------- |
 | Frontend              | Next.js, React, TanStack Query, Redux Toolkit, shadcn/ui, Tailwind CSS |
 | Backend               | Express, Node.js                                                       |
-| Database              | PostgreSQL + Prisma                                                    |
-| Event pipeline        | Kafka                                                                  |
-| Cache / rate tracking | Redis                                                                  |
+| Database / state      | PostgreSQL + Prisma                                                    |
+| Rate limiting         | Bounded in-memory counters (per app process)                           |
 | Realtime updates      | WebSockets                                                             |
 | Auth                  | better-auth (GitHub OAuth)                                             |
 | Geo lookups           | MaxMind GeoLite2                                                       |
@@ -41,14 +40,12 @@ Webanly lets you track visitors on your own website without relying on third-par
 ## How it works
 
 1. A lightweight tracking script (`script.js`) runs on the customer's website and sends pageview events to the collector API.
-2. The collector validates the API key, enriches the event (country from IP, referrer, device info), and publishes it to Kafka.
-3. Two things consume from Kafka in parallel:
-   - A **worker** that writes events into Postgres for historical queries.
-   - A **WebSocket broadcaster** that pushes the event to any dashboard currently connected for that domain, for the live view.
+2. The collector validates the API key, enriches the event (country from IP, referrer, device info), and writes it to Postgres.
+3. The collector broadcasts the event directly to connected WebSocket dashboards for that domain.
 4. A **spike detector** runs on a schedule and compares recent traffic against an adaptive expected baseline. The baseline adjusts up when traffic grows and down when it is quiet. It fires a notification when there is a real spike.
-5. The dashboard (Next.js) reads historical data via REST endpoints (cached in Redis) and live data via a WebSocket connection, then merges both into the same charts.
+5. The dashboard (Next.js) reads historical data via REST endpoints and live data via a WebSocket connection, then merges both into the same charts.
 
-Dashboard WebSocket connections use one-time Redis tickets. The web app issues a 60-second ticket only for an authenticated user who owns an active domain; the WebSocket server consumes it once and binds the connection to that domain. Configure `NEXT_PUBLIC_APP_URL` (or `BETTER_AUTH_URL`) to the dashboard's origin so ticket requests are restricted to that origin. The API key remains for analytics collection and is not used to authenticate dashboard sockets.
+Dashboard WebSocket connections use one-time PostgreSQL tickets. The web app issues a 60-second ticket only for an authenticated user who owns an active domain; the WebSocket server atomically consumes it once and binds the connection to that domain. Expired tickets are cleaned up periodically. Configure `NEXT_PUBLIC_APP_URL` (or `BETTER_AUTH_URL`) to the dashboard's origin so ticket requests are restricted to that origin. The API key remains for analytics collection and is not used to authenticate dashboard sockets. AI daily token usage is stored in PostgreSQL and old usage rows are cleaned up daily. Rate limits are held in bounded, per-process memory and reset on restart; they are best-effort across serverless instances.
 
 ---
 
@@ -60,10 +57,9 @@ Dashboard WebSocket connections use one-time Redis tickets. The web app issues a
 webanly/
 ├── apps/
 │   ├── web/                  # Next.js frontend (dashboards, auth, domain management)
-│   └── server/               # Express backend: collector API, Kafka workers, WebSocket server
+│   └── server/               # Express backend: collector API, scheduled jobs, WebSocket server
 ├── packages/
 │   ├── db/                   # Prisma schema, migrations, generated client
-│   ├── redis/                # Shared Redis client + cache helpers
 │   ├── ui/                   # Shared shadcn/ui component library
 │   ├── types/                # Shared TypeScript contracts and Zod validation schemas
 │   ├── eslint-config/        # Shared lint rules
@@ -82,7 +78,7 @@ webanly/
 
 ## Running Locally with Docker (recommended)
 
-This is the easiest way to run the full stack (Postgres, Redis, Kafka, backend, and frontend) with one command.
+This is the easiest way to run the full stack (Postgres, backend, and frontend) with one command.
 
 ### Prerequisites
 
@@ -119,7 +115,7 @@ This is the easiest way to run the full stack (Postgres, Redis, Kafka, backend, 
    docker compose up --build
    ```
 
-   This starts Postgres, Redis, and Kafka, runs database migrations automatically, then starts the backend and frontend in the right order.
+   This starts Postgres, applies database migrations automatically, then starts the backend and frontend in the right order.
 
 4. Open the app:
 
@@ -132,7 +128,7 @@ This is the easiest way to run the full stack (Postgres, Redis, Kafka, backend, 
    docker compose down
    ```
 
-   Add `-v` to also wipe the database and Redis data.
+   Add `-v` to also wipe the database data.
 
 > **Note:** The GeoLite2 database file is *not* included in the Docker image, to keep it lightweight. It is downloaded automatically the first time the server container starts, using your `MAXMIND_LICENSE_KEY`.
 
@@ -145,16 +141,13 @@ This is the easiest way to run the full stack (Postgres, Redis, Kafka, backend, 
 - Node.js LTS
 - npm
 - PostgreSQL
-- Redis
-- Kafka
 
 ### Steps
 
 ```
 npm install
 
-# Add .env files with your DATABASE_URL, REDIS_URL, Kafka broker address,
-# and auth credentials in both apps/web and apps/server
+# Add .env files with your DATABASE_URL and auth credentials in both apps/web and apps/server
 
 npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
 
@@ -162,6 +155,8 @@ npm run dev
 ```
 
 This starts all apps via Turborepo.
+
+Apply pending migrations before deploying updated web and server code.
 
 ---
 
@@ -172,8 +167,6 @@ The hosted demo runs on:
 - **Frontend:** Vercel
 - **Backend:** Render
 - **Database:** Neon (managed PostgreSQL)
-- **Redis:** Upstash
-- **Kafka:** Aiven
 
 The included Dockerfiles and `docker-compose.yml` can also be used to self-host on any VPS or container platform.
 

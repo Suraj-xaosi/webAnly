@@ -139,6 +139,9 @@ model Domain {
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   pageVisits  PageVisit[]
   
+  webSocketTickets WebSocketTicket[]
+  aiTokenUsage     AiTokenUsage[]
+
   payments    Payment[]
 
   @@index([userId])
@@ -225,6 +228,27 @@ model PageVisit {
   @@index([domainId, previousPage, visitedAt])
   @@index([domainId, page, visitedAt])
   @@map("page_visit")
+}
+
+model WebSocketTicket {
+  tokenHash String   @id
+  domainId  String
+  origin    String
+  expiresAt DateTime
+  domain    Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@map("web_socket_ticket")
+}
+
+model AiTokenUsage {
+  domainId  String
+  usageDate DateTime @db.Date
+  tokens    Int      @default(0)
+  domain    Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+
+  @@id([domainId, usageDate])
+  @@map("ai_token_usage")
 }
 
 

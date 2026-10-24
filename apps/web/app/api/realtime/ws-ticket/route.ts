@@ -1,13 +1,11 @@
 import { randomBytes, createHash } from "node:crypto"
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@repo/db"
-import { redis } from "@repo/redis"
 import { auth } from "@/lib/betterAuth/auth"
 
 export const runtime = "nodejs"
 
 const TICKET_TTL_SECONDS = 60
-const TICKET_KEY_PREFIX = "websocket:ticket:v1:"
 
 function getExpectedAppOrigin(): string | null {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.BETTER_AUTH_URL
@@ -59,19 +57,20 @@ export async function POST(request: NextRequest) {
   }
 
   const ticket = randomBytes(32).toString("hex")
-  const ticketKey = `${TICKET_KEY_PREFIX}${createHash("sha256").update(ticket).digest("hex")}`
+  const tokenHash = createHash("sha256").update(ticket).digest("hex")
 
   try {
-    const stored = await redis.set(
-      ticketKey,
-      JSON.stringify({ domainId: domain.id, origin: expectedOrigin }),
-      "EX",
-      TICKET_TTL_SECONDS,
-      "NX"
-    )
-    if (stored !== "OK") {
-      return NextResponse.json({ error: "Unable to create WebSocket ticket." }, { status: 503 })
-    }
+    await prisma.webSocketTicket.deleteMany({
+      where: { expiresAt: { lte: new Date() } },
+    })
+    await prisma.webSocketTicket.create({
+      data: {
+        tokenHash,
+        domainId: domain.id,
+        origin: expectedOrigin,
+        expiresAt: new Date(Date.now() + TICKET_TTL_SECONDS * 1000),
+      },
+    })
   } catch (error) {
     console.error("Failed to create WebSocket ticket:", error)
     return NextResponse.json({ error: "Unable to create WebSocket ticket." }, { status: 503 })

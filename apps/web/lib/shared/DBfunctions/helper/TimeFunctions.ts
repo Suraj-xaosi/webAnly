@@ -2,9 +2,6 @@ import { NextResponse } from "next/server";
 
 export const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-export const CACHE_TTL_TODAY = 30;   // seconds — "today" data still accumulating
-export const CACHE_TTL_PAST  = 600;  // seconds — past data is immutable history
-
 export function isValidTimeZone(tz: string): boolean {
   try {
     Intl.DateTimeFormat(undefined, { timeZone: tz });
@@ -17,7 +14,6 @@ export function isValidTimeZone(tz: string): boolean {
 export function todayInTimeZone(timezone: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date());
 }
-
 
 export function validateDateParams(
   from: string | null,

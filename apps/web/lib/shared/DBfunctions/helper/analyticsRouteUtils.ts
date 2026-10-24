@@ -1,25 +1,5 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@repo/db";
-import { getCache, setCache } from "@repo/redis";
-import {
-  CACHE_TTL_PAST,
-  CACHE_TTL_TODAY,
-  todayInTimeZone,
-} from "./TimeFunctions";
-
-export function readCachedResponse<T>(cacheKey: string): Promise<T | null> {
-  return getCache<T>(cacheKey);
-}
-
-export async function writeCachedResponse<T extends object>(
-  cacheKey: string,
-  responseBody: T,
-  to: string,
-  timezone: string
-): Promise<void> {
-  const ttl = to === todayInTimeZone(timezone) ? CACHE_TTL_TODAY : CACHE_TTL_PAST;
-  await setCache(cacheKey, responseBody, ttl);
-}
 
 export function getAnalyticsDateBounds(from: string, to: string, timezone: string) {
   return {

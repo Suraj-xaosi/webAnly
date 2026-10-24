@@ -1,7 +1,6 @@
 "use server"
 
 import { prisma } from "@repo/db"
-import { deleteCache } from "@repo/redis"
 import { requireSession } from "./requireSession"
 import { findOwnedDomain } from "./findOwnedDomain"
 import { actionErr, actionOk } from "@repo/types/actionResult"
@@ -19,7 +18,6 @@ export async function deleteDomain(id: string) {
 
     const domain = await findOwnedDomain(id, sessionResult.data.user.id, {
       id: true,
-      apikey: true,
     })
 
     if (!domain) {
@@ -27,8 +25,8 @@ export async function deleteDomain(id: string) {
     }
 
     const deletion = await prisma.$transaction(async (tx) => {
-      const domains = await tx.$queryRaw<{ id: string; apikey: string }[]>`
-        SELECT "id", "apikey"
+      const domains = await tx.$queryRaw<{ id: string }[]>`
+        SELECT "id"
         FROM "domain"
         WHERE "id" = ${domain.id}
           AND "userId" = ${sessionResult.data.user.id}
@@ -45,7 +43,7 @@ export async function deleteDomain(id: string) {
       if (pendingPayment) return { status: "payment-pending" as const }
 
       await tx.domain.delete({ where: { id: lockedDomain.id } })
-      return { status: "deleted" as const, apikey: lockedDomain.apikey }
+      return { status: "deleted" as const }
     })
 
     if (deletion.status === "payment-pending") {
@@ -56,15 +54,6 @@ export async function deleteDomain(id: string) {
 
     if (deletion.status === "not-found") {
       return actionErr("Domain not found.")
-    }
-
-    try {
-      await deleteCache(`apikey:${deletion.apikey}`)
-    } catch (cacheError) {
-      console.warn(
-        "Failed to invalidate deleted domain API key cache:",
-        cacheError
-      )
     }
 
     return actionOk(true)

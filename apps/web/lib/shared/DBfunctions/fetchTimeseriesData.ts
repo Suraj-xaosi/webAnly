@@ -1,7 +1,7 @@
 import "server-only"
 import { prisma } from "@repo/db"
 import { DAY_NAMES, MONTH_NAMES, TRUNC_FOR, type Interval } from "./helper/analyticsConstants"
-import { getAnalyticsDateBounds, readCachedResponse, writeCachedResponse } from "./helper/analyticsRouteUtils"
+import { getAnalyticsDateBounds } from "./helper/analyticsRouteUtils"
 import type { TimeseriesResponse } from "@repo/types/analytics"
 
 export async function fetchTimeseriesData(
@@ -11,11 +11,6 @@ export async function fetchTimeseriesData(
   timezone: string,
   interval: Interval = from === to ? "hour" : "day"
 ): Promise<TimeseriesResponse> {
-  const cacheKey = `timeseries:v2:${domainId}:${interval}:${from}:${to}:${timezone}`
-
-  const cachedResponse = await readCachedResponse<TimeseriesResponse>(cacheKey)
-  if (cachedResponse) return cachedResponse
-
   const { lowerBoundSql, upperBoundSql } = getAnalyticsDateBounds(from, to, timezone)
   type SummaryRow = { views: number; visitors: number; exits: number }
   const [summaryRow] = await prisma.$queryRaw<SummaryRow[]>`
@@ -97,6 +92,5 @@ export async function fetchTimeseriesData(
     summary: summaryRow ?? { views: 0, visitors: 0, exits: 0 },
     data,
   }
-  await writeCachedResponse(cacheKey, responseBody, to, timezone)
   return responseBody
 }

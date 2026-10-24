@@ -111,7 +111,13 @@ export async function POST(req: NextRequest) {
     if (!lengthCheck.ok) return quickTextResponse(lengthCheck.error!)
 
     // ── 5. Daily token budget guard ──────────────────────────
-    const budget = await checkTokenBudget(domain.id)
+    let budget: Awaited<ReturnType<typeof checkTokenBudget>>
+    try {
+      budget = await checkTokenBudget(domain.id)
+    } catch (error) {
+      console.error("[ai-chat] token budget lookup failed:", error)
+      return new Response("AI usage limit is temporarily unavailable.", { status: 503 })
+    }
     if (!budget.ok) {
       return quickTextResponse(
         "The AI assistant's limit for today has been reached. Please try again tomorrow."

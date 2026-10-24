@@ -1,6 +1,5 @@
 import { prisma } from "@repo/db";
-import { deleteCache, getCache, setCache } from "@repo/redis";
-import { createHttpError, isHttpError } from "../errors.js";
+import { createHttpError } from "../errors.js";
 
 export interface DomainInfo {
   domainId: string;
@@ -10,31 +9,10 @@ export interface DomainInfo {
   defaultTimezone: string;
 }
 
-const CACHE_TTL_SECONDS = 1200;
-
-export async function invalidateApikeyCache(apikey: string): Promise<void> {
-  const cacheKey = `apikey:${apikey.trim()}`;
-  await deleteCache(cacheKey);
-}
-
 export async function apikeyChecker(apikey: string): Promise<DomainInfo> {
   const normalizedApiKey = typeof apikey === "string" ? apikey.trim() : "";
   if (!normalizedApiKey) {
     throw createHttpError(401, "Invalid API key.", "INVALID_API_KEY");
-  }
-
-  const cacheKey = `apikey:${normalizedApiKey}`;
-  try {
-    const cached = await getCache<DomainInfo>(cacheKey);
-    if (cached) {
-      if (cached.state !== "ACTIVE") {
-        throw createHttpError(403, "Domain is inactive.", "DOMAIN_INACTIVE");
-      }
-      return cached;
-    }
-  } catch (error) {
-    if (isHttpError(error)) throw error;
-    console.warn("API key cache lookup failed", error);
   }
 
   let domain;
@@ -62,12 +40,6 @@ export async function apikeyChecker(apikey: string): Promise<DomainInfo> {
     type: domain.type,
     defaultTimezone: domain.defaultTimezone,
   };
-
-  try {
-    await setCache(cacheKey, result, CACHE_TTL_SECONDS);
-  } catch (error) {
-    console.warn("API key cache write failed", error);
-  }
 
   return result;
 }

@@ -2,18 +2,9 @@ import { createHash } from "node:crypto";
 import { IncomingMessage, Server } from "node:http";
 import { Duplex } from "node:stream";
 import { WebSocketServer, WebSocket } from "ws";
-import { redis } from "@repo/redis";
+import { prisma } from "@repo/db";
 
 export const domainClients = new Map<string, Set<WebSocket>>();
-
-const TICKET_KEY_PREFIX = "websocket:ticket:v1:";
-const CONSUME_TICKET_SCRIPT = `
-local value = redis.call("GET", KEYS[1])
-if value then
-  redis.call("DEL", KEYS[1])
-end
-return value
-`;
 
 function rejectUpgrade(socket: Duplex, status: number, message: string) {
   if ((socket as any).destroyed) return;
@@ -42,11 +33,17 @@ export function initWebSocketServer(httpServer: Server) {
       return;
     }
 
-    const ticketKey = `${TICKET_KEY_PREFIX}${createHash("sha256").update(ticket).digest("hex")}`;
+    const tokenHash = createHash("sha256").update(ticket).digest("hex");
 
-    let storedTicket: string | null;
+    let storedTicket: { domainId: string; origin: string } | undefined;
     try {
-      storedTicket = (await redis.eval(CONSUME_TICKET_SCRIPT, 1, ticketKey)) as string | null;
+      const tickets = await prisma.$queryRaw<{ domainId: string; origin: string }[]>`
+        DELETE FROM "web_socket_ticket"
+        WHERE "tokenHash" = ${tokenHash}
+          AND "expiresAt" > NOW()
+        RETURNING "domainId", "origin"
+      `;
+      storedTicket = tickets[0];
     } catch (error) {
       console.error("WS SERVER: Failed to verify WebSocket ticket:", error);
       rejectUpgrade(socket, 503, "Service Unavailable");
@@ -58,33 +55,12 @@ export function initWebSocketServer(httpServer: Server) {
       return;
     }
 
-    let domainId: string;
-    let ticketOrigin: string;
-    try {
-      const parsedTicket = JSON.parse(storedTicket) as unknown;
-      if (
-        !parsedTicket ||
-        typeof parsedTicket !== "object" ||
-        !("domainId" in parsedTicket) ||
-        typeof (parsedTicket as { domainId?: unknown }).domainId !== "string" ||
-        !("origin" in parsedTicket) ||
-        typeof (parsedTicket as { origin?: unknown }).origin !== "string"
-      ) {
-        rejectUpgrade(socket, 401, "Unauthorized");
-        return;
-      }
-      domainId = (parsedTicket as { domainId: string }).domainId;
-      ticketOrigin = (parsedTicket as { origin: string }).origin;
-    } catch {
-      rejectUpgrade(socket, 401, "Unauthorized");
-      return;
-    }
-
-    if (requestOrigin !== ticketOrigin) {
+    if (requestOrigin !== storedTicket.origin) {
       rejectUpgrade(socket, 403, "Forbidden");
       return;
     }
 
+    const domainId = storedTicket.domainId;
     try {
       wss.handleUpgrade(req, socket, head, (ws) => {
         if (!domainClients.has(domainId)) {

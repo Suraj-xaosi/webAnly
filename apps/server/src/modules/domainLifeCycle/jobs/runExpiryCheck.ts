@@ -1,9 +1,7 @@
 import { prisma } from "@repo/db";
-import { KAFKA_TOPICS } from "../../../shared/config/kafka.js";
-import { producer } from "../../../shared/config/kafka/kafkaClient.js";
-import { invalidateApikeyCache } from "../../../shared/functions/apikeyChecker.js";
+import { createNotification } from "../../notifications/createNotification.js";
 
-export  async function runExpiryCheck() {
+export async function runExpiryCheck() {
   const now = new Date();
 
   const expiredDomains = await prisma.domain.findMany({
@@ -12,7 +10,7 @@ export  async function runExpiryCheck() {
       endsAt: { lt: now },
       deletedAt: null,
     },
-    select: { id: true, apikey: true, endsAt: true },
+    select: { id: true, endsAt: true },
   });
 
   if (expiredDomains.length === 0) return;
@@ -34,24 +32,10 @@ export  async function runExpiryCheck() {
       // A payment may have renewed the domain after the initial query.
       if (deactivated.count === 0) continue;
 
-      try {
-        await invalidateApikeyCache(domain.apikey);
-      } catch (error) {
-        console.error(`DOMAIN LIFECYCLE CRON: Failed to invalidate API key cache for ${domain.id}:`, error);
-      }
-
-      await producer.send({
-        topic: KAFKA_TOPICS.NOTIFICATIONS,
-        messages: [
-          {
-            key: domain.id,
-            value: JSON.stringify({
-              domainId: domain.id,
-              type: "DOMAIN_EXPIRED",
-              endsAt: domain.endsAt.toISOString(),
-            }),
-          },
-        ],
+      await createNotification({
+        domainId: domain.id,
+        type: "DOMAIN_EXPIRED",
+        endsAt: domain.endsAt.toISOString(),
       });
     } catch (error) {
       console.error(`DOMAIN LIFECYCLE CRON: Failed to expire domain ${domain.id}:`, error);

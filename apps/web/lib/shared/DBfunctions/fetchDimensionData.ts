@@ -1,7 +1,7 @@
 import "server-only"
 import { prisma, Prisma } from "@repo/db"
 import { DIMENSION_COL_MAP } from "./helper/analyticsConstants"
-import { getAnalyticsDateBounds, readCachedResponse, writeCachedResponse } from "./helper/analyticsRouteUtils"
+import { getAnalyticsDateBounds } from "./helper/analyticsRouteUtils"
 import {
   ANALYTICS_DIMENSIONS,
   type Dimension,
@@ -33,11 +33,6 @@ export async function fetchDimensionData(
   to: string,
   timezone: string
 ): Promise<DimensionResponse> {
-  const cacheKey = `dimension:${domainId}:${dimension}:${from}:${to}:${timezone}`
-
-  const cachedResponse = await readCachedResponse<DimensionResponse>(cacheKey)
-  if (cachedResponse) return cachedResponse
-
   const col = DIMENSION_COL_MAP[dimension]
   const colId = Prisma.raw(`"${col}"`)
   const { lowerBoundSql, upperBoundSql } = getAnalyticsDateBounds(from, to, timezone)
@@ -71,6 +66,5 @@ export async function fetchDimensionData(
     }))
 
   const responseBody: DimensionResponse = { dimension, from, to, timezone, total: data.length, data }
-  await writeCachedResponse(cacheKey, responseBody, to, timezone)
   return responseBody
 }

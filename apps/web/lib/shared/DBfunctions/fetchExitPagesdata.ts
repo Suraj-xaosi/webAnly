@@ -1,6 +1,6 @@
 import "server-only"
 import { prisma } from "@repo/db"
-import { getAnalyticsDateBounds, readCachedResponse, writeCachedResponse } from "./helper/analyticsRouteUtils"
+import { getAnalyticsDateBounds } from "./helper/analyticsRouteUtils"
 import type { ExitPagesResponse } from "@repo/types/analytics"
 
 export async function fetchExitPagesData(
@@ -9,11 +9,6 @@ export async function fetchExitPagesData(
   to: string,
   timezone: string
 ): Promise<ExitPagesResponse> {
-  const cacheKey = `exit-pages:${domainId}:${from}:${to}:${timezone}`
-
-  const cachedResponse = await readCachedResponse<ExitPagesResponse>(cacheKey)
-  if (cachedResponse) return cachedResponse
-
   const { lowerBoundSql, upperBoundSql } = getAnalyticsDateBounds(from, to, timezone)
 
   type Row = { name: string; views: number; exits: number }
@@ -40,6 +35,5 @@ export async function fetchExitPagesData(
     }))
 
   const responseBody: ExitPagesResponse = { from, to, timezone, total: data.length, data }
-  await writeCachedResponse(cacheKey, responseBody, to, timezone)
   return responseBody
 }

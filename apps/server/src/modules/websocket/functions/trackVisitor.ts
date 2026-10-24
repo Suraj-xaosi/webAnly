@@ -1,21 +1,10 @@
 import { DateTime } from "luxon";
 import { prisma } from "@repo/db";
-import { redis } from "@repo/redis";
 import {
   TRACKED_DIMENSIONS,
   type TrackedDimension,
-  buildHourKey,
-  buildDayKey,
-  buildDimensionKey,
   isTrackableValue,
-} from "./visitorRedisKeys.js";
-
-type Entry = {
-  kind: "hour" | "day" | TrackedDimension;
-  key: string;
-  value?: string;
-  ttl: number;
-};
+} from "./visitorDimensions.js";
 
 type ExistingVisits = Record<TrackedDimension, boolean> & {
   hour: boolean;
@@ -31,10 +20,6 @@ export interface VisitorNewnessResult {
 function getZonedVisitTime(visitedAt: Date, timezone: string): DateTime {
   const eventTime = DateTime.fromJSDate(visitedAt, { zone: "utc" }).setZone(timezone);
   return eventTime.isValid ? eventTime : DateTime.fromJSDate(visitedAt, { zone: "utc" });
-}
-
-function secondsUntil(end: DateTime, visitedAt: DateTime): number {
-  return Math.max(0, Math.ceil(end.diff(visitedAt, "seconds").seconds));
 }
 
 async function getExistingVisits(
@@ -63,9 +48,9 @@ async function getExistingVisits(
     FROM "page_visit"
     WHERE "domainId" = ${domainId}
       AND "visitorId" = ${visitorId}
-      AND "visitedAt"::timestamptz >= ${startOfDay}
-      AND "visitedAt"::timestamptz < ${endOfDay}
-      AND "visitedAt"::timestamptz < ${visitedAt}
+      AND "visitedAt" >= ${startOfDay}
+      AND "visitedAt" < ${endOfDay}
+      AND "visitedAt" <= ${visitedAt}
   `;
 
   return existing ?? {
@@ -97,125 +82,28 @@ export async function checkVisitorNewness(
   }
 
   const eventTime = getZonedVisitTime(visitedAt, timezone);
-  const eventTimezone = eventTime.zoneName ?? "UTC";
   const startOfDay = eventTime.startOf("day");
-  const startOfHour = eventTime.startOf("hour");
-  const dayEnd = startOfDay.plus({ days: 1 });
-  let hourEnd = startOfHour.plus({ hours: 1 });
-  while (hourEnd.toFormat("yyyy-MM-dd HH") === startOfHour.toFormat("yyyy-MM-dd HH")) {
-    hourEnd = hourEnd.plus({ hours: 1 });
-  }
-  const now = DateTime.now();
-  const entries: Entry[] = [
-    {
-      kind: "hour",
-      key: buildHourKey(
-        domainId,
-        eventTimezone,
-        startOfDay.toFormat("yyyy-MM-dd"),
-        eventTime.toFormat("HH")
-      ),
-      ttl: secondsUntil(hourEnd, now),
-    },
-    {
-      kind: "day",
-      key: buildDayKey(domainId, eventTimezone, startOfDay.toFormat("yyyy-MM-dd")),
-      ttl: secondsUntil(dayEnd, now),
-    },
-  ];
-
-  for (const dimension of TRACKED_DIMENSIONS) {
-    const value = dimensionValues[dimension];
-    if (!isTrackableValue(value)) continue;
-    entries.push({
-      kind: dimension,
-      key: buildDimensionKey(
-        domainId,
-        eventTimezone,
-        startOfDay.toFormat("yyyy-MM-dd"),
-        dimension,
-        value
-      ),
-      value,
-      ttl: secondsUntil(dayEnd, now),
-    });
-  }
-
-  const redisSeen = new Map<string, boolean>();
-  let redisAvailable = true;
-  try {
-    const pipeline = redis.pipeline();
-    entries.forEach((entry) => {
-      if (entry.ttl > 0) pipeline.sismember(entry.key, visitorId);
-    });
-    const results = await pipeline.exec();
-    if (!results) throw new Error("Redis membership pipeline returned no results");
-
-    let resultIndex = 0;
-    for (const entry of entries) {
-      if (entry.ttl <= 0) {
-        redisSeen.set(entry.key, false);
-        continue;
-      }
-      const result = results[resultIndex++];
-      if (!result || result[0]) throw result?.[0] ?? new Error("Missing Redis membership result");
-      redisSeen.set(entry.key, result[1] === 1);
-    }
-  } catch (error) {
-    redisAvailable = false;
-    console.error("VISITOR TRACKING: Redis lookup failed; checking the database", error);
-  }
-
-  const needsDatabase =
-    !redisAvailable || entries.some((entry) => !redisSeen.get(entry.key));
-  let existing: ExistingVisits | undefined;
-  if (needsDatabase) {
-    existing = await getExistingVisits(
-      domainId,
-      visitorId,
-      startOfDay.toJSDate(),
-      dayEnd.toJSDate(),
-      eventTime.hour,
-      eventTime.zoneName ?? "UTC",
-      visitedAt,
-      dimensionValues
-    );
-  }
-
-  const hasSeen = (entry: Entry) => {
-    if (redisAvailable && redisSeen.get(entry.key)) return true;
-    if (!existing) return false;
-    if (entry.kind === "hour" || entry.kind === "day") {
-      return existing[entry.kind];
-    }
-    return Boolean(entry.value && existing[entry.kind]);
-  };
+  const existing = await getExistingVisits(
+    domainId,
+    visitorId,
+    startOfDay.toJSDate(),
+    startOfDay.plus({ days: 1 }).toJSDate(),
+    eventTime.hour,
+    eventTime.zoneName ?? "UTC",
+    visitedAt,
+    dimensionValues
+  );
 
   const isNewVisitorFor: Partial<Record<TrackedDimension, boolean>> = {};
-  for (const entry of entries) {
-    if (entry.kind !== "hour" && entry.kind !== "day") {
-      isNewVisitorFor[entry.kind] = !hasSeen(entry);
+  for (const dimension of TRACKED_DIMENSIONS) {
+    if (isTrackableValue(dimensionValues[dimension])) {
+      isNewVisitorFor[dimension] = !existing[dimension];
     }
-  }
-
-  try {
-    const pipeline = redis.pipeline();
-    for (const entry of entries) {
-      if (entry.ttl <= 0) continue;
-      pipeline.sadd(entry.key, visitorId);
-      pipeline.expire(entry.key, entry.ttl, "NX");
-    }
-    const results = await pipeline.exec();
-    if (!results) throw new Error("Redis update pipeline returned no results");
-    const failedResult = results.find((result) => !result || result[0]);
-    if (failedResult) throw failedResult[0] ?? new Error("Missing Redis update result");
-  } catch (error) {
-    console.error("VISITOR TRACKING: Redis update failed; database remains authoritative", error);
   }
 
   return {
-    isNewVisitor: !hasSeen(entries[0]!),
-    isNewVisitorToday: !hasSeen(entries[1]!),
+    isNewVisitor: !existing.hour,
+    isNewVisitorToday: !existing.day,
     isNewVisitorFor,
   };
 }

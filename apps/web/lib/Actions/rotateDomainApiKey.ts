@@ -2,12 +2,12 @@
 
 import { randomUUID } from "node:crypto"
 import { prisma } from "@repo/db"
-import { deleteCache, redis } from "@repo/redis"
 import { requireSession } from "./requireSession"
 import { findOwnedDomain } from "./findOwnedDomain"
 import { actionErr, actionOk } from "@repo/types/actionResult"
 
 const ROTATION_COOLDOWN_SECONDS = 60
+const ROTATION_COOLDOWNS = new Map<string, number>()
 
 export async function rotateDomainApiKey(domainId: string) {
   try {
@@ -29,32 +29,21 @@ export async function rotateDomainApiKey(domainId: string) {
       return actionErr("Domain not found.")
     }
 
-    let cooldown: string | null
-    try {
-      cooldown = await redis.set(
-        `domain:api-key-rotation:v1:${domain.id}`,
-        "1",
-        "EX",
-        ROTATION_COOLDOWN_SECONDS,
-        "NX"
-      )
-    } catch (error) {
-      console.error("API key rotation rate limiter failed:", error)
-      return actionErr(
-        "API key regeneration is temporarily unavailable. Please try again later."
-      )
-    }
-
-    if (cooldown !== "OK") {
+    const now = Date.now()
+    const cooldownUntil = ROTATION_COOLDOWNS.get(domain.id) ?? 0
+    if (cooldownUntil > now) {
       return actionErr(
         "This domain's API key was recently regenerated. Please wait 60 seconds before trying again."
       )
     }
 
-    const nextApiKey = randomUUID()
+    if (ROTATION_COOLDOWNS.size >= 20_000) {
+      const oldestDomainId = ROTATION_COOLDOWNS.keys().next().value
+      if (oldestDomainId) ROTATION_COOLDOWNS.delete(oldestDomainId)
+    }
+    ROTATION_COOLDOWNS.set(domain.id, now + ROTATION_COOLDOWN_SECONDS * 1000)
 
-    // Clear existing cached credentials before changing the database key.
-    await deleteCache(`apikey:${domain.apikey}`)
+    const nextApiKey = randomUUID()
 
     const updated = await prisma.domain.updateMany({
       where: {
@@ -68,19 +57,6 @@ export async function rotateDomainApiKey(domainId: string) {
     if (updated.count !== 1) {
       return actionErr(
         "The domain API key changed before regeneration completed. Refresh and try again."
-      )
-    }
-
-    try {
-      // Clear again in case a concurrent collector request repopulated the old key.
-      await deleteCache(`apikey:${domain.apikey}`)
-    } catch (error) {
-      console.error(
-        "Failed to invalidate the old API key cache after rotation:",
-        error
-      )
-      return actionErr(
-        "The API key was regenerated, but the old key cache could not be cleared. Refresh this page; the old key may remain valid briefly."
       )
     }
 

@@ -1,6 +1,5 @@
-import { producer }                    from "../../shared/config/kafka/kafkaClient.js";
 import { apikeyChecker }               from "../../shared/functions/apikeyChecker.js";
-import { KAFKA_TOPICS }                from "../../shared/config/kafka.js";
+import { prisma }                      from "@repo/db";
 import parseTime                       from "./functions/parseTimeSpent.js";
 import parseDate                       from "./functions/parseDate.js";
 import { extractRealIp }               from "./functions/extractIP.js";
@@ -9,6 +8,8 @@ import { Request }                     from "express";
 import { extractReferrerHostname }     from "./functions/extractReferrerHostname.js";
 import { normalizePath }               from "./functions/normalizepath.js";
 import { isOriginAllowed }             from "./functions/checkOrigin.js";
+import { broadcastDomainEvent }         from "../websocket/websocket.broadcast.js";
+import { checkVisitorNewness }          from "../websocket/functions/trackVisitor.js";
 import {
   checkCollectorIpRateLimit,
   checkCollectorRateLimit,
@@ -88,20 +89,35 @@ export async function handleCollectEvent(
     visitedAt,
   };
 
-  await producer.send({
-    topic: KAFKA_TOPICS.SITE_EVENTS,
-    messages: [{ key: domain.domainId, value: JSON.stringify(eventData) }],
+  const visitorNewness = await checkVisitorNewness(
+    domain.domainId,
+    eventData.visitorId,
+    domain.defaultTimezone || eventData.timezone || "UTC",
+    eventData.visitedAt,
+    eventData
+  );
+
+  await prisma.pageVisit.create({
+    data: {
+      ...eventData,
+      pageTitle: eventData.pageTitle ?? "unknown",
+      referrer: eventData.referrer,
+      previousPage: eventData.previousPage,
+      country: eventData.country,
+      city: eventData.city,
+      browser: eventData.browser,
+      device: eventData.device,
+      os: eventData.os,
+      timezone: eventData.timezone,
+      exitType: eventData.exitType,
+      timeSpent: eventData.timeSpent,
+    },
   });
 
-  await producer.send({
-    topic: KAFKA_TOPICS.SOCKET_EVENTS,
-    messages: [{
-      key: domain.domainId,
-      value: JSON.stringify({
-        ...eventData,
-        defaultTimezone: domain.defaultTimezone,
-      }),
-    }],
+  broadcastDomainEvent(domain.domainId, {
+    ...eventData,
+    defaultTimezone: domain.defaultTimezone,
+    ...visitorNewness,
   });
 
   return null;

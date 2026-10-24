@@ -5,11 +5,13 @@ import {runWarningCheck} from "./jobs/runWarningCheck.js";
 
 export async function startDomainLifecycleJob() {
   cron.schedule("0 * * * *", async () => {
-    await runExpiryCheck();
-    await runWarningCheck();
+    try {
+      await runExpiryCheck();
+      await runWarningCheck();
+    } catch (error) {
+      console.error("DOMAIN LIFECYCLE CRON: Scheduled check failed", error);
+    }
   });
 
-  console.log(
-    "DOMAIN LIFECYCLE CRON: scheduled (hourly tick; expiry runs every tick, warning gated to ~once/day via redis lock)"
-  );
+  console.log("DOMAIN LIFECYCLE CRON: scheduled (hourly tick)");
 }

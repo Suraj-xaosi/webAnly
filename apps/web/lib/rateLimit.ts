@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto"
-import { redis } from "@repo/redis"
 
 const RATE_LIMIT_BY_SCOPE = {
   user: 10,
@@ -7,19 +6,8 @@ const RATE_LIMIT_BY_SCOPE = {
 } as const
 const RATE_WINDOW_MS = 60_000
 
-const RATE_LIMIT_SCRIPT = `
-local requestCount = redis.call("INCR", KEYS[1])
-if requestCount == 1 then
-  redis.call("PEXPIRE", KEYS[1], ARGV[1])
-end
-
-local ttl = redis.call("PTTL", KEYS[1])
-if requestCount > tonumber(ARGV[2]) then
-  return { 1, ttl }
-end
-
-return { 0, ttl }
-`
+const MAX_BUCKETS = 20_000
+const buckets = new Map<string, { count: number; resetAt: number }>()
 export interface RateLimitResult {
   limited: boolean
   retryAfterSeconds: number
@@ -29,11 +17,11 @@ function normalizeIdentity(value: string): string {
   return value.trim()
 }
 
-export async function checkWebRateLimit(
+export function checkWebRateLimit(
   scope: "user" | "ip",
   identity: string,
   resource: string
-): Promise<RateLimitResult> {
+): RateLimitResult {
   const safeScope = scope === "user" ? "user" : "ip"
   const safeIdentity = normalizeIdentity(identity)
   const safeResource = resource.trim()
@@ -48,16 +36,24 @@ export async function checkWebRateLimit(
 
   const limit = RATE_LIMIT_BY_SCOPE[safeScope]
 
-  const [limited, ttlMs] = (await redis.eval(
-    RATE_LIMIT_SCRIPT,
-    1,
-    `web:rate:v1:${identityHash}`,
-    String(RATE_WINDOW_MS),
-    String(limit)
-  )) as [number, number]
+  const key = `web:rate:v1:${identityHash}`
+  const now = Date.now()
+  let bucket = buckets.get(key)
+  if (!bucket || bucket.resetAt <= now) {
+    if (buckets.size >= MAX_BUCKETS) {
+      const oldestKey = buckets.keys().next().value
+      if (oldestKey) buckets.delete(oldestKey)
+    }
+    bucket = { count: 0, resetAt: now + RATE_WINDOW_MS }
+    buckets.set(key, bucket)
+  }
+  bucket.count += 1
+  buckets.delete(key)
+  buckets.set(key, bucket)
+  const ttlMs = bucket.resetAt - now
 
   return {
-    limited: limited === 1,
+    limited: bucket.count > limit,
     retryAfterSeconds: Math.max(1, Math.ceil(ttlMs / 1000)),
   }
 }

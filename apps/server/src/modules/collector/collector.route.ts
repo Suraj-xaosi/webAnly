@@ -26,5 +26,5 @@ collectorRouter.post("/collect", asyncHandler(async (req: Request, res: Response
   const rateLimit = await handleCollectEvent(req, parsedBody.data);
   if (rateLimit) return sendRateLimitResponse(res, rateLimit);
 
-  return res.status(200).send("COLLECTOR : Event sent to Kafka");
+  return res.status(200).send("COLLECTOR : Event processed");
 }));

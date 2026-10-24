@@ -1,7 +1,7 @@
 import "server-only"
 import { Prisma, prisma } from "@repo/db"
 import { DAY_NAMES, DIMENSION_COL_MAP, MONTH_NAMES, TRUNC_FOR, type Interval } from "./helper/analyticsConstants"
-import { getAnalyticsDateBounds, readCachedResponse, writeCachedResponse } from "./helper/analyticsRouteUtils"
+import { getAnalyticsDateBounds } from "./helper/analyticsRouteUtils"
 import type { Dimension, DimensionTimeseriesResponse } from "@repo/types/analytics"
 
 export async function fetchDimensionTimeseriesData(
@@ -13,10 +13,6 @@ export async function fetchDimensionTimeseriesData(
   timezone: string,
   interval: Interval
 ): Promise<DimensionTimeseriesResponse> {
-  const cacheKey = `dimension-timeseries:${domainId}:${dimension}:${value}:${interval}:${from}:${to}:${timezone}`
-  const cachedResponse = await readCachedResponse<DimensionTimeseriesResponse>(cacheKey)
-  if (cachedResponse) return cachedResponse
-
   const { lowerBoundSql, upperBoundSql } = getAnalyticsDateBounds(from, to, timezone)
   const colId = Prisma.raw(`"${DIMENSION_COL_MAP[dimension]}"`)
   let data: { date: string; views: number; visitors: number }[]
@@ -70,6 +66,5 @@ export async function fetchDimensionTimeseriesData(
   }
 
   const responseBody: DimensionTimeseriesResponse = { dimension, value, interval, from, to, timezone, data }
-  await writeCachedResponse(cacheKey, responseBody, to, timezone)
   return responseBody
 }

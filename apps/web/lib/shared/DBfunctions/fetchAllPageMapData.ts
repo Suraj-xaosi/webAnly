@@ -2,8 +2,6 @@ import "server-only"
 import { prisma } from "@repo/db"
 import {
   getAnalyticsDateBounds,
-  readCachedResponse,
-  writeCachedResponse,
 } from "./helper/analyticsRouteUtils"
 import type {
   PageMapEdge,
@@ -26,11 +24,6 @@ export async function fetchAllPageMapData(
   to: string,
   timezone: string
 ): Promise<PageMapResponse> {
-  const cacheKey = `all-page-map:${domainId}:${from}:${to}:${timezone}:v2`
-
-  const cachedResponse = await readCachedResponse<PageMapResponse>(cacheKey)
-  if (cachedResponse) return cachedResponse
-
   const { lowerBoundSql, upperBoundSql } = getAnalyticsDateBounds(
     from,
     to,
@@ -156,6 +149,5 @@ export async function fetchAllPageMapData(
     edges: row?.edges ?? [],
   }
 
-  await writeCachedResponse(cacheKey, responseBody, to, timezone)
   return responseBody
 }
