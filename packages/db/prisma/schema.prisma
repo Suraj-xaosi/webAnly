@@ -220,6 +220,7 @@ model PageVisit {
   domain Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
 
   @@index([domainId, visitedAt])
+  @@index([visitedAt, domainId])
   @@index([domainId, visitorId])
   @@index([domainId, page])
   @@index([domainId, previousPage, visitedAt])

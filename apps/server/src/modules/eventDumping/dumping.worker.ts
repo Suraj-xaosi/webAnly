@@ -1,8 +1,6 @@
 import { createConsumer }           from "../../shared/config/kafka/kafkaClient.js";
 import dumpInDB                     from "./functions/dumpInDB.js";
 import { KAFKA_TOPICS, KAFKA_GROUPS } from "../../shared/config/kafka.js";
-import { redis }                    from "@repo/redis";
-import { DOMAIN_ACTIVITY_SET_KEY }  from "../../shared/config/rediskeys.js";
 
 const consumer = createConsumer(KAFKA_GROUPS.ANALYTICS_WORKERS);
 const DB_RETRY_BACKOFF_MS = 1_000;
@@ -56,13 +54,6 @@ export async function startAnalyticsWorker() {
       }
 
       await persistEventWithOneRetry(eventData);
-
-      // Mark domain as active for spike detection 
-      try {
-        await redis.sadd(DOMAIN_ACTIVITY_SET_KEY, eventData.domainId);
-      } catch (err) {
-        console.error(" EVENT DUMPING WORKER: Failed to mark domain activity in Redis", err);
-      }
     },
   });
 }
