@@ -60,9 +60,9 @@ export default function RootLayout({
         <script
           src="https://webanly-dashboard.vercel.app/script.js"
           data-collect-api-url="https://webanly.onrender.com/collect"
-          data-domain-name="webanly-dashboard.vercel.app715"
-          data-api-key="41d3fcc4-19ab-4ea6-8435-b3161bd87cb3"
-        />
+          data-domain-name="webanly-dashboard.vercel.app"
+          data-api-key="9a987899-9e7d-4e76-8289-678f1b489870">
+        </script>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
 
         <ThemeProvider>
