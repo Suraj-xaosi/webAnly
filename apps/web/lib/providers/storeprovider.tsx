@@ -1,21 +1,17 @@
 "use client"
 
-import { AppStore, createStore } from "../../store/store"
-import { ReactNode, useRef } from "react"
-import { Provider } from "react-redux"
+import { ReactNode, useReducer } from "react"
+import { AppStoreContext, initialAppState, rootReducer } from "../../store/store"
 import { ThemeNameSync } from "@/components/theme/theme-name-sync"
 
 const StoreProvider = ({ children }: { children: ReactNode }) => {
-  const storeRef = useRef<AppStore>(undefined)
-  if (!storeRef.current) {
-    storeRef.current = createStore()
-  }
+  const [state, dispatch] = useReducer(rootReducer, initialAppState)
 
   return (
-    <Provider store={storeRef.current}>
+    <AppStoreContext.Provider value={{ state, dispatch }}>
       <ThemeNameSync />
       {children}
-    </Provider>
+    </AppStoreContext.Provider>
   )
 }
 
