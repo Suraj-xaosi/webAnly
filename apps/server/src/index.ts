@@ -24,11 +24,24 @@ const httpServer = createServer(app);
 
 app.set("trust proxy", 1);
 app.use(helmet());
-app.use(cors({
-  origin: true,
-  methods: ["POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"],
-}));
+
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean | string) => void) => {
+    callback(null, origin || "*");
+  },
+  credentials: true,
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "X-API-Key",
+  ],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json({ limit: "32kb" }));
 
 app.use("/", collectorRouter);
