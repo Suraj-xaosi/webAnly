@@ -24,7 +24,7 @@ Webanly lets you track visitors on your own website without relying on third-par
 
 | Layer                 | Technology                                                             |
 | --------------------- | ---------------------------------------------------------------------- |
-| Frontend              | Next.js, React, TanStack Query, Redux Toolkit, shadcn/ui, Tailwind CSS |
+| Frontend              | Next.js, React, TanStack Query, shadcn/ui, Tailwind CSS |
 | Backend               | Express, Node.js                                                       |
 | Database              | PostgreSQL + Prisma                                                    |
 | Event pipeline        | Kafka                                                                  |
