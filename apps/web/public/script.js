@@ -218,6 +218,28 @@
 
   let lastPath = window.location.pathname;
   let flushed = false;
+  const HIDDEN_EXIT_GRACE_MS = 30000;
+  let hiddenTimer = null;
+
+  function clearHiddenExitTimer() {
+    if (hiddenTimer) {
+      clearTimeout(hiddenTimer);
+      hiddenTimer = null;
+    }
+  }
+
+  function scheduleHiddenExit() {
+    clearHiddenExitTimer();
+
+    hiddenTimer = setTimeout(function () {
+      if (flushed) {
+        return;
+      }
+
+      flushed = true;
+      flush("hidden");
+    }, HIDDEN_EXIT_GRACE_MS);
+  }
 
   function send(payload) {
     const body = JSON.stringify(payload);
@@ -295,6 +317,8 @@
   window.addEventListener("popstate", onRouteChange);
 
   window.addEventListener("pagehide", function () {
+    clearHiddenExitTimer();
+
     if (flushed) {
       return;
     }
@@ -303,7 +327,22 @@
     flush("pagehide");
   });
 
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") {
+      scheduleHiddenExit();
+      return;
+    }
+
+    clearHiddenExitTimer();
+
+    state.startedAt = Date.now();
+    state.pageTitle = document.title;
+    flushed = false;
+  });
+
   window.addEventListener("pageshow", function (event) {
+    clearHiddenExitTimer();
+
     if (!event.persisted) {
       return;
     }

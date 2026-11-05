@@ -20,9 +20,6 @@ type EventData = {
 };
 
 export default async function dumpInDB(eventData: EventData) {
-  if (eventData.exitType === "hidden") {
-    return;
-  }
   await prisma.pageVisit.create({
     data: {
       domainId:     eventData.domainId,

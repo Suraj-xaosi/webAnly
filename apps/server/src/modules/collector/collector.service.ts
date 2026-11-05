@@ -38,10 +38,6 @@ export async function handleCollectEvent(
 
   const exitType = parseExitType(body.exitType);
 
-  if (exitType === "hidden") {
-    return null;
-  }
-
   const domain = await apikeyChecker(body.apikey);
 
   const allowed = isOriginAllowed(
