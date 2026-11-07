@@ -22,7 +22,7 @@ export async function fetchTimeseriesData(
     SELECT
       COUNT(*)::int AS views,
       COUNT(DISTINCT "visitorId")::int AS visitors,
-      COUNT(*) FILTER (WHERE "exitType" = 'pagehide')::int AS exits
+      COUNT(DISTINCT "vistorId") FILTER (WHERE "exitType" = 'pagehide')::int AS exits
     FROM "page_visit"
     WHERE "domainId" = ${domainId}
       AND "visitedAt"::timestamptz >= ${lowerBoundSql}

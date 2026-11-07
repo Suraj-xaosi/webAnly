@@ -68,7 +68,7 @@ function mergeWebSocketEvent(
           previous.summary.visitors +
           (from === to && eventData.isNewVisitorToday === true ? 1 : 0),
         exits:
-          previous.summary.exits + (eventData.exitType === "pagehide" ? 1 : 0),
+          previous.summary.exits + (from === to && eventData.exitType === "pagehide" && eventData.isNewVisitorToday===true ? 1 : 0),
       }
     : undefined;
 
