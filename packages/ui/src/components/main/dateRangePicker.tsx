@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useMemo } from "react"
 import {
   format,
   subDays,
@@ -131,13 +131,6 @@ export function DateRangePicker({
   const [activePreset, setActivePreset] = useState("Last 28 Days")
   const [activeInterval, setActiveInterval] =
     useState<Interval>(DEFAULT_INTERVAL)
-
-  // Keep internal state in sync if parent controls `value` and changes it externally
-  useEffect(() => {
-    if (value) {
-      setInternalApplied(value)
-    }
-  }, [value])
 
   const applied = value ?? internalApplied
 
