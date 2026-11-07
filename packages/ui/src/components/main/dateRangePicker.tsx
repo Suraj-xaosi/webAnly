@@ -127,7 +127,7 @@ export function DateRangePicker({ value, onApply, timezone = "UTC" }: DateRangeP
 
       <PopoverContent
         align="start"
-        className="max-h-[calc(100dvh-1rem)] max-w-[calc(100vw-1.5rem)] overflow-y-auto p-0"
+        className="w-auto max-h-[calc(100dvh-1rem)] max-w-[calc(100vw-1.5rem)] overflow-y-auto p-0"
       >
         <div className="flex flex-col sm:flex-row">
           <div className="grid max-h-36 grid-cols-2 overflow-y-auto border-b py-2 sm:flex sm:max-h-none sm:min-w-[145px] sm:flex-col sm:border-b-0 sm:border-r sm:py-3">
