@@ -21,9 +21,15 @@ const AnalyticsChatWidget = dynamic(
 export function AnalyticsChatLauncher() {
   const { activeDomainId: domainId } = useDomainSelection()
   const [open, setOpen] = useState(false)
+  const [hasOpened, setHasOpened] = useState(false)
+
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen)
+    if (nextOpen) setHasOpened(true)
+  }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
           variant="outline"
@@ -35,12 +41,15 @@ export function AnalyticsChatLauncher() {
         </Button>
       </DialogTrigger>
       <DialogContent
+        activityMode={open ? "visible" : "hidden"}
         showCloseButton
         onPointerDownOutside={(event) => event.preventDefault()}
         onInteractOutside={(event) => event.preventDefault()}
         className="h-[min(86vh,760px)] w-[min(92vw,980px)] max-w-none overflow-hidden border-0 bg-transparent p-0 shadow-none ring-0"
       >
-        {domainId && <AnalyticsChatWidget key={domainId} domainId={domainId} />}
+        {hasOpened && domainId && (
+          <AnalyticsChatWidget key={domainId} domainId={domainId} />
+        )}
       </DialogContent>
     </Dialog>
   )
