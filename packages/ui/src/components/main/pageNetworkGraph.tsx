@@ -13,7 +13,7 @@ import {
 } from "d3-force"
 import { useMemo, useRef, useState } from "react"
 
-export type PageNetworkMetric = "views" | "visitors"
+type PageNetworkMetric = "views" | "visitors"
 
 export interface PageNetworkNode {
   id: string

@@ -61,6 +61,7 @@ function mergeWebSocketEvent(
   const label = getHourBucketLabel(eventTimestamp, timezone);
 
   const isNewVisitor = Boolean(eventData.isNewVisitor);
+
   const summary = previous?.summary
     ? {
         views: previous.summary.views + 1,
@@ -68,7 +69,12 @@ function mergeWebSocketEvent(
           previous.summary.visitors +
           (from === to && eventData.isNewVisitorToday === true ? 1 : 0),
         exits:
-          previous.summary.exits + (from === to && eventData.exitType === "pagehide" && eventData.isNewVisitorToday===true ? 1 : 0),
+          previous.summary.exits +
+          (from === to &&
+          eventData.exitType === "pagehide" &&
+          eventData.isNewVisitorToday === true
+            ? 1
+            : 0),
       }
     : undefined;
 
