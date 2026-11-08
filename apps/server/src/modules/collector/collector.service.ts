@@ -83,7 +83,8 @@ export async function handleCollectEvent(
     timeSpent,
     visitedAt,
   };
-
+  console.log(`event data:${eventData}`)
+  
   await producer.send({
     topic: KAFKA_TOPICS.SITE_EVENTS,
     messages: [{ key: domain.domainId, value: JSON.stringify(eventData) }],
