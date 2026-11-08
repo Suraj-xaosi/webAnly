@@ -11,14 +11,8 @@ function initGeoIP(): Promise<void> {
     const dbPath = fileURLToPath(
       new URL('../../../../GeoLite2-City.mmdb', import.meta.url)
     );
-    initPromise = open<CityResponse>(dbPath)
-      .then((reader) => {
+    initPromise = open<CityResponse>(dbPath).then((reader) => {
         lookup = reader;
-        console.info('GeoIP database loaded successfully.');
-      })
-      .catch((error: unknown) => {
-        console.error(`Unable to load GeoIP database at ${dbPath}.`, error);
-        throw error;
       });
   }
   return initPromise;
@@ -50,14 +44,10 @@ function isPrivateIp(ip: string): boolean {
 export async function locationFromIp(
   ip: string
 ): Promise<{ city: string; country: string }> {
-  console.log(`location from ip : ${ip}`)
   if (!ip || isIP(ip) === 0) {
-    
-    console.warn('GeoIP lookup skipped: client IP is missing or invalid.');
     return { city: "Unknown", country: "Unknown" };
   }
   if (isPrivateIp(ip)) {
-    console.warn('GeoIP lookup skipped: client IP is private or local.');
     return { city: "Unknown", country: "Unknown" };
   }
 
@@ -66,9 +56,6 @@ export async function locationFromIp(
     if (!lookup) return { city: "Unknown", country: "Unknown" };
 
     const result = lookup.get(ip);
-    if (!result?.country?.names?.en && !result?.registered_country?.names?.en) {
-      console.warn('GeoIP database has no country record for a public client IP.');
-    }
     return {
       city: result?.city?.names?.en ?? "Unknown",
       country:

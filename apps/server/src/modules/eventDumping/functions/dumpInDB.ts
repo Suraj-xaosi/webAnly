@@ -45,5 +45,7 @@ export default async function dumpInDB(eventData: EventData) {
     domainId: eventData.domainId,
     domainName: eventData.domainName,
     visitorId: eventData.visitorId,
+    country:eventData.country,
+    city:eventData.city
   });
 }
