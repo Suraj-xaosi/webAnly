@@ -1,6 +1,6 @@
 
-import path from 'path';
 import { isIP } from 'node:net';
+import { fileURLToPath } from 'node:url';
 import { open, CityResponse, Reader } from 'maxmind';
 
 let lookup: Reader<CityResponse> | null = null;
@@ -8,7 +8,9 @@ let initPromise: Promise<void> | null = null;
 
 function initGeoIP(): Promise<void> {
   if (!initPromise) {
-    const dbPath = path.join(process.cwd(), 'GeoLite2-City.mmdb');
+    const dbPath = fileURLToPath(
+      new URL('../../../../GeoLite2-City.mmdb', import.meta.url)
+    );
     initPromise = open<CityResponse>(dbPath).then((reader) => {
       lookup = reader;
     });
@@ -52,7 +54,10 @@ export async function locationFromIp(
     const result = lookup.get(ip);
     return {
       city: result?.city?.names?.en ?? "Unknown",
-      country: result?.country?.names?.en ?? "Unknown",
+      country:
+        result?.country?.names?.en ??
+        result?.registered_country?.names?.en ??
+        "Unknown",
     };
   } catch (error) {
     console.error(`Error looking up location for IP ${ip}:`, error);
