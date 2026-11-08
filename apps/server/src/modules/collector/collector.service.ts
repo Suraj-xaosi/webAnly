@@ -31,13 +31,6 @@ export async function handleCollectEvent(
   req: Request,
   body: CollectorEventInput
 ): Promise<CollectorRateLimitResult | null> {
-  console.info("Collector IP diagnostics:", {
-    ip: req.ip,
-    ips: req.ips,
-    forwardedFor: req.get("x-forwarded-for"),
-    socketIp: req.socket.remoteAddress,
-  });
-
   const visitorIP = extractRealIp(req.ip || req.socket.remoteAddress || "");
 
   const ipRateLimit = await checkCollectorIpRateLimit(visitorIP);

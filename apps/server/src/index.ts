@@ -22,7 +22,7 @@ import { errorHandler } from "./shared/middleware/errors.js";
 const app        = express();
 const httpServer = createServer(app);
 
-app.set("trust proxy", 1);
+app.set("trust proxy", 3);
 app.use(helmet());
 
 const corsOptions = {
