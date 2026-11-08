@@ -29,7 +29,7 @@ function buildSpikeAlert(domainName: string, parsed: any): NotificationContent {
   const spikeAt = spikeDate ? new Date(spikeDate) : new Date();
 
   return {
-    title: `🚨 Traffic spike on ${domainName}`,
+    title: ` Traffic spike on ${domainName}`,
     message: `Got ${visitorCountIn5min} visitors, above the expected ${expectedVisitors}.`,
     data: {
       visitorCountIn5min,
@@ -48,7 +48,7 @@ function buildDomainExpiring(domainName: string, parsed: any): NotificationConte
     : "soon";
 
   return {
-    title: `⏳ ${domainName} is expiring soon`,
+    title: ` ${domainName} is expiring soon`,
     message: `This domain's plan ends on ${readable}. Extend or reactivate to keep tracking running.`,
     data: {
       endsAt: endsAtDate ? endsAtDate.toISOString() : null,
@@ -61,7 +61,7 @@ function buildDomainExpired(domainName: string, parsed: any): NotificationConten
   const endsAtDate = endsAt ? new Date(endsAt) : null;
 
   return {
-    title: `🔒 ${domainName} has been deactivated`,
+    title: ` ${domainName} has been deactivated`,
     message: `This domain's plan expired and event collection has stopped. Reactivate to resume tracking.`,
     data: {
       endsAt: endsAtDate ? endsAtDate.toISOString() : null,
