@@ -1,4 +1,3 @@
-
 import { isIP } from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { open, CityResponse, Reader } from 'maxmind';
@@ -12,8 +11,8 @@ function initGeoIP(): Promise<void> {
       new URL('../../../../GeoLite2-City.mmdb', import.meta.url)
     );
     initPromise = open<CityResponse>(dbPath).then((reader) => {
-        lookup = reader;
-      });
+      lookup = reader;
+    });
   }
   return initPromise;
 }
@@ -41,6 +40,7 @@ function isPrivateIp(ip: string): boolean {
     /^fe[89ab]/.test(normalizedIp)
   );
 }
+
 export async function locationFromIp(
   ip: string
 ): Promise<{ city: string; country: string }> {
@@ -57,7 +57,10 @@ export async function locationFromIp(
 
     const result = lookup.get(ip);
     return {
-      city: result?.city?.names?.en ?? "Unknown",
+      city:
+        result?.subdivisions?.[0]?.names?.en ??
+        result?.city?.names?.en ??
+        "Unknown",
       country:
         result?.country?.names?.en ??
         result?.registered_country?.names?.en ??
@@ -67,4 +70,4 @@ export async function locationFromIp(
     console.error('GeoIP lookup failed.', error);
     return { city: "Unknown", country: "Unknown" };
   }
-}
+      }
