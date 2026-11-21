@@ -1,8 +1,8 @@
-"use server"
+﻿"use server"
 
 import { prisma } from "@repo/db"
 import { requireSession } from "./requireSession"
-import { actionErr, actionOk } from "@repo/types/actionResult"
+import { actionErr, actionOk } from "@/lib/actionResult"
 
 const DOMAIN_PATTERN = /^(?=.{1,253}$)(?!-)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i
 
@@ -55,8 +55,7 @@ export async function setDomain(domainName: string, expectedVisitors: number, de
 
     const threeDigitUid = Math.floor(Math.random() * 900 + 100).toString()
 
-    // New domains start as FREE + ACTIVE for a 10-day trial window.
-    // type/state have schema defaults, but set explicitly here for clarity.
+    // New domains start active for a 10-day trial window.
     const endsAt = new Date(Date.now() + FREE_TRIAL_DAYS * 24 * 60 * 60 * 1000)
 
     const domain = await prisma.domain.create({
@@ -64,7 +63,6 @@ export async function setDomain(domainName: string, expectedVisitors: number, de
         domainName: `${sanitizedDomain}${threeDigitUid}`,
         userId: user.id,
         apikey: crypto.randomUUID(),
-        type: "FREE",
         state: "ACTIVE",
         endsAt,
         expectedVisitors: safeExpectedVisitors,

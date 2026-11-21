@@ -1,14 +1,14 @@
-import { useQueryClient } from "@tanstack/react-query";
+﻿import { useQueryClient } from "@tanstack/react-query";
 import {
   ANALYTICS_DIMENSIONS,
   type Dimension,
   type DimensionPoint,
   type DimensionResponse,
   type DimensionsResponse,
-} from "@repo/types/analytics";
-import type { RealtimeDimensionResult, WebSocketMessage } from "@repo/types/realtime";
+} from "@/types/analytics";
+import type { RealtimeDimensionResult, WebSocketMessage } from "@/types/realtime";
 import { useDimensions } from "@/hooks/analytics/useDimensions";
-import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys";
+import { queryKeys } from "@/lib/queryKeys";
 import { useRealtimeContext } from "@/components/wrapper/RealtimeProvider";
 import { useRealtimeMerge } from "./useRealtimeMerge";
 

@@ -1,8 +1,8 @@
-"use server"
+﻿"use server"
 
 import { requireSession } from "./requireSession";
 import { findOwnedDomain } from "./findOwnedDomain";
-import { actionErr, actionOk } from "@repo/types/actionResult"
+import { actionErr, actionOk } from "@/lib/actionResult"
 
 export async function getApikey(domainId: string) {
   try {

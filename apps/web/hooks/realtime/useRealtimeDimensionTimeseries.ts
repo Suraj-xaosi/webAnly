@@ -1,10 +1,10 @@
-import { useQueryClient } from "@tanstack/react-query";
+﻿import { useQueryClient } from "@tanstack/react-query";
 import { useDimensionTimeseries } from "../analytics/useDimTimeseries";
 import { useRealtimeContext } from "@/components/wrapper/RealtimeProvider";
 import { useRealtimeMerge } from "./useRealtimeMerge";
 import { getHourBucketLabel, mergeHourlyPoint } from "./timeseriesUtils";
-import type { WebSocketMessage } from "@repo/types/realtime";
-import type { Dimension, DimensionTimeseriesResponse } from "@repo/types/analytics";
+import type { WebSocketMessage } from "@/types/realtime";
+import type { Dimension, DimensionTimeseriesResponse } from "@/types/analytics";
 
 export interface RealtimeDimensionTimeseriesResult {
   data: DimensionTimeseriesResponse["data"];

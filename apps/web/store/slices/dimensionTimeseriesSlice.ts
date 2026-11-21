@@ -1,4 +1,4 @@
-  import type { Dimension } from "@repo/types/analytics"
+﻿  import type { Dimension } from "@/types/analytics"
   import type { RootState } from "../store"
 
   export type DimensionTimeseriesMode = "historical" | "live"

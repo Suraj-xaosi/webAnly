@@ -1,7 +1,7 @@
-import { useQueryClient } from "@tanstack/react-query"
+﻿import { useQueryClient } from "@tanstack/react-query"
 import { setDomain } from "@/lib/Actions/setDomain"
-import { useApiMutation } from "@/lib/shared/tanstackFunctions/api"
-import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys"
+import { useApiMutation } from "@/lib/api"
+import { queryKeys } from "@/lib/queryKeys"
 
 export function useAddDomain() {
   const queryClient = useQueryClient();

@@ -1,10 +1,10 @@
-import { fetchApiData, useApiQuery } from "@/lib/shared/tanstackFunctions/api"
-import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys"
+﻿import { fetchApiData, useApiQuery } from "@/lib/api"
+import { queryKeys } from "@/lib/queryKeys"
 import {
   ALL_PAGE_MAP_VALUE,
   type PageMapResponse,
-} from "@repo/types/analytics"
-import type { ApiError } from "@repo/types/api"
+} from "@/types/analytics"
+import type { ApiError } from "@/types/api"
 
 interface PageMapParams {
   domainId: string

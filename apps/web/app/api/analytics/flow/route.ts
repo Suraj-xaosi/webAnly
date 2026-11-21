@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server"
-import { validateDateParams } from "@/lib/shared/DBfunctions/helper/TimeFunctions"
-import { analyticsErrorResponse } from "@/lib/shared/DBfunctions/helper/analyticsRouteUtils"
-import { fetchAllPageMapData } from "@/lib/shared/DBfunctions/fetchAllPageMapData"
-import { fetchFlowData } from "@/lib/shared/DBfunctions/fetchFlowData"
-import { ALL_PAGE_MAP_VALUE } from "@repo/types/analytics"
-import { requireActiveDomainAccess } from "@/lib/shared/DBfunctions/helper/requireActiveDomainAccess"
+﻿import { NextRequest, NextResponse } from "next/server"
+import { validateDateParams } from "@/app/api/analytics/_lib/TimeFunctions"
+import { analyticsErrorResponse } from "@/app/api/analytics/_lib/analyticsRouteUtils"
+import { fetchAllPageMapData } from "@/app/api/analytics/_lib/fetchAllPageMapData"
+import { fetchFlowData } from "@/app/api/analytics/_lib/fetchFlowData"
+import { ALL_PAGE_MAP_VALUE } from "@/types/analytics"
+import { requireActiveDomainAccess } from "@/app/api/analytics/_lib/requireActiveDomainAccess"
 
 export async function GET(req: NextRequest) {
   try {

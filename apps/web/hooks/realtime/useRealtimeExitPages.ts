@@ -1,10 +1,10 @@
-import { useQueryClient } from "@tanstack/react-query";
+﻿import { useQueryClient } from "@tanstack/react-query";
 import { useExitPages } from "../analytics/useExitPages";
 import { useRealtimeContext } from "@/components/wrapper/RealtimeProvider";
 import { useRealtimeMerge } from "./useRealtimeMerge";
-import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys";
-import type { ExitPagesResponse } from "@repo/types/analytics";
-import type { WebSocketMessage } from "@repo/types/realtime";
+import { queryKeys } from "@/lib/queryKeys";
+import type { ExitPagesResponse } from "@/types/analytics";
+import type { WebSocketMessage } from "@/types/realtime";
 
 export function useRealtimeExitPages(
   domainId: string,

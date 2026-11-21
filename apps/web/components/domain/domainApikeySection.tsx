@@ -1,11 +1,9 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import { useDomain } from "@/hooks/domainCrud/useDomain"
 import { useDeleteDomain } from "@/hooks/domainCrud/useDeleteDomain"
 import { useRotateDomainApiKey } from "@/hooks/domainCrud/useRotateDomainApiKey"
-import { usePricing } from "@/hooks/razorpayIntegration/usePricing"
-import { useRazorpayCheckout } from "@/hooks/razorpayIntegration/useRazorpayCheckout"
 import { Button } from "@workspace/ui/components/button"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import {
@@ -34,129 +32,20 @@ import {
   KeyIcon,
   Trash2Icon,
   Loader2Icon,
-  CreditCardIcon,
   RotateCwIcon,
 } from "lucide-react"
-import { cn } from "@workspace/ui/lib/utils"
 import { getDisplayDomainName } from "@workspace/ui/lib/domainName"
-import type { Domain } from "@repo/types/domain"
+import type { Domain } from "@/types/domain"
 
 function maskKey(key: string) {
   if (key.length <= 8) return "•".repeat(key.length)
   return `${key.slice(0, 4)}${"•".repeat(key.length - 8)}${key.slice(-4)}`
 }
 
-// Turns the domain's type/state/endsAt into what the badge says and what
-// the pay button should say. Only two real backend outcomes exist
-// (REACTIVATE vs EXTEND)
-function getBillingInfo(domain: Domain) {
-  if (domain.state === "DEACTIVATED") {
-    return {
-      badgeLabel: "Expired",
-      badgeClass: "bg-destructive/10 text-destructive",
-      buttonLabel: "Reactivate",
-    }
-  }
-
-  const daysLeft = Math.max(
-    0,
-    Math.ceil(
-      (new Date(domain.endsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-    )
-  )
-
-  if (domain.type === "FREE") {
-    return {
-      badgeLabel: `Free · ${daysLeft}d left`,
-      badgeClass: "bg-muted text-muted-foreground",
-      buttonLabel: "Upgrade to Premium",
-    }
-  }
-
-  return {
-    badgeLabel: `Premium · ${daysLeft}d left`,
-    badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-    buttonLabel: "Extend +30 days",
-  }
-}
-
-function BillingButton({
-  domain,
-  priceLabel,
-}: {
-  domain: Domain
-  priceLabel: string | null
-}) {
-  const checkout = useRazorpayCheckout()
-  const { badgeLabel, badgeClass, buttonLabel } = getBillingInfo(domain)
-
-  const isThisDomainBusy =
-    checkout.activeDomainId === domain.id &&
-    ["creating-order", "awaiting-payment", "confirming"].includes(
-      checkout.status
-    )
-
-  const statusText =
-    checkout.status === "creating-order"
-      ? "Starting checkout..."
-      : checkout.status === "awaiting-payment"
-        ? "Waiting for payment..."
-        : checkout.status === "confirming"
-          ? "Confirming payment..."
-          : null
-
-  return (
-    <div className="flex flex-col gap-2">
-      <span
-        className={cn("w-fit rounded-full px-2 py-0.5 text-xs", badgeClass)}
-      >
-        {badgeLabel}
-      </span>
-
-      <Button
-        size="sm"
-        variant="outline"
-        className="w-fit gap-1.5"
-        disabled={isThisDomainBusy || !checkout.scriptReady}
-        onClick={() => checkout.payForDomain(domain)}
-      >
-        {isThisDomainBusy ? (
-          <Loader2Icon className="size-3.5 animate-spin" />
-        ) : (
-          <CreditCardIcon className="size-3.5" />
-        )}
-        {isThisDomainBusy
-          ? statusText
-          : `${buttonLabel}${priceLabel ? ` — ${priceLabel}` : ""}`}
-      </Button>
-
-      {checkout.scriptStatus === "loading" && (
-        <p className="text-xs text-muted-foreground">
-          Loading secure checkout…
-        </p>
-      )}
-      {checkout.scriptStatus === "error" && (
-        <p className="text-xs text-destructive" role="alert">
-          Secure checkout couldn&apos;t load. Check your connection or browser
-          extensions, then reload this page.
-        </p>
-      )}
-      {checkout.status === "error" && checkout.activeDomainId === domain.id && (
-        <p className="text-xs text-destructive" role="alert">
-          {checkout.errorMessage ??
-            "Checkout couldn't be started (no need). Service will be for FREE now  . he he"}
-        </p>
-      )}
-    </div>
-  )
-}
-
 function ApiKeyRow({
   domain,
-  priceLabel,
 }: {
   domain: Domain
-  priceLabel: string | null
 }) {
   const [revealed, setRevealed] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -225,8 +114,6 @@ function ApiKeyRow({
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-3">
-          <BillingButton domain={domain} priceLabel={priceLabel} />
-
           {deleteMutation.error && (
             <p className="w-full text-sm text-destructive" role="alert">
               {deleteMutation.error.message}
@@ -323,9 +210,6 @@ function ApiKeyRow({
 
 export function DomainApiKeySection() {
   const { data: domains, isLoading, error, refetch } = useDomain()
-  const { data: pricing } = usePricing()
-
-  const priceLabel = pricing ? `₹${pricing.paidDomainPrice / 100}` : null
 
   if (isLoading && !domains) {
     return (
@@ -388,7 +272,6 @@ export function DomainApiKeySection() {
           >
             <ApiKeyRow
               domain={domain as unknown as Domain}
-              priceLabel={priceLabel}
             />
           </div>
         ))}

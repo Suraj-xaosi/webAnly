@@ -1,11 +1,11 @@
-"use server"
+﻿"use server"
 
 import { randomUUID } from "node:crypto"
 import { prisma } from "@repo/db"
 import { deleteCache, redis } from "@repo/redis"
 import { requireSession } from "./requireSession"
 import { findOwnedDomain } from "./findOwnedDomain"
-import { actionErr, actionOk } from "@repo/types/actionResult"
+import { actionErr, actionOk } from "@/lib/actionResult"
 
 const ROTATION_COOLDOWN_SECONDS = 60
 

@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { DIMENSION_COL_MAP, VALID_INTERVALS, type Interval } from "@/lib/shared/DBfunctions/helper/analyticsConstants";
-import type { Dimension } from "@repo/types/analytics";
-import { validateDateParams } from "@/lib/shared/DBfunctions/helper/TimeFunctions";
-import { fetchDimensionTimeseriesData } from "@/lib/shared/DBfunctions/fetchDimensionTimeseriesData";
-import { analyticsErrorResponse } from "@/lib/shared/DBfunctions/helper/analyticsRouteUtils";
-import { requireActiveDomainAccess } from "@/lib/shared/DBfunctions/helper/requireActiveDomainAccess";
+﻿import { NextRequest, NextResponse } from "next/server";
+import { DIMENSION_COL_MAP, VALID_INTERVALS, type Interval } from "@/app/api/analytics/_lib/analyticsConstants";
+import type { Dimension } from "@/types/analytics";
+import { validateDateParams } from "@/app/api/analytics/_lib/TimeFunctions";
+import { fetchDimensionTimeseriesData } from "@/app/api/analytics/_lib/fetchDimensionTimeseriesData";
+import { analyticsErrorResponse } from "@/app/api/analytics/_lib/analyticsRouteUtils";
+import { requireActiveDomainAccess } from "@/app/api/analytics/_lib/requireActiveDomainAccess";
 
 export async function GET(req: NextRequest) {
   try {

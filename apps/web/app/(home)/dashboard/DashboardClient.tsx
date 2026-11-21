@@ -1,6 +1,5 @@
 "use client"
 
-import { AnalyticsChatLauncher } from "@/components/ai/analyticsChatLauncher"
 import { format } from "date-fns";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectFrom, selectTo, selectInterval, setDateRange,selectTimezone } from "@/store/slices/dashboardSlice";
@@ -132,7 +131,6 @@ export default function DashboardClient() {
           <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <DomainSwitch />
-              <AnalyticsChatLauncher />
             </div>
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <DateRangePicker

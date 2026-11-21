@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateDateParams } from "@/lib/shared/DBfunctions/helper/TimeFunctions";
-import { fetchAllDimensionData } from "@/lib/shared/DBfunctions/fetchDimensionData";
-import { analyticsErrorResponse } from "@/lib/shared/DBfunctions/helper/analyticsRouteUtils";
-import { requireActiveDomainAccess } from "@/lib/shared/DBfunctions/helper/requireActiveDomainAccess";
+import { validateDateParams } from "@/app/api/analytics/_lib/TimeFunctions";
+import { fetchAllDimensionData } from "@/app/api/analytics/_lib/fetchDimensionData";
+import { analyticsErrorResponse } from "@/app/api/analytics/_lib/analyticsRouteUtils";
+import { requireActiveDomainAccess } from "@/app/api/analytics/_lib/requireActiveDomainAccess";
 
 export async function GET(req: NextRequest) {
   try {

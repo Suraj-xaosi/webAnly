@@ -1,4 +1,4 @@
-
+﻿
 "use client"
 import { memo, useState } from "react";
 import { ChartBarMixed, type DataKey } from "@workspace/ui/components/main/ChartBarMixed";
@@ -14,8 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
-import type { Dimension, DimensionPoint } from "@repo/types/analytics";
-import type { ApiError } from "@repo/types/api";
+import type { Dimension, DimensionPoint } from "@/types/analytics";
+import type { ApiError } from "@/types/api";
 import { Badge } from "@workspace/ui/components/badge";
 import { useAppDispatch } from "@/store/hooks";
 import { openDimensionTimeseries } from "@/store/slices/dimensionTimeseriesSlice";

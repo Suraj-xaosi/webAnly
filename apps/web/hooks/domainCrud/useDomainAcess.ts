@@ -1,6 +1,6 @@
-import { isActiveDomain } from "@/lib/Actions/isActiveDomain"
-import { useApiQuery } from "@/lib/shared/tanstackFunctions/api"
-import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys"
+﻿import { isActiveDomain } from "@/lib/Actions/isActiveDomain"
+import { useApiQuery } from "@/lib/api"
+import { queryKeys } from "@/lib/queryKeys"
 
 export function useDomainAccess(domainId: string) {
   return useApiQuery({

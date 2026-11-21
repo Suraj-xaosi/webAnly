@@ -1,7 +1,7 @@
-import { fetchApiData, useApiQuery, normalizeApiError } from "@/lib/shared/tanstackFunctions/api";
-import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys";
-import type { DimensionTimeseriesResponse, DimensionTimeseriesParams } from "@repo/types/analytics";
-import type { ApiError } from "@repo/types/api";
+﻿import { fetchApiData, useApiQuery, normalizeApiError } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
+import type { DimensionTimeseriesResponse, DimensionTimeseriesParams } from "@/types/analytics";
+import type { ApiError } from "@/types/api";
 
 async function fetchDimensionTimeseries(
   params: DimensionTimeseriesParams
@@ -29,5 +29,5 @@ export function useDimensionTimeseries(params: DimensionTimeseriesParams) {
   });
 }
 
-export type { DimensionTimeseriesResponse, DimensionTimeseriesParams } from "@repo/types/analytics";
-export type { ApiError } from "@repo/types/api";
+export type { DimensionTimeseriesResponse, DimensionTimeseriesParams } from "@/types/analytics";
+export type { ApiError } from "@/types/api";

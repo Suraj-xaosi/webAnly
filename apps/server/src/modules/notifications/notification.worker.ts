@@ -8,7 +8,6 @@ const VALID_NOTIFICATION_TYPES = new Set<NotificationType>([
   "SPIKE_ALERT",
   "DOMAIN_EXPIRING",
   "DOMAIN_EXPIRED",
-  "BILLING",
   "SYSTEM",
 ]);
 
@@ -20,7 +19,7 @@ interface NotificationContent {
 
 // ── Per-type content builders ─────────────────────────────────────────────
 // Each producer (spikeCheck.ts, the expiry cron, the warning cron, the
-// payment webhook) sends whatever fields are relevant to its own event.
+// producers send whatever fields are relevant to their own event.
 // This worker never assumes a shape beyond `domainId` + `type` — everything
 // else is read defensively per-type below.
 
@@ -49,7 +48,7 @@ function buildDomainExpiring(domainName: string, parsed: any): NotificationConte
 
   return {
     title: ` ${domainName} is expiring soon`,
-    message: `This domain's plan ends on ${readable}. Extend or reactivate to keep tracking running.`,
+    message: `This domain's plan ends on ${readable}.`,
     data: {
       endsAt: endsAtDate ? endsAtDate.toISOString() : null,
     },
@@ -62,15 +61,14 @@ function buildDomainExpired(domainName: string, parsed: any): NotificationConten
 
   return {
     title: ` ${domainName} has been deactivated`,
-    message: `This domain's plan expired and event collection has stopped. Reactivate to resume tracking.`,
+    message: `This domain's plan expired and event collection has stopped.`,
     data: {
       endsAt: endsAtDate ? endsAtDate.toISOString() : null,
     },
   };
 }
 
-// Placeholder for BILLING (payment webhook lands this later) and as the
-// safe fallback for SYSTEM / any unrecognized type.
+// Safe fallback for SYSTEM / any unrecognized type.
 function buildGeneric(domainName: string, type: NotificationType, parsed: any): NotificationContent {
   return {
     title: `Notification for ${domainName}`,
@@ -139,7 +137,6 @@ export async function startNotificationWorker() {
           case "DOMAIN_EXPIRED":
             content = buildDomainExpired(domain.domainName, parsed);
             break;
-          case "BILLING":
           case "SYSTEM":
           default:
             content = buildGeneric(domain.domainName, type, parsed);

@@ -14,7 +14,7 @@ import {
   checkCollectorRateLimit,
   type CollectorRateLimitResult,
 } from "./functions/collectorRateLimiter.js";
-import type { CollectorEventInput } from "@repo/types/validation";
+import type { CollectorEventInput } from "./collector.validation.js";
 
 const VALID_EXIT_TYPES = new Set(["navigation", "pagehide", "hidden"]);
 

@@ -1,10 +1,10 @@
-"use server"
+﻿"use server"
 
 import { prisma } from "@repo/db"
 import { deleteCache } from "@repo/redis"
 import { requireSession } from "./requireSession"
 import { findOwnedDomain } from "./findOwnedDomain"
-import { actionErr, actionOk } from "@repo/types/actionResult"
+import { actionErr, actionOk } from "@/lib/actionResult"
 
 export async function deleteDomain(id: string) {
   try {
@@ -37,22 +37,9 @@ export async function deleteDomain(id: string) {
       const lockedDomain = domains[0]
       if (!lockedDomain) return { status: "not-found" as const }
 
-      const pendingPayment = await tx.payment.findFirst({
-        where: { domainId: lockedDomain.id, status: "PENDING" },
-        select: { id: true },
-      })
-
-      if (pendingPayment) return { status: "payment-pending" as const }
-
       await tx.domain.delete({ where: { id: lockedDomain.id } })
       return { status: "deleted" as const, apikey: lockedDomain.apikey }
     })
-
-    if (deletion.status === "payment-pending") {
-      return actionErr(
-        "A payment for this domain is still processing. Please wait a few minutes before deleting."
-      )
-    }
 
     if (deletion.status === "not-found") {
       return actionErr("Domain not found.")

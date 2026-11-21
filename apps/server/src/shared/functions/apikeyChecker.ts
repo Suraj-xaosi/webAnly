@@ -6,7 +6,6 @@ export interface DomainInfo {
   domainId: string;
   domainName: string;
   state: "ACTIVE" | "DEACTIVATED";
-  type: "FREE" | "PAID";
   defaultTimezone: string;
 }
 
@@ -41,7 +40,7 @@ export async function apikeyChecker(apikey: string): Promise<DomainInfo> {
   try {
     domain = await prisma.domain.findUnique({
       where: { apikey: normalizedApiKey },
-      select: { id: true, domainName: true, state: true, type: true, defaultTimezone: true },
+      select: { id: true, domainName: true, state: true, defaultTimezone: true },
     });
   } catch (error) {
     console.error("Failed to reach database while checking API key", error);
@@ -59,7 +58,6 @@ export async function apikeyChecker(apikey: string): Promise<DomainInfo> {
     domainId: domain.id,
     domainName: domain.domainName,
     state: domain.state,
-    type: domain.type,
     defaultTimezone: domain.defaultTimezone,
   };
 

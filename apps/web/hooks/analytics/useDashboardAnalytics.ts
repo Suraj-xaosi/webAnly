@@ -1,11 +1,11 @@
-import { useCallback, useMemo, useState } from "react"
-import type { Dimension } from "@repo/types/analytics"
+﻿import { useCallback, useMemo, useState } from "react"
+import type { Dimension } from "@/types/analytics"
 import { useDimensions } from "./useDimensions"
 import { useExitPages } from "./useExitPages"
 import { useFlow } from "./useFlow"
 import { useTimeseries } from "./useTimeseries"
 import { useAllPageMap } from "./useAllPageMap"
-import { ALL_PAGE_MAP_VALUE } from "@repo/types/analytics"
+import { ALL_PAGE_MAP_VALUE } from "@/types/analytics"
 
 const DIMENSIONS: Dimension[] = [
   "browser",

@@ -1,9 +1,9 @@
 
 import { Router, Request, Response } from "express";
-import { collectorEventSchema } from "@repo/types/validation";
 import { handleCollectEvent }        from "./collector.service.js";
 import type { CollectorRateLimitResult } from "./functions/collectorRateLimiter.js";
 import { asyncHandler } from "../../shared/middleware/asyncHandler.js";
+import { collectorEventSchema } from "./collector.validation.js";
 
 export const collectorRouter = Router();
 

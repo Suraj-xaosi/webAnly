@@ -1,7 +1,7 @@
-import { fetchApiData, useApiQuery } from "@/lib/shared/tanstackFunctions/api";
-import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys";
-import type { ApiError } from "@repo/types/api";
-import type { DimensionsResponse } from "@repo/types/analytics";
+﻿import { fetchApiData, useApiQuery } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
+import type { ApiError } from "@/types/api";
+import type { DimensionsResponse } from "@/types/analytics";
 
 interface DimensionsParams {
   domainId: string;

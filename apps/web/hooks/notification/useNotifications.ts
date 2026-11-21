@@ -1,11 +1,11 @@
-import { useQueryClient } from "@tanstack/react-query";
+﻿import { useQueryClient } from "@tanstack/react-query";
 import {
   getNotifications,
   markNotificationRead,
   markAllNotificationsRead,
 } from "@/lib/Actions/getNotifications";
-import { useApiMutation, useApiQuery } from "@/lib/shared/tanstackFunctions/api";
-import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys";
+import { useApiMutation, useApiQuery } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 
 export function useNotifications() {
   return useApiQuery({

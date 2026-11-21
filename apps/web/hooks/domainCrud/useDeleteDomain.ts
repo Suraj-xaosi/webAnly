@@ -1,7 +1,7 @@
-import { useQueryClient } from "@tanstack/react-query"
+﻿import { useQueryClient } from "@tanstack/react-query"
 import { deleteDomain } from "@/lib/Actions/deleteDomain"
-import { useApiMutation } from "@/lib/shared/tanstackFunctions/api"
-import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys"
+import { useApiMutation } from "@/lib/api"
+import { queryKeys } from "@/lib/queryKeys"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"          
 import { selectDomainId, setDomainId } from "@/store/slices/dashboardSlice" 
 

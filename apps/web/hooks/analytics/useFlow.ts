@@ -1,7 +1,7 @@
-import { fetchApiData, useApiQuery, normalizeApiError } from "@/lib/shared/tanstackFunctions/api";
-import { queryKeys } from "@/lib/shared/tanstackFunctions/queryKeys";
-import type { FlowParams, FlowResponse } from "@repo/types/analytics";
-import type { ApiError } from "@repo/types/api";
+﻿import { fetchApiData, useApiQuery, normalizeApiError } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
+import type { FlowParams, FlowResponse } from "@/types/analytics";
+import type { ApiError } from "@/types/api";
 
 async function fetchFlow(params: FlowParams): Promise<FlowResponse> {
   const { domainId, page, from, to, timezone } = params;
@@ -31,5 +31,5 @@ export function useFlow(params: FlowParams) {
   });
 }
 
-export type { FlowEntry, FlowParams, FlowResponse } from "@repo/types/analytics";
-export type { ApiError } from "@repo/types/api";
+export type { FlowEntry, FlowParams, FlowResponse } from "@/types/analytics";
+export type { ApiError } from "@/types/api";

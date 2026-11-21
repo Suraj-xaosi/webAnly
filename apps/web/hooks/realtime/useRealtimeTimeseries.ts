@@ -1,10 +1,10 @@
-import { useQueryClient } from "@tanstack/react-query";
+﻿import { useQueryClient } from "@tanstack/react-query";
 import { useTimeseries } from "../analytics/useTimeseries";
 import { useRealtimeContext } from "@/components/wrapper/RealtimeProvider";
 import { useRealtimeMerge } from "./useRealtimeMerge";
 import { getHourBucketLabel, mergeHourlyPoint } from "./timeseriesUtils";
-import type { RealtimeTimeseriesResult, WebSocketMessage } from "@repo/types/realtime";
-import type { TimeseriesResponse} from "@repo/types/analytics"
+import type { RealtimeTimeseriesResult, WebSocketMessage } from "@/types/realtime";
+import type { TimeseriesResponse} from "@/types/analytics"
 
 
 

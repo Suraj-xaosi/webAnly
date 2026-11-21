@@ -1,8 +1,8 @@
-"use server"
+﻿"use server"
 
 import { findOwnedDomain } from "./findOwnedDomain"
 import { requireSession } from "./requireSession"
-import { actionErr, actionOk } from "@repo/types/actionResult"
+import { actionErr, actionOk } from "@/lib/actionResult"
 
 export async function isActiveDomain(domainId: string) {
   try {

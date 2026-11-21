@@ -13,7 +13,6 @@ Webanly lets you track visitors on your own website without relying on third-par
 
 - A **live dashboard** showing visitors, page views, and events as they happen
 - **Historical analytics**: traffic over time, top pages, browsers, devices, countries, referrers, and exit pages
-- An **AI traffic analyst chatbot** that explains your traffic data and answers any question about your website's traffic in simple words
 - **Automatic spike alerts** when traffic jumps above your site's normal range
 - **Domain-scoped API keys**, so each tracked site is isolated
 - **Timezone-aware reporting**: "today" means today in the visitor's timezone, not the server's
@@ -74,7 +73,6 @@ webanly/
 
 ### Code organization
 
-- `packages/types` owns shared TypeScript contracts and runtime Zod schemas. Keep schemas used by multiple apps here and export them from a focused package entry point.
 - Keep Express middleware and HTTP-specific behavior in `apps/server`. Routes validate requests, async failures go to the central error handler, and service functions handle application logic.
 - Keep Next.js route handlers, server actions, and UI-specific behavior in the web app. Do not put framework middleware in the shared types package.
 

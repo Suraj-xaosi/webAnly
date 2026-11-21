@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useMemo, useState, type ReactNode } from "react"
 import { Card, CardHeader, CardTitle } from "@workspace/ui/components/card"
@@ -31,7 +31,7 @@ import { AnalyticsCardState } from "./analyticsCardState"
 import {
   ALL_PAGE_MAP_VALUE,
   type PageMapResponse,
-} from "@repo/types/analytics"
+} from "@/types/analytics"
 import {
   buildPageFlowChartData,
   type FlowMetric,
