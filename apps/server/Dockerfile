@@ -24,21 +24,17 @@ RUN npm prune --omit=dev
 # ---- Minimal runtime image ----
 FROM base AS runner
 WORKDIR /app
-RUN apk add --no-cache curl \
- && addgroup --system --gid 1001 nodejs \
+RUN addgroup --system --gid 1001 nodejs \
  && adduser --system --uid 1001 expressjs
 
 COPY --from=installer /app/node_modules ./node_modules
 COPY --from=installer /app/packages ./packages
 COPY --from=installer /app/apps/server ./apps/server
-
-COPY apps/server/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
- && chown -R expressjs:nodejs /app/apps/server
+COPY --from=installer --chown=expressjs:nodejs /app/apps/server/GeoLite2-City.mmdb /app/apps/server/GeoLite2-City.mmdb
+RUN chown -R expressjs:nodejs /app/apps/server
 
 USER expressjs
 WORKDIR /app/apps/server
 EXPOSE 4000
 
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["node", "dist/index.js"]

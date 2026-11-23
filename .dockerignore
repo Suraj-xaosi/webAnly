@@ -48,9 +48,6 @@ packages/db/src/generated/
 npm-debug.log*
 .DS_Store
 
-# GeoIP databases are downloaded during server startup when needed
-*.mmdb
-
 # Files intentionally excluded from Git
 CODEBASE_GUIDE_HINGLISH.md
 LLD_PRACTICES_HINGLISH.md

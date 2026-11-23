@@ -86,7 +86,6 @@ services:
       TOPIC_NAME_NOTIFICATIONS: notifications
       KAFKA_GROUP_ID: db.dumpers
       KAFKA_GROUP_ID_WORKER2: notification.workers
-      MAXMIND_LICENSE_KEY: ${MAXMIND_LICENSE_KEY:-}
     ports:
       - "4000:4000"
     depends_on:
