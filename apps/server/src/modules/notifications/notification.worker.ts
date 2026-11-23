@@ -6,8 +6,6 @@ const consumer = createConsumer(KAFKA_GROUPS.NOTIFICATION_WORKERS);
 
 const VALID_NOTIFICATION_TYPES = new Set<NotificationType>([
   "SPIKE_ALERT",
-  "DOMAIN_EXPIRING",
-  "DOMAIN_EXPIRED",
   "SYSTEM",
 ]);
 
@@ -35,35 +33,6 @@ function buildSpikeAlert(domainName: string, parsed: any): NotificationContent {
       expectedVisitors,
       difference,
       spikeDate: spikeAt.toISOString(),
-    },
-  };
-}
-
-function buildDomainExpiring(domainName: string, parsed: any): NotificationContent {
-  const { endsAt } = parsed;
-  const endsAtDate = endsAt ? new Date(endsAt) : null;
-  const readable = endsAtDate
-    ? endsAtDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })
-    : "soon";
-
-  return {
-    title: ` ${domainName} is expiring soon`,
-    message: `This domain's plan ends on ${readable}.`,
-    data: {
-      endsAt: endsAtDate ? endsAtDate.toISOString() : null,
-    },
-  };
-}
-
-function buildDomainExpired(domainName: string, parsed: any): NotificationContent {
-  const { endsAt } = parsed;
-  const endsAtDate = endsAt ? new Date(endsAt) : null;
-
-  return {
-    title: ` ${domainName} has been deactivated`,
-    message: `This domain's plan expired and event collection has stopped.`,
-    data: {
-      endsAt: endsAtDate ? endsAtDate.toISOString() : null,
     },
   };
 }
@@ -130,12 +99,6 @@ export async function startNotificationWorker() {
         switch (type) {
           case "SPIKE_ALERT":
             content = buildSpikeAlert(domain.domainName, parsed);
-            break;
-          case "DOMAIN_EXPIRING":
-            content = buildDomainExpiring(domain.domainName, parsed);
-            break;
-          case "DOMAIN_EXPIRED":
-            content = buildDomainExpired(domain.domainName, parsed);
             break;
           case "SYSTEM":
           default:
