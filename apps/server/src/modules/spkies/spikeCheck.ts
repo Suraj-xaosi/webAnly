@@ -1,7 +1,5 @@
 
 import { prisma }        from "@repo/db";
-import { producer }      from "../../shared/config/kafka/kafkaClient.js";
-import { KAFKA_TOPICS }  from "../../shared/config/kafka.js";
 import visitorCount      from "./functions/visitorCount.js"; 
 
 const GROWTH_FACTOR = 1.10;
@@ -28,22 +26,23 @@ export default async function spikeCheck(domainId: string) {
 
     if (countIn5min > expected) {
       const difference = countIn5min - expected;
+      const spikeDate = new Date();
 
-      await producer.send({
-        topic: KAFKA_TOPICS.NOTIFICATIONS,
-        messages: [
-          {
-            key: domainId,
-            value: JSON.stringify({
-              domainId,
-              visitorCountIn5min: countIn5min,
-              expectedVisitors: expected,
-              difference,
-              type: "SPIKE_ALERT",
-              spikeDate: new Date().toISOString(), // explicit, since JSON.stringify would do this anyway
-            }),
+      await prisma.notification.create({
+        data: {
+          userId: domain.userId,
+          type: "SPIKE_ALERT",
+          title: `Traffic spike on ${domain.domainName}`,
+          message: `Got ${countIn5min} visitors, above the expected ${expected}.`,
+          data: {
+            domainId,
+            domainName: domain.domainName,
+            visitorCountIn5min: countIn5min,
+            expectedVisitors: expected,
+            difference,
+            spikeDate: spikeDate.toISOString(),
           },
-        ],
+        },
       });
 
       newExpected = Math.max(MIN_EXPECTED, Math.ceil(expected * GROWTH_FACTOR));

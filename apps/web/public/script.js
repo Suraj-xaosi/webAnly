@@ -2,26 +2,33 @@
   const script = document.currentScript;
 
   if (!script) {
-    console.warn("Collector: could not find the current script element.");
     return;
   }
 
-  const COLLECT_URL = script.getAttribute("data-collect-api-url");
+  const COLLECT_URL = script.getAttribute("data-collect-api-url"); 
   const apikey = script.getAttribute("data-api-key");
 
   if (!COLLECT_URL) {
-    console.warn("Collector: missing data-collect-api-url on script tag.");
     return;
   }
 
   if (!apikey) {
-    console.warn("Collector: missing data-api-key on script tag.");
     return;
   }
 
+
+
+
+
+
+
+
+
+
+
   const VISITOR_ID_KEY = "webanly:visitor-id";
-  const VISITOR_ID_PATTERN =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const VISITOR_ID_PATTERN =/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 
   function createVisitorId() {
     if (typeof crypto.randomUUID === "function") {
@@ -46,6 +53,7 @@
     ].join("-");
   }
 
+
   function getVisitorId() {
     try {
       const storedVisitorId = localStorage.getItem(VISITOR_ID_KEY);
@@ -66,6 +74,18 @@
   }
 
   const visitorId = getVisitorId();
+
+
+
+
+
+
+
+
+
+
+
+
 
   const rawPattern = script.getAttribute("data-normalize-pattern");
   let customNormalizer = null;
@@ -91,6 +111,7 @@
     }
   }
 
+
   function normalizePage(path) {
     if (!customNormalizer) {
       return path;
@@ -103,6 +124,16 @@
       return path;
     }
   }
+
+
+
+
+
+
+
+
+
+
 
   function getDevice() {
     const ua = navigator.userAgent.toLowerCase();
@@ -122,6 +153,8 @@
 
     return "desktop";
   }
+
+
 
   function getOS() {
     const ua = navigator.userAgent;
@@ -156,6 +189,8 @@
     return "Unknown";
   }
 
+
+
   function getBrowser() {
     const ua = navigator.userAgent;
 
@@ -186,6 +221,8 @@
     return "Unknown";
   }
 
+
+
   function parseInitialReferrer() {
     if (!document.referrer) {
       return { referrer: null, previousPage: null };
@@ -205,8 +242,19 @@
 
     return { referrer: document.referrer, previousPage: null };
   }
-
   const initial = parseInitialReferrer();
+
+
+
+
+
+
+
+
+
+
+
+
 
   let state = {
     page: normalizePage(window.location.pathname),
@@ -218,6 +266,13 @@
 
   let lastPath = window.location.pathname;
   let flushed = false;
+
+
+
+
+
+
+
   const HIDDEN_EXIT_GRACE_MS = 30000;
   let hiddenTimer = null;
 
@@ -240,6 +295,14 @@
       flush("hidden");
     }, HIDDEN_EXIT_GRACE_MS);
   }
+
+
+
+
+
+
+
+
 
   function send(payload) {
     const body = JSON.stringify(payload);
@@ -283,6 +346,14 @@
     });
   }
 
+
+
+
+
+
+
+
+
   function onRouteChange() {
     const newPath = window.location.pathname;
 
@@ -306,6 +377,13 @@
 
     flushed = false;
   }
+
+
+
+
+
+
+
 
   const originalPushState = history.pushState.bind(history);
 
@@ -352,6 +430,10 @@
     flushed = false;
   });
 
+
+
+
+  
   function watchTitle() {
     if (typeof MutationObserver === "undefined" || !document.head) {
       return;

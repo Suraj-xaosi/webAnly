@@ -11,6 +11,7 @@ export const KAFKA_TOPICS = {
   NOTIFICATIONS: process.env.TOPIC_NAME_NOTIFICATIONS || "notifications",
 } as const;
 
+
 export const KAFKA_GROUPS = {
   ANALYTICS_WORKERS: process.env.KAFKA_GROUP_ID || "db.dumpers",
   NOTIFICATION_WORKERS: process.env.KAFKA_GROUP_ID_WORKER2 || "notification.workers",

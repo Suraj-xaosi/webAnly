@@ -1,6 +1,4 @@
-import { producer }                    from "../../shared/config/kafka/kafkaClient.js";
 import { apikeyChecker }               from "../../shared/functions/apikeyChecker.js";
-import { KAFKA_TOPICS }                from "../../shared/config/kafka.js";
 import parseTime                       from "./functions/parseTimeSpent.js";
 import parseDate                       from "./functions/parseDate.js";
 import { extractRealIp }               from "./functions/extractIP.js";
@@ -9,11 +7,7 @@ import { Request }                     from "express";
 import { extractReferrerHostname }     from "./functions/extractReferrerHostname.js";
 import { normalizePath }               from "./functions/normalizepath.js";
 import { isOriginAllowed }             from "./functions/checkOrigin.js";
-import {
-  checkCollectorIpRateLimit,
-  checkCollectorRateLimit,
-  type CollectorRateLimitResult,
-} from "./functions/collectorRateLimiter.js";
+import dumpInDB                        from "../eventDumping/functions/dumpInDB.js";
 import type { CollectorEventInput } from "./collector.validation.js";
 
 const VALID_EXIT_TYPES = new Set(["navigation", "pagehide", "hidden"]);
@@ -30,11 +24,8 @@ function parsePreviousPage(value: unknown): string | null {
 export async function handleCollectEvent(
   req: Request,
   body: CollectorEventInput
-): Promise<CollectorRateLimitResult | null> {
+) {
   const visitorIP = extractRealIp(req.ip || req.socket.remoteAddress || "");
-
-  const ipRateLimit = await checkCollectorIpRateLimit(visitorIP);
-  if (ipRateLimit) return ipRateLimit;
 
   const exitType = parseExitType(body.exitType);
 
@@ -50,9 +41,6 @@ export async function handleCollectEvent(
     console.warn(`Collector: origin mismatch for domain ${domain.domainName}`);
     return null;
   }
-
-  const apiKeyRateLimit = await checkCollectorRateLimit(body.apikey);
-  if (apiKeyRateLimit) return apiKeyRateLimit;
 
   const visitedAt = parseDate(body.visitedAt);
   const timeSpent = parseTime(body.timeSpent);
@@ -85,21 +73,5 @@ export async function handleCollectEvent(
   };
  
 
-  await producer.send({
-    topic: KAFKA_TOPICS.SITE_EVENTS,
-    messages: [{ key: domain.domainId, value: JSON.stringify(eventData) }],
-  });
-
-  await producer.send({
-    topic: KAFKA_TOPICS.SOCKET_EVENTS,
-    messages: [{
-      key: domain.domainId,
-      value: JSON.stringify({
-        ...eventData,
-        defaultTimezone: domain.defaultTimezone,
-      }),
-    }],
-  });
-
-  return null;
+  await dumpInDB(eventData);
 }
