@@ -24,7 +24,7 @@ function parsePreviousPage(value: unknown): string | null {
 export async function handleCollectEvent(
   req: Request,
   body: CollectorEventInput
-) {
+): Promise<boolean> {
   const visitorIP = extractRealIp(req.ip || req.socket.remoteAddress || "");
 
   const exitType = parseExitType(body.exitType);
@@ -39,7 +39,7 @@ export async function handleCollectEvent(
 
   if (!allowed) {
     console.warn(`Collector: origin mismatch for domain ${domain.domainName}`);
-    return null;
+    return false;
   }
 
   const visitedAt = parseDate(body.visitedAt);
@@ -74,4 +74,5 @@ export async function handleCollectEvent(
  
 
   await dumpInDB(eventData);
+  return true;
 }

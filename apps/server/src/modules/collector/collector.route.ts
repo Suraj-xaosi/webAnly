@@ -14,7 +14,10 @@ collectorRouter.post("/collect", asyncHandler(async (req: Request, res: Response
     });
   }
 
-  await handleCollectEvent(req, parsedBody.data);
+  const stored = await handleCollectEvent(req, parsedBody.data);
+  if (!stored) {
+    return res.status(403).json({ error: "Request origin does not match the domain." });
+  }
 
   return res.status(200).send("COLLECTOR : Event stored");
 }));

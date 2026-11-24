@@ -7,7 +7,8 @@
   "scripts": {
     "build": "tsc -b",
     "dev": "tsx --watch -r dotenv/config src/index.ts",
-    "start": "node -r dotenv/config dist/index.js"
+    "start": "node -r dotenv/config dist/index.js",
+    "loadtest:collector": "node scripts/load-test-collector.mjs"
   },
   "keywords": [],
   "author": "",

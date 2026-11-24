@@ -7,6 +7,7 @@
     "dev": "next dev --turbopack",
     "build": "next build --webpack",
     "start": "next start",
+    "loadtest:analytics": "node scripts/load-test-analytics.mjs",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit"
