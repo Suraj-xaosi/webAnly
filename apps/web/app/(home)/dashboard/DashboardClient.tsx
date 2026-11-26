@@ -1,5 +1,6 @@
 "use client"
 
+import { lazy, Suspense } from "react";
 import { format } from "date-fns";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectFrom, selectTo, selectInterval, setDateRange,selectTimezone } from "@/store/slices/dashboardSlice";
@@ -11,13 +12,18 @@ import { ExitPageCard } from "@/components/dashCards/exitPageCard";
 import TimezonePicker from "@/components/picker/timezonePicker";
 import { DimensionTimeseriesPanel } from "@/components/dashCards/dimensionTimeseriesPanel";
 import { selectDimensionTimeseriesSelection } from "@/store/slices/dimensionTimeseriesSlice";
-import { PageFlowCard } from "@/components/dashCards/pageFlowCard";
 import { useDashboardAnalytics } from "@/hooks/analytics/useDashboardAnalytics";
 import { useDomainSelection } from "@/hooks/domainCrud/useDomainSelection";
 import { useTransition } from "react";
 import Link from "next/link";
 import { Button } from "@workspace/ui/components/button";
 import { Skeleton } from "@workspace/ui/components/skeleton";
+
+const PageFlowCard = lazy(() =>
+  import("@/components/dashCards/pageFlowCard").then((module) => ({
+    default: module.PageFlowCard,
+  }))
+);
 
 function parseDateOnly(value: string): Date {
   return new Date(`${value}T00:00:00`)
@@ -191,26 +197,47 @@ export default function DashboardClient() {
             })}
           </div>
 
-          <PageFlowCard
-            data={pageFlow.data}
-            selectedPageMetrics={selectedPageMetrics}
-            allPageMapData={allPageMap.data}
-            allPageMapLoading={allPageMap.isLoading}
-            allPageMapError={allPageMap.error}
-            onRetryAllPageMap={allPageMap.refetch}
-            isAllPageMap={isAllPageMap}
-            availablePages={flowPages}
-            selectedPage={activeFlowPage}
-            onPageChange={setSelectedFlowPage}
-            isPagesLoading={pagesAreLoading}
-            isPagesError={isPagesError}
-            pagesError={pagesError}
-            onRetryPages={dimensionMap.page.refetch}
-            isLoading={pageFlow.isLoading}
-            isError={pageFlow.isError}
-            error={pageFlow.error}
-            onRetryFlow={pageFlow.refetch}
-          />
+          <Suspense
+            fallback={
+              <div
+                className="col-span-full grid gap-4 overflow-hidden rounded-xl bg-card py-4 ring-1 ring-foreground/10"
+                role="status"
+                aria-busy="true"
+                aria-label="Loading page flow"
+              >
+                <span className="sr-only">Loading page flow</span>
+                <div className="flex items-center justify-between gap-3 px-4">
+                  <Skeleton className="h-6 w-32" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-9 w-[140px]" />
+                    <Skeleton className="h-9 w-[180px]" />
+                  </div>
+                </div>
+                <Skeleton className="mx-4 h-[360px] w-auto" />
+              </div>
+            }
+          >
+            <PageFlowCard
+              data={pageFlow.data}
+              selectedPageMetrics={selectedPageMetrics}
+              allPageMapData={allPageMap.data}
+              allPageMapLoading={allPageMap.isLoading}
+              allPageMapError={allPageMap.error}
+              onRetryAllPageMap={allPageMap.refetch}
+              isAllPageMap={isAllPageMap}
+              availablePages={flowPages}
+              selectedPage={activeFlowPage}
+              onPageChange={setSelectedFlowPage}
+              isPagesLoading={pagesAreLoading}
+              isPagesError={isPagesError}
+              pagesError={pagesError}
+              onRetryPages={dimensionMap.page.refetch}
+              isLoading={pageFlow.isLoading}
+              isError={pageFlow.isError}
+              error={pageFlow.error}
+              onRetryFlow={pageFlow.refetch}
+            />
+          </Suspense>
 
           {dimensionTimeseriesSelection?.mode === "historical" && (
             <DimensionTimeseriesPanel />
