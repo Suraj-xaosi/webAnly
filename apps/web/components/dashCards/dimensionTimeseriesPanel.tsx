@@ -113,9 +113,23 @@ function HistoricalDimensionTimeseriesChart({
   }
 
   if (historical.isError) {
+    if (!historical.data) {
+      return (
+        <PanelFailure
+          error={historical.error}
+          onRetry={() => void historical.refetch()}
+        />
+      )
+    }
+
     return (
-      <div className="py-8 text-center text-sm text-destructive">
-        Failed to load data
+      <div className="grid gap-3">
+        <PanelFailure
+          error={historical.error}
+          hasData
+          onRetry={() => void historical.refetch()}
+        />
+        <AreaChartGradient data={historical.data.data} />
       </div>
     )
   }
@@ -156,12 +170,59 @@ function LiveDimensionTimeseriesChart({
   }
 
   if (realtime.isError) {
+    if (!realtime.data.length) {
+      return (
+        <PanelFailure
+          error={realtime.error}
+          onRetry={() => void realtime.refetch()}
+        />
+      )
+    }
+
     return (
-      <div className="py-8 text-center text-sm text-destructive">
-        Failed to load data
+      <div className="grid gap-3">
+        <PanelFailure
+          error={realtime.error}
+          hasData
+          onRetry={() => void realtime.refetch()}
+        />
+        <AreaChartGradient data={realtime.data} />
       </div>
     )
   }
 
   return <AreaChartGradient data={realtime.data} />
+}
+
+function PanelFailure({
+  error,
+  hasData = false,
+  onRetry,
+}: {
+  error: unknown
+  hasData?: boolean
+  onRetry: () => void
+}) {
+  const message =
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+      ? error.message
+      : "Check your connection and try again."
+
+  return (
+    <div
+      className="grid justify-items-start gap-2 rounded-md border border-destructive/40 p-3 text-sm"
+      role="alert"
+    >
+      <p className="font-medium">
+        {hasData ? "Showing saved data; refresh failed." : "This chart couldn’t load."}
+      </p>
+      <p className="text-muted-foreground">{message}</p>
+      <Button variant="outline" size="sm" onClick={onRetry}>
+        Try again
+      </Button>
+    </div>
+  )
 }

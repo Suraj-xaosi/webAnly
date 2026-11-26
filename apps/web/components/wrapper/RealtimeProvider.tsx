@@ -8,6 +8,8 @@ type MessageListener = (message: WebSocketMessage) => void
 interface RealtimeContextValue {
   subscribe: (listener: MessageListener) => () => void
   isConnected: boolean
+  connectionError: string | null
+  retryConnection: () => void
 }
 
 const RealtimeContext = createContext<RealtimeContextValue | null>(null)
@@ -23,7 +25,7 @@ export function RealtimeProvider({ domainId, children }: RealtimeProviderProps) 
   const listenersRef = useRef<Set<MessageListener>>(new Set())
 
 
-  const { isConnected } = useWebSocket(domainId, (message) => {
+  const { isConnected, connectionError, retry } = useWebSocket(domainId, (message) => {
     listenersRef.current.forEach((listener) => listener(message))
   })
 
@@ -35,7 +37,9 @@ export function RealtimeProvider({ domainId, children }: RealtimeProviderProps) 
   }, [])
 
   return (
-    <RealtimeContext.Provider value={{ subscribe, isConnected }}>
+    <RealtimeContext.Provider
+      value={{ subscribe, isConnected, connectionError, retryConnection: retry }}
+    >
       {children}
     </RealtimeContext.Provider>
   )

@@ -134,6 +134,8 @@ This is the easiest way to run the full stack (Postgres, Redis, Kafka, backend, 
 
 > **Note:** The GeoLite2 database file is *not* included in the Docker image, to keep it lightweight. It is downloaded automatically the first time the server container starts, using your `MAXMIND_LICENSE_KEY`.
 
+The local Redis container is capped at 256 MiB by default and evicts least-recently-used keys that have an expiry. Override the limit with `REDIS_MAXMEMORY`. For managed Redis deployments, configure an equivalent memory limit and an expiry-aware eviction policy in the provider; application code cannot set the provider’s server-level memory policy. 
+
 ---
 
 ## Running Without Docker (manual setup)

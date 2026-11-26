@@ -12,9 +12,12 @@ import { DimensionCard } from "@/components/dashCards/dimensionCard"
 import { ExitPageCard } from "@/components/dashCards/exitPageCard"
 
 import { Card, CardContent } from "@workspace/ui/components/card"
+import { Button } from "@workspace/ui/components/button"
+import Link from "next/link"
 import DomainSwitch from "@/components/picker/domainSwitch"
 import { useApiKey } from "@/hooks/useApikey"
 import { useDomainAccess } from "@/hooks/domainCrud/useDomainAcess"
+import { useRealtimeContext } from "@/components/wrapper/RealtimeProvider"
 import type { Dimension } from "@/types/analytics"
 import { DimensionTimeseriesPanel } from "@/components/dashCards/dimensionTimeseriesPanel";
 import { useRealtimeExitPages } from "@/hooks/realtime/useRealtimeExitPages"
@@ -43,31 +46,96 @@ function useLiveDate(timezone: string) {
 }
 
 export default function LiveDashboardClient() {
-  const { activeDomainId: domainId } = useDomainSelection()
+  const domainSelection = useDomainSelection()
+  const { activeDomainId: domainId } = domainSelection
 
   const domainAccess = useDomainAccess(domainId)
-  const isDomainActive = !domainId
-    ? null
-    : domainAccess.isError
-      ? false
-      : domainAccess.data?.active ?? null
+  const isDomainActive = domainAccess.data?.active ?? null
   const timezone = domainAccess.data?.timezone ?? "UTC"
 
   const from = useLiveDate(timezone)
   const to = from
 
-  const { data: apikey, isPending: apikeyLoading } = useApiKey(
+  const {
+    data: apikey,
+    isPending: apikeyLoading,
+    isError: apiKeyFailed,
+    error: apiKeyError,
+    refetch: refetchApiKey,
+  } = useApiKey(
     domainId,
     isDomainActive === true
   )
   const enabled = !!apikey && !apikeyLoading
 
+  if (domainSelection.isLoading && !domainSelection.data) {
+    return <Card><CardContent className="p-6 text-muted-foreground">Loading your domains...</CardContent></Card>
+  }
+
+  if (domainSelection.isError && !domainSelection.data) {
+    return (
+      <RecoveryCard
+        title="Your domains couldn’t be loaded."
+        message={getErrorMessage(domainSelection.error, "Check your connection and try again.")}
+        onRetry={() => void domainSelection.refetch()}
+      />
+    )
+  }
+
+  if (domainId && domainAccess.isError && !domainAccess.data) {
+    return (
+      <RecoveryCard
+        title="Domain access couldn’t be checked."
+        message={getErrorMessage(domainAccess.error, "Check your connection and try again.")}
+        onRetry={() => void domainAccess.refetch()}
+        showDomainSwitch
+      />
+    )
+  }
+
+  if (domainId && domainAccess.isLoading && !domainAccess.data) {
+    return <Card><CardContent className="p-6 text-muted-foreground">Checking domain access...</CardContent></Card>
+  }
+
   if (isDomainActive === false) {
-    return <Card><CardContent className="p-6 text-muted-foreground">This domain is currently deactivated.</CardContent></Card>
+    return (
+      <div className="grid gap-6">
+        <DomainSwitch />
+        <Card>
+          <CardContent className="p-6 text-muted-foreground">
+            This domain is currently deactivated. Reactivate it in domain settings to view live data.
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (domainId && apiKeyFailed && !apikey) {
+    return (
+      <RecoveryCard
+        title="Live dashboard setup failed."
+        message={getErrorMessage(apiKeyError, "Your live access key couldn’t be loaded. Try again.")}
+        onRetry={() => void refetchApiKey()}
+        showDomainSwitch
+      />
+    )
   }
 
   return (
     <div className="grid min-w-0 gap-6">
+      {domainSelection.isError && domainSelection.data && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/40 bg-card p-4 text-sm" role="alert">
+          <p>Couldn’t refresh your domains. Showing the last loaded data.</p>
+          <Button variant="outline" size="sm" onClick={() => void domainSelection.refetch()}>
+            Try again
+          </Button>
+        </div>
+      )}
+      {domainAccess.isError && domainAccess.data && (
+        <div className="rounded-lg border border-destructive/40 bg-card p-4 text-sm" role="alert">
+          Couldn’t refresh domain access. Showing the last known status.
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <DomainSwitch />
@@ -125,6 +193,7 @@ function LiveDashboardContent({
   apikey: string
   enabled: boolean
 }) {
+  const { connectionError, retryConnection } = useRealtimeContext()
   const timeseries = useRealtimeTimeseries(domainId, from, to, apikey, enabled, timezone)
 
   const dimensions = useRealtimeDimensions(domainId, from, to, enabled, timezone)
@@ -141,6 +210,27 @@ function LiveDashboardContent({
 
   return (
     <>
+      {connectionError && (
+        <Card role="alert" className="border-destructive/40">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div className="grid gap-1 text-sm">
+              <p className="font-medium">Live updates are unavailable.</p>
+              <p className="text-muted-foreground">
+                {connectionError} Loaded analytics remain visible; retry the connection or sign in again if your session expired.
+              </p>
+            </div>
+            {connectionError.startsWith("Your session may have expired.") ? (
+              <Button asChild variant="outline" size="sm">
+                <Link href="/auth">Sign in</Link>
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" onClick={retryConnection}>
+                Reconnect
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
       <TimeseriesCard
         data={timeseries.data}
         summary={timeseries.summary}
@@ -177,4 +267,43 @@ function LiveDashboardContent({
       {dimensionTimeseriesSelection?.mode === "live" && <DimensionTimeseriesPanel />}
     </>
   )
+}
+
+function RecoveryCard({
+  title,
+  message,
+  onRetry,
+  showDomainSwitch = false,
+}: {
+  title: string
+  message: string
+  onRetry: () => void
+  showDomainSwitch?: boolean
+}) {
+  return (
+    <div className="grid gap-6">
+      {showDomainSwitch && <DomainSwitch />}
+      <Card role="alert" className="border-destructive/40">
+        <CardContent className="grid justify-items-start gap-3 p-6">
+          <p className="font-medium">{title}</p>
+          <p className="text-sm text-muted-foreground">{message}</p>
+          <Button variant="outline" size="sm" onClick={onRetry}>
+            Try again
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message
+  }
+  return fallback
 }

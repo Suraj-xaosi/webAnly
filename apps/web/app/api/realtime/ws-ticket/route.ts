@@ -21,47 +21,55 @@ function getExpectedAppOrigin(): string | null {
 }
 
 export async function POST(request: NextRequest) {
-  const expectedOrigin = getExpectedAppOrigin()
-  const requestOrigin = request.headers.get("origin")
-
-  if (!expectedOrigin || requestOrigin !== expectedOrigin) {
-    return NextResponse.json({ error: "Invalid request origin." }, { status: 403 })
-  }
-
-  const session = await auth.api.getSession({ headers: request.headers })
-  if (!session) {
-    return NextResponse.json({ error: "Please log in." }, { status: 401 })
-  }
-
-  let body: { domainId?: unknown }
   try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 })
-  }
+    const expectedOrigin = getExpectedAppOrigin()
+    const requestOrigin = request.headers.get("origin")
 
-  if (typeof body.domainId !== "string" || !body.domainId.trim()) {
-    return NextResponse.json({ error: "domainId is required." }, { status: 400 })
-  }
+    if (!expectedOrigin) {
+      console.error("WebSocket ticket route is missing a valid application URL.")
+      return NextResponse.json(
+        { error: "Live updates are temporarily unavailable. Please try again." },
+        { status: 503 }
+      )
+    }
 
-  const domain = await prisma.domain.findFirst({
-    where: {
-      id: body.domainId,
-      userId: session.user.id,
-      deletedAt: null,
-      state: "ACTIVE",
-    },
-    select: { id: true },
-  })
+    if (requestOrigin !== expectedOrigin) {
+      return NextResponse.json({ error: "Invalid request origin." }, { status: 403 })
+    }
 
-  if (!domain) {
-    return NextResponse.json({ error: "Domain not found or inactive." }, { status: 403 })
-  }
+    const session = await auth.api.getSession({ headers: request.headers })
+    if (!session) {
+      return NextResponse.json({ error: "Please log in." }, { status: 401 })
+    }
 
-  const ticket = randomBytes(32).toString("hex")
-  const ticketKey = `${TICKET_KEY_PREFIX}${createHash("sha256").update(ticket).digest("hex")}`
+    let body: { domainId?: unknown }
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: "Invalid request body." }, { status: 400 })
+    }
 
-  try {
+    if (typeof body.domainId !== "string" || !body.domainId.trim()) {
+      return NextResponse.json({ error: "domainId is required." }, { status: 400 })
+    }
+
+    const domain = await prisma.domain.findFirst({
+      where: {
+        id: body.domainId,
+        userId: session.user.id,
+        deletedAt: null,
+        state: "ACTIVE",
+      },
+      select: { id: true },
+    })
+
+    if (!domain) {
+      return NextResponse.json({ error: "Domain not found or inactive." }, { status: 403 })
+    }
+
+    const ticket = randomBytes(32).toString("hex")
+    const ticketKey = `${TICKET_KEY_PREFIX}${createHash("sha256").update(ticket).digest("hex")}`
+
     const stored = await redis.set(
       ticketKey,
       JSON.stringify({ domainId: domain.id, origin: expectedOrigin }),
@@ -72,10 +80,13 @@ export async function POST(request: NextRequest) {
     if (stored !== "OK") {
       return NextResponse.json({ error: "Unable to create WebSocket ticket." }, { status: 503 })
     }
-  } catch (error) {
-    console.error("Failed to create WebSocket ticket:", error)
-    return NextResponse.json({ error: "Unable to create WebSocket ticket." }, { status: 503 })
-  }
 
-  return NextResponse.json({ ticket })
+    return NextResponse.json({ ticket })
+  } catch (error) {
+    console.error("Failed to issue WebSocket ticket:", error)
+    return NextResponse.json(
+      { error: "Live updates are temporarily unavailable. Please try again." },
+      { status: 503 }
+    )
+  }
 }

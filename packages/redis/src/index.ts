@@ -7,13 +7,13 @@ export async function getCache<T>(key: string): Promise<T | null> {
   return val ? (JSON.parse(val) as T) : null;
 }
 
-export async function setCache(key: string, value: unknown, ttlSeconds?: number) {
-  const str = JSON.stringify(value);
-  if (ttlSeconds) {
-    await redis.set(key, str, "EX", ttlSeconds);
-  } else {
-    await redis.set(key, str);
+export async function setCache(key: string, value: unknown, ttlSeconds: number) {
+  if (!Number.isSafeInteger(ttlSeconds) || ttlSeconds <= 0) {
+    throw new RangeError("Cache TTL must be a positive integer.");
   }
+
+  const str = JSON.stringify(value);
+  await redis.set(key, str, "EX", ttlSeconds);
 }
 
 export async function deleteCache(key: string) {

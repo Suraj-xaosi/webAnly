@@ -8,7 +8,10 @@ import {
 } from "./TimeFunctions";
 
 export function readCachedResponse<T>(cacheKey: string): Promise<T | null> {
-  return getCache<T>(cacheKey);
+  return getCache<T>(cacheKey).catch((error: unknown) => {
+    console.warn("Analytics cache read failed; falling back to the database.", error);
+    return null;
+  });
 }
 
 export async function writeCachedResponse<T extends object>(
@@ -18,7 +21,11 @@ export async function writeCachedResponse<T extends object>(
   timezone: string
 ): Promise<void> {
   const ttl = to === todayInTimeZone(timezone) ? CACHE_TTL_TODAY : CACHE_TTL_PAST;
-  await setCache(cacheKey, responseBody, ttl);
+  try {
+    await setCache(cacheKey, responseBody, ttl);
+  } catch (error) {
+    console.warn("Analytics cache write failed; returning the uncached response.", error);
+  }
 }
 
 export function getAnalyticsDateBounds(from: string, to: string, timezone: string) {

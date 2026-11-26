@@ -11,6 +11,7 @@ export interface RealtimeDimensionTimeseriesResult {
   isLoading: boolean;
   isError: boolean;
   error?: unknown;
+  refetch: () => Promise<unknown>;
 }
 
 export function useRealtimeDimensionTimeseries(
@@ -40,6 +41,7 @@ export function useRealtimeDimensionTimeseries(
     isLoading: !enabled || (restQuery.isLoading && restQuery.data === undefined),
     isError: restQuery.isError,
     error: restQuery.error,
+    refetch: restQuery.refetch,
   };
 }
 
